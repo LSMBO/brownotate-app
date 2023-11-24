@@ -16,7 +16,7 @@
     justify-content: space-between;
     align-items: center;
     margin: 20px auto;
-    border: 5px solid #33BEFF;
+    border: 5px solid #288cbb;
     border-radius: 20px;
 }
 
@@ -29,6 +29,10 @@
     font-weight: lighter;
     font-size: 1rem;
     margin: 0px;
+}
+span {
+    color: #288cbb;
+    font-weight: bold;
 }
 
 .title > h1 {   
