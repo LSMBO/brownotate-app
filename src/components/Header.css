@@ -1,0 +1,63 @@
+@font-face {
+    font-family: "Oswald";
+    src: url(../assets/fonts/Oswald-VariableFont_wght.ttf);
+}
+
+@font-face {
+    font-family: "Oxygen";
+    src: url(../assets/fonts/Oxygen-Light.ttf);
+}
+
+
+.header {
+    background-color: #cddfeb;
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px auto;
+    border: 5px solid #33BEFF;
+    border-radius: 20px;
+}
+
+.title {
+    margin: 8px 8px;
+}
+
+.title > h4 {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: lighter;
+    font-size: 1rem;
+    margin: 0px;
+}
+
+.title > h1 {   
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1.5px;
+    margin: 0px;
+    font-size: 2.3rem;
+    color: #288cbb;
+}
+
+img {
+    width: 30%;
+    margin-right: 10px;
+}
+
+@media screen and (max-width: 1000px) {
+    .header {
+        width: 80%;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    img {
+        width: 40%;
+    }
+    .title > h1 {   
+        font-size: 1.5rem;
+    }
+    .title > h4 {
+        font-size: 0.8rem;
+    }
+}
