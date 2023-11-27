@@ -1,0 +1,77 @@
+label {
+    display: flex;
+    width: 95%;
+    margin: 0 0 5px 2%;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input-button {
+    display: flex;
+    width: 95%;
+    justify-content: space-between;
+}
+
+@media screen and (max-width: 1060px) {
+    .input-button {
+        flex-direction: column;
+        align-items: flex-end
+    }
+    input, button {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    button {
+        margin-right: 20px;
+    }
+    .t1 {
+        font-size: 0.8rem;
+    }
+}
+
+@media screen and (max-width: 630px) {
+    .t1 {
+        font-size: 0.6rem;
+    }
+    .t2 {
+        font-size: 1rem;
+    }
+}
+
+
+input {
+    width: 95%;
+    margin-right: 15px;
+    border: 2px solid #288cbb;
+    padding-left: 8px;
+}
+
+button {
+  width: 10%;
+  border: 5px solid #288cbb;
+  border-radius: 20px;
+  background-color: #cddfeb;
+  cursor: pointer;
+
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #B0D2EA;
+}
+
+input.error {
+    border-color: red;
+}
+  
+.error-message {
+    color: red;
+    display: flex;
+    width: 95%;
+    margin: 5px 0 0 5px;
+}
+  

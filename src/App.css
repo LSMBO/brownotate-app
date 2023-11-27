@@ -1,3 +1,21 @@
+@font-face {
+    font-family: "Oxygen";
+    src: url(./assets/fonts/Oxygen-Light.ttf);
+}
+
+.t1 {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.t2 {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+
 body {
     background-color: #cddfeb;
 }

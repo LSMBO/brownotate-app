@@ -3,12 +3,6 @@
     src: url(../assets/fonts/Oswald-VariableFont_wght.ttf);
 }
 
-@font-face {
-    font-family: "Oxygen";
-    src: url(../assets/fonts/Oxygen-Light.ttf);
-}
-
-
 .header {
     background-color: #cddfeb;
     width: 50%;
@@ -25,9 +19,7 @@
 }
 
 .title > h4 {
-    font-family: 'Oxygen', sans-serif;
     font-weight: lighter;
-    font-size: 1rem;
     margin: 0px;
 }
 span {
