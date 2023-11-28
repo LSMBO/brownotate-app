@@ -1,0 +1,5 @@
+{
+    "text_card1" : ["Browse the complete biological data of the species you have entered. This will show you the sequencing data (DNA and RNA), the assembled genomes and predicted proteins for your species. The search is performed on prominent databases such as NCBI RefSeq, GenBank, UniProtKB, and Ensembl.", "Give it a try! Click on Search!"],
+    "text_card2" : ["Automatically retrieve the most relevant protein database for the species you've entered. The process begins by identifying existing protein annotations. If none are found but a genome assembly is present, Brownotate will compute a new annotation for the genome. In cases where only sequencing data has been found, Brownotate will start with the assembly before proceeding to the protein annotation.", "Stop thinking, click on Run and get automatically the proteins of your species !"],
+    "text_card3" : ["Click on Settings to access the core of the Brownotate workflow. This mode is the most recommended, offering the flexibility to choose your input data, skip certain steps, or adjust specific parameters.", "Go put your settings and then click on Run to initiate your own Brownotate’s workflow!"]
+}

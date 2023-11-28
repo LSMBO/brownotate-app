@@ -3,9 +3,15 @@
     src: url(./assets/fonts/Oxygen-Light.ttf);
 }
 
-.t1 {
+.t1_bold {
     font-family: 'Oxygen', sans-serif;
     font-weight: bold;
+    font-size: 1rem;
+}
+
+.t1_light {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: normal;
     font-size: 1rem;
 }
 
@@ -18,4 +24,34 @@
 
 body {
     background-color: #cddfeb;
+}
+
+button {
+    border: 5px solid #288cbb;
+    border-radius: 20px;
+    background-color: #cddfeb;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+  
+button:not(:disabled):hover {
+    background-color: #B0D2EA;
+}
+
+button:disabled {
+    cursor: auto;
+    background-color: rgba(255, 255, 255, 0.575);
+}
+
+.cardContainer {
+    display: flex;
+    justify-content: space-around;
+    min-height: 50vh;
+    margin-bottom: 20px;
+}
+
+.footer {
+    width: 100%;
+    height: auto;
+
 }

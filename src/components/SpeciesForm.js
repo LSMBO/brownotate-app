@@ -2,10 +2,12 @@ import { useState } from "react";
 import "./SpeciesForm.css"
 
 
-export default function SpeciesForm() {
+export default function SpeciesForm( {handleSetSpecies} ) {
     // state
-const [species, setSpecies] = useState("")
+const [newSpecies, setNewSpecies] = useState("")
+const [loadedSpecies, setLoadedSpecies] = useState([])
 const [error, setError] = useState(null);
+const [success, setSuccess] = useState(false);
 
     // comportement
     const buildUrl = (species) => {
@@ -19,7 +21,7 @@ const [error, setError] = useState(null);
     };
     
     const handleApiResponse = (data) => {
-        const lowerSpecies = species.toLowerCase();
+        const lowerSpecies = newSpecies.toLowerCase();
         
         for (const result of data.results) {
             const lowerScientificName = result.scientificName.toLowerCase();
@@ -27,7 +29,8 @@ const [error, setError] = useState(null);
     
             if (trimmedScientificName === lowerSpecies) {
                 console.log('Your species has been found:', result.scientificName);
-                return result.taxonId
+                setLoadedSpecies([result.scientificName, result.taxonId])
+                return [result.scientificName, result.taxonId]
             }
         }
         return false
@@ -39,13 +42,13 @@ const [error, setError] = useState(null);
     };
 
     const handleChange = (e) => {
-        setSpecies(e.target.value)
+        setNewSpecies(e.target.value)
     } 
 
      const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const url = buildUrl(species);
+            const url = buildUrl(newSpecies);
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -56,18 +59,23 @@ const [error, setError] = useState(null);
             if (response.ok) {
                 const data = await response.json();
                 const apiResponse = handleApiResponse(data);
-                if (apiResponse){
+                if (apiResponse[0]){
                     setError("");
+                    setSuccess(true);
+                    handleSetSpecies(apiResponse)
                 }
                 else {
                     setError("Your species has not been found in UniProt. Please use another species name.")
+                    setSuccess(false);
                 }
                 console.log(apiResponse)
             } else {
                 setError(handleError(response));
+                setSuccess(false);
             }
         } catch (error) {
             setError(handleError(error));
+            setSuccess(false);
         }
     };
 
@@ -75,17 +83,18 @@ const [error, setError] = useState(null);
     return (
         <form action="submit" onSubmit={handleSubmit}>
             <label className="t2">Species :</label>
-            <div className="t1 input-button">
+            <div className="t1_bold input-button">
                 <input
-                    className={error ? "t1 error" : "t1"}
-                    value={species}
+                    className={error ? "t1_light error" : success ? "t1_light success" : "t1_light"}
+                    value={newSpecies}
                     type="text"
                     placeholder="Enter your species ..."
                     onChange={handleChange}
                 />
-                <button className="t1">Search</button>
+                <button className="t1_bold">Load</button>
             </div>
-            {<p className="t1 error-message">{error}</p>}
+            {<p className="t1_bold error-message">{error}</p>}
+            {<p className="t1_bold success-message"><i>{loadedSpecies[0]}&nbsp;</i>{loadedSpecies[0] ? `(${loadedSpecies[1]}) is loaded` : ""}</p>}
         </form>
       );
 }
