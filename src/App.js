@@ -3,6 +3,7 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom"
 import About from "./pages/About";
 import DatabaseSearch from "./pages/DatabaseSearch";
 import Home from "./pages/Home";
+import Settings from './pages/Settings';
 
 
 const router = createBrowserRouter([
@@ -13,6 +14,10 @@ const router = createBrowserRouter([
   {
     path: '/about',
     element: <About/>
+  },
+  {
+    path: '/settings',
+    element: <Settings />
   },
   {
     path: '/database-search/:id',

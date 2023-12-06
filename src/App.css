@@ -21,6 +21,19 @@
     font-size: 1.2rem;
 }
 
+@media screen and (max-width: 680px) {
+    .t1_bold, .t1_light {
+        font-size: 0.6rem;
+    }
+    .t2 {
+        font-size: 1rem;
+    }
+}
+
+div {
+    display: flex;
+    flex-direction: column;
+}
 
 body {
     background-color: #cddfeb;
@@ -34,7 +47,7 @@ button {
     transition: background-color 0.3s ease;
 }
   
-button:not(:disabled):hover {
+button:not(:disabled):hover, input[type="file"]::file-selector-button:hover{
     background-color: #B0D2EA;
 }
 
@@ -42,6 +55,33 @@ button:disabled {
     cursor: auto;
     background-color: rgba(255, 255, 255, 0.575);
 }
+
+input.success {
+    border-color: green;
+}
+
+input.error {
+    border-color: red;
+}
+  
+input[type="file"]::file-selector-button {
+    border: 2px solid #288cbb;
+    border-radius: 5px;
+    background-color: #cddfeb;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+
+.error-message {
+    color: red;
+}
+
+.success-message {
+    color: green;
+}
+
+
 
 .cardContainer {
     display: flex;
@@ -55,3 +95,9 @@ button:disabled {
     height: auto;
 
 }
+
+.helpIcon {
+    margin-left: 5px;
+    width: 2%;
+}
+  

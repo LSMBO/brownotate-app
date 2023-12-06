@@ -1,22 +1,15 @@
 import Card from "./Card"
 import cardContent from "../assets/text/cards.json";
+import { useNavigate } from "react-router-dom";
 
-export default function cardContainer( {species} ) {
+
+export default function CardContainer( {species} ) {
     // state
     const loadedSpecies = {
         "scientificName" : species[0],
         "taxonId" : species[1]
     }
-
-    // const possibleColorFilters = [0, 80, 120, 160, 200, 260];
-    // 0 : bleu ; 80 : violet ; 120 : rose ; 160 : orange ; 200 : gold ; 260 : vert
-    const possibleColorFilters = [-20, 0, 40, 60];
-
-    const randomColorFilter1 = possibleColorFilters[Math.floor(Math.random() * possibleColorFilters.length)];
-    const remainingFilters1 = possibleColorFilters.filter(filter => filter !== randomColorFilter1);
-    const randomColorFilter2 = remainingFilters1[Math.floor(Math.random() * remainingFilters1.length)];
-    const remainingFilters2 = remainingFilters1.filter(filter => filter !== randomColorFilter2);
-    const randomColorFilter3 = remainingFilters2[Math.floor(Math.random() * remainingFilters2.length)];
+    const navigate = useNavigate();
 
     const card1_button = "Search"
     const card2_button = "Run"
@@ -33,6 +26,7 @@ export default function cardContainer( {species} ) {
 
     const handleClickSetting = () => {
         console.log(`Open settings with ${loadedSpecies.scientificName} !!`)
+        navigate('/settings');
     }
 
     const handleClickClassicRun = () => {
@@ -46,7 +40,7 @@ export default function cardContainer( {species} ) {
                 title="Data available" 
                 content={cardContent.text_card1} 
                 button={card1_button} 
-                colorFilter={randomColorFilter1} 
+                colorFilter={-20} 
                 handleClick={handleClickDBS}
                 isDisabled={!loadedSpecies.scientificName}
             />
@@ -54,7 +48,7 @@ export default function cardContainer( {species} ) {
                 title="Automatic run" 
                 content={cardContent.text_card2} 
                 button={card2_button} 
-                colorFilter={randomColorFilter2} 
+                colorFilter={60} 
                 handleClick={handleClickAuto}
                 isDisabled={!loadedSpecies.scientificName}
             />
@@ -62,7 +56,7 @@ export default function cardContainer( {species} ) {
                 title="Classic run" 
                 content={cardContent.text_card3} 
                 button={card3_button} 
-                colorFilter={randomColorFilter3} 
+                colorFilter={40} 
                 handleClick={[handleClickSetting, handleClickClassicRun]}
                 isDisabled={!loadedSpecies.scientificName}
             />

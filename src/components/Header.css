@@ -8,26 +8,27 @@
     width: 50%;
     display: flex;
     justify-content: space-between;
+    flex-direction: row;
     align-items: center;
     margin: 20px auto;
     border: 5px solid #288cbb;
     border-radius: 20px;
 }
 
-.title {
+.header .title {
     margin: 8px 8px;
 }
 
-.title > h4 {
+.header .title > h4 {
     font-weight: lighter;
     margin: 0px;
 }
-span {
+.header span {
     color: #288cbb;
     font-weight: bold;
 }
 
-.title > h1 {   
+.header .title > h1 {   
     font-family: 'Oswald', sans-serif;
     letter-spacing: 1.5px;
     margin: 0px;
@@ -35,25 +36,28 @@ span {
     color: #288cbb;
 }
 
-img {
+.header img {
     width: 30%;
     margin-right: 10px;
 }
 
 @media screen and (max-width: 1000px) {
     .header {
-        width: 80%;
+        width: 60%;
+    }
+    .header img {
+        width: 40%;
     }
 }
 
-@media screen and (max-width: 600px) {
-    img {
+@media screen and (max-width: 680px) {
+    .header img {
         width: 40%;
     }
-    .title > h1 {   
+    .header .title > h1 {   
         font-size: 1.5rem;
     }
-    .title > h4 {
+    .header .title > h4 {
         font-size: 0.8rem;
     }
 }

@@ -1,0 +1,98 @@
+
+.settingsForm {
+    margin: 0 10%;
+}
+
+.settingsForm fieldset {
+    margin-top: 15px;
+    border: 0.5px solid #288cbb;
+    border-radius: 10px;   
+}
+
+.settingsForm .submitButton {
+    display: flex;
+    margin: 10px auto;
+    width: 30%;
+    justify-content: center;
+}
+
+.settingsForm fieldset .sectionElements .formElement {
+    flex-direction: row;
+    margin-top: 5px;
+    margin-bottom: 5px;
+} 
+
+.settingsForm fieldset .sectionElements .sectionUnable {
+    background-color: red;
+}
+
+.settingsForm fieldset .sectionElements .formElement .radioLabel {
+    flex-direction: row;
+    width: 25%;
+    align-items: center;
+} 
+
+.settingsForm fieldset .sectionElements .formElement .radioLabel .helpSpan{
+    color: #288cbb ;
+    font-style: italic;
+    font-size: smaller;
+    margin-left: 5px;
+} 
+
+
+.settingsForm fieldset .sectionElements .formElement .radioOnly{
+    width: 100%;
+} 
+
+.settingsForm fieldset .sectionElements .formElement .radioLabel input[type="radio"] {
+    width: 25px;
+    height: 18px;
+} 
+
+.settingsForm fieldset .sectionElements .formElement input[type="text"] {
+    border: 2px solid #288cbb;
+    width: 30%;
+    padding: 0.3% 0.5%;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies {
+    width: 100%;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies .labelForm {
+    flex-direction: row;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies .labelForm label {
+    width: 25%;
+    margin-top: 5px;
+    margin-left: 35px;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies .labelForm .labelFormInput {
+    width: 100%;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies ul {
+    /* border: 0.5px solid #696969; 
+    border-radius: 5px;*/
+    margin-left: 20%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    min-height: 20px;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies ul li{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.settingsForm fieldset .sectionElements .formElement .excludedSpecies ul li button{
+    margin-left: 2%;
+    color: red;
+    width: 30px;
+    height: 25px;
+    border: 2px solid red;
+    border-radius: 50px;
+    font-weight: bold;
+}

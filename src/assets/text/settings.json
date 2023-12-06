@@ -1,0 +1,80 @@
+{
+    "start" : {
+        "sectionName" : "Start",
+        "formElements" : [
+            {
+                "name" : "Auto",
+                "type" : "radio_only",
+                "help" : "Searches for a genome and, if unavailable, looks for a sequencing dataset"
+            },
+            {
+                "name" : "Genome",
+                "type" : "radio_only"
+            },
+            {
+                "name" : "Sequencing",
+                "type" : "radio_only"
+            }        
+        ]
+    },
+    "download" : {
+        "sectionName" : "Data",
+        "formElements" : [
+            {
+                "name" : "Auto",
+                "type" : "radio_only"
+            },
+            {
+                "name" : "Accession",
+                "type" : "text"
+            },
+            {
+                "name" : "Sequencing file",
+                "type" : "file"
+            }
+        ]
+    },
+    "assembly" : {
+        "sectionName" : "Assembly",
+        "formElements" : [
+            {
+                "name" : "Skip fastp",
+                "type" : "radio_only"
+            },
+            {
+                "name" : "Skip phix removing",
+                "type" : "radio_only"
+            }
+        ]
+    },
+    "annotation" : {
+        "sectionName" : "Annotation (proteins prediction)",
+        "formElements" : [
+            {
+                "name" : "Remove duplicated sequence (strict)",
+                "type" : "radio_only"
+            },
+            {
+                "name" : "Remove duplicated sequence (soft)",
+                "type" : "radio_only"
+            }
+        ]
+    },
+    "brownaming" : {
+        "sectionName" : "Brownaming",
+        "formElements" : [
+            {
+                "name" : "Skip Brownaming",
+                "type" : "radio_only"
+            },
+            {
+                "name" : "Excluded species",
+                "type" : "excluded_species"
+            },
+            {
+                "name" : "Highest rank",
+                "type" : "select"
+            }
+        ]
+    }
+}

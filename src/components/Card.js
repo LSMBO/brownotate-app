@@ -12,9 +12,8 @@ export default function Card({ title, content, button, colorFilter, handleClick,
         <div className="card" style={{ filter: `hue-rotate(${colorFilter}deg)` }}>
             <div className="card-text">
                 <h2>{title}</h2>
-                <p>{content[0]}</p>
-                <p style={{ fontWeight: "bold" }}>{content[1]}</p>
-                <p>{isDisabled}</p>
+                <p className="t1_light">{content[0]}</p>
+                <p className="t1_light" style={{ fontWeight: "bold" }}>{content[1]}</p>
             </div>
             <div className="button-div">
                 {buttonContents.length === 2 ? ( // Vérifier s'il y a deux parties après la division

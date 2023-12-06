@@ -11,8 +11,8 @@ export default function Home() {
 
     
     //comportement
-    const handleSetSpecies = (newSpecies) => {
-        setSpecies(newSpecies)
+    const handleSetSpecies = (species) => {
+        setSpecies(species)
     }
 
 
