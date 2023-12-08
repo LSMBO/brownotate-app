@@ -1,10 +1,28 @@
 
+.settings .titleBox {
+    color: #cacaca;
+    /* background-color: #206d91; */
+    background: linear-gradient(to bottom, #cddfeb 0%, #206d91 10%, #206d91 90%, #cddfeb 100%);
+    align-items: center;
+}
+.settings .titleBox h2{
+    margin-top: 10px;
+    margin-bottom: 2px;
+    font-size: 1.5rem;
+}
+.settings .titleBox h3{
+    margin-top: 2px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    font-style: italic;
+}
+
 .settingsForm {
     margin: 0 10%;
 }
 
 .settingsForm fieldset {
-    margin-top: 15px;
+    margin: 15px auto;
     border: 0.5px solid #288cbb;
     border-radius: 10px;   
 }
@@ -12,87 +30,118 @@
 .settingsForm .submitButton {
     display: flex;
     margin: 10px auto;
-    width: 30%;
+    width: 100%;
     justify-content: center;
 }
 
-.settingsForm fieldset .sectionElements .formElement {
+.settingsForm fieldset .formElement {
     flex-direction: row;
-    margin-top: 5px;
+    margin-top: 9px;
     margin-bottom: 5px;
+    min-height: 30px;
 } 
 
-.settingsForm fieldset .sectionElements .sectionUnable {
+.settingsForm fieldset .sectionUnable {
     background-color: red;
 }
 
-.settingsForm fieldset .sectionElements .formElement .radioLabel {
+.settingsForm fieldset .formElement .radioLabel {
+    align-content: flex-start;
+    flex-wrap: wrap;
     flex-direction: row;
-    width: 25%;
+    width: 35%;
     align-items: center;
 } 
 
-.settingsForm fieldset .sectionElements .formElement .radioLabel .helpSpan{
+.settingsForm fieldset .formElement textarea {
+    border: 2px solid #288cbb;
+    width: 30%;
+    padding: 0.3% 0.5%;
+    resize: vertical;
+}
+
+.settingsForm fieldset .formElement .radioLabel .tooltipContainer {
+    position: relative;
+    display: inline-block;
+  }
+
+.settingsForm fieldset .formElement .tooltipContainer .helpSpan{
     color: #288cbb ;
-    font-style: italic;
     font-size: smaller;
-    margin-left: 5px;
+    font-weight: normal;
+    position: absolute;
+    z-index: 1;
+    background-color: #fff; /* Ajoutez la couleur de fond que vous souhaitez */
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: none;
+    min-width: 50vmax;
 } 
 
+.settingsForm fieldset .formElement .tooltipContainer:hover .helpSpan {
+    display: block;
+}
 
-.settingsForm fieldset .sectionElements .formElement .radioOnly{
-    width: 100%;
-} 
 
-.settingsForm fieldset .sectionElements .formElement .radioLabel input[type="radio"] {
+.settingsForm fieldset .formElement .radioAndTextInput {
+    flex-direction: row;
+}
+
+.settingsForm fieldset .formElement .radioLabel input[type="radio"] {
     width: 25px;
     height: 18px;
 } 
 
-.settingsForm fieldset .sectionElements .formElement input[type="text"] {
+
+.settingsForm fieldset .formElement select {
     border: 2px solid #288cbb;
     width: 30%;
     padding: 0.3% 0.5%;
 }
 
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies {
-    width: 100%;
+.settingsForm fieldset .formElement .excludedSpecies {
+    width: 48.5%;
+    flex-direction: column;
 }
 
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies .labelForm {
+.settingsForm fieldset .formElement .excludedSpecies .speciesInputBtn{
+    display: flex;
     flex-direction: row;
 }
 
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies .labelForm label {
-    width: 25%;
-    margin-top: 5px;
-    margin-left: 35px;
+.settingsForm fieldset .formElement .excludedSpecies .speciesInputBtn input[type="text"]{
+    width: 60%;
 }
 
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies .labelForm .labelFormInput {
-    width: 100%;
+.settingsForm fieldset .formElement .excludedSpecies .speciesInputBtn button{
+    width: 18%;
+    font-weight: normal;
+    border: 2px solid #288cbb;
 }
 
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies ul {
-    /* border: 0.5px solid #696969; 
-    border-radius: 5px;*/
-    margin-left: 20%;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    min-height: 20px;
-}
-
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies ul li{
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-.settingsForm fieldset .sectionElements .formElement .excludedSpecies ul li button{
-    margin-left: 2%;
-    color: red;
-    width: 30px;
-    height: 25px;
-    border: 2px solid red;
-    border-radius: 50px;
-    font-weight: bold;
-}
+.settingsForm fieldset .formElement .excludedSpecies ul  {
+    padding-left: 5px;
+    border: 1px solid #288cbb;
+    border-radius: 5px;
+  }
+  
+  .settingsForm fieldset .formElement .excludedSpecies ul li {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px;
+  }
+  
+  .settingsForm fieldset .formElement .excludedSpecies ul li button {
+    background-color: #ff6666; /* Couleur du bouton "X" */
+    color: #fff;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  
+  .settingsForm fieldset .formElement .excludedSpecies ul li button:hover {
+    background-color: #ff4d4d; /* Couleur au survol du bouton "X" */
+  }
+  

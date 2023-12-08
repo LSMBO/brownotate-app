@@ -59,6 +59,7 @@ export default function SpeciesInput({ button, handleSetLoadedSpecies, handleSet
                     setError("");
                     handleSetErrorMsg("");
                     setSuccess(true);
+                    setNewSpecies("")
                     handleSetLoadedSpecies(apiResponse)
                 }
                 else {

@@ -5,7 +5,7 @@
             {
                 "name" : "Auto",
                 "type" : "radio_only",
-                "help" : "Searches for a genome and, if unavailable, looks for a sequencing dataset"
+                "help" : "Searches for a genome and, if unavailable, looks for a sequencing dataset."
             },
             {
                 "name" : "Genome",
@@ -29,7 +29,7 @@
                 "type" : "text"
             },
             {
-                "name" : "Sequencing file",
+                "name" : "File(s)",
                 "type" : "file"
             }
         ]

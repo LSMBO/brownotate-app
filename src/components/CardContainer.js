@@ -26,7 +26,7 @@ export default function CardContainer( {species} ) {
 
     const handleClickSetting = () => {
         console.log(`Open settings with ${loadedSpecies.scientificName} !!`)
-        navigate('/settings');
+        navigate('/settings', {state: {loadedSpecies}});
     }
 
     const handleClickClassicRun = () => {
