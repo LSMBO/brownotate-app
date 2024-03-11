@@ -22,7 +22,7 @@ export default function SpeciesForm( {handleSetSpecies} ) {
     return (
         <div className="speciesFormHome">
             <label className="t2">Species :</label>
-            <SpeciesInput button="Load" handleSetLoadedSpecies={handleSetLoadedSpecies} handleSetErrorMsg={handleSetErrorMsg} />
+            <SpeciesInput button="Load" handleSetLoadedSpecies={handleSetLoadedSpecies} handleSetErrorMsg={handleSetErrorMsg} isEnable={true}/>
             {errorMsg && <p className="t1_bold error-message">{errorMsg}</p>}
             {loadedSpecies[0] && <p className="t1_bold success-message"><i>{loadedSpecies[0]}&nbsp;</i>{loadedSpecies[0] ? `(${loadedSpecies[1]}) is loaded` : ""}</p>}
         </div>

@@ -3,7 +3,7 @@ import HelpIcon from "../../assets/help.png";
 
 
 
-export default function SettingsSelect({ label, help, options, defaultOption, handleSetMaxRank }) {
+export default function SettingsSelect({ label, help, options, defaultOption, handleSetMaxRank, isEnable }) {
     const handleChange = (e) => {
         const selectedValue = e.target.value;
         handleSetMaxRank(selectedValue);
@@ -18,7 +18,7 @@ export default function SettingsSelect({ label, help, options, defaultOption, ha
                         <span className="helpSpan">{help}</span>
                 </div>
             </div>
-            <select defaultValue={defaultOption} onChange={handleChange}>
+            <select defaultValue={defaultOption} onChange={handleChange} disabled={!isEnable}>
                 {options.map((option, index) => (
                 <option key={index} value={option}>
                     {option}

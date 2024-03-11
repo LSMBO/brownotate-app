@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function SpeciesInput({ button, handleSetLoadedSpecies, handleSetErrorMsg }) {
+export default function SpeciesInput({ button, handleSetLoadedSpecies, handleSetErrorMsg, isEnable }) {
     const [loadedSpecies, setLoadedSpecies] = useState("")
     const [newSpecies, setNewSpecies] = useState("")
     const [error, setError] = useState("");
@@ -67,7 +67,6 @@ export default function SpeciesInput({ button, handleSetLoadedSpecies, handleSet
                     handleSetErrorMsg("Your species has not been found in UniProt. Please use another species name.");
                     setSuccess(false);
                 }
-                console.log(apiResponse)
             } else {
                 setError(handleError(response));
                 handleSetErrorMsg(handleError(response));
@@ -89,8 +88,9 @@ export default function SpeciesInput({ button, handleSetLoadedSpecies, handleSet
                 type="text"
                 placeholder="Enter your species ..."
                 onChange={handleChange}
+                disabled={!isEnable}
             />
-            <button className="t1_bold" onClick={handleSubmit}>{button}</button>
+            <button className="t1_bold" onClick={handleSubmit} disabled={!isEnable}>{button}</button>
         </div>
     )
 }

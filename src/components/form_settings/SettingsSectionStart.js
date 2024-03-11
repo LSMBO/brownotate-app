@@ -1,53 +1,75 @@
-import { useState } from "react";
 import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
 
-export default function SettingsSectionStart({ enabled, handleSetEnable, updateFormData }) {
-  const [sectionChecked, setSectionChecked] = useState({
-    startSection: {
-      auto: false,
-      genome: false,
-      sequencing: false,
-    }
-  });
+export default function SettingsSectionStart({ enabled, handleSetEnable, updateParameters, parameters }) {
 
   const handleRadioChange = (name, isChecked) => {
-    const sectionCheckedCopy = { ...sectionChecked };
+    const parametersCopy = { ...parameters };
       
-    sectionCheckedCopy.startSection.auto = false;
-    sectionCheckedCopy.startSection.genome = false;
-    sectionCheckedCopy.startSection.sequencing = false;
+    parametersCopy.startSection.auto = false;
+    parametersCopy.startSection.genome = false;
+    parametersCopy.startSection.sequencing = false;
       
     if (isChecked) {
       if (name === "Auto") {
-        sectionCheckedCopy.startSection.auto = true;
+        parametersCopy.startSection.auto = true;
+        parametersCopy.dataSection.auto = true;
+        parametersCopy.dataSection.genomeFile = false;
+        parametersCopy.dataSection.sequencingFiles = false;
+        parametersCopy.dataSection.sequencingFilesList = []
+        parametersCopy.dataSection.sequencingAccessions = false;
+        parametersCopy.dataSection.sequencingAccessionsList = [];
+        parametersCopy.buscoSection.assembly = true;
       } else if (name === "Genome") {
-        sectionCheckedCopy.startSection.genome = true;
+        parametersCopy.startSection.genome = true;
+        parametersCopy.dataSection.sequencingFiles = false;
+        parametersCopy.dataSection.auto = true;
+        parametersCopy.dataSection.sequencingFilesList = []
+        parametersCopy.dataSection.sequencingAccessions = false;
+        parametersCopy.dataSection.sequencingAccessionsList = [];
+        parametersCopy.dataSection.illuminaOnly = false;
+        parametersCopy.dataSection.excludedSRA = false;
+        parametersCopy.dataSection.excludedSRAList = [];
+        parametersCopy.buscoSection.assembly = false;
+
       } else if (name === "Sequencing") {
-        sectionCheckedCopy.startSection.sequencing = true;
+        parametersCopy.startSection.sequencing = true;
+        parametersCopy.dataSection.genomeFile = false;
+        parametersCopy.dataSection.auto = true;
+        parametersCopy.buscoSection.assembly = true;
       }
     }
-    if (!sectionCheckedCopy.startSection.auto && !sectionCheckedCopy.startSection.genome && !sectionCheckedCopy.startSection.sequencing) {
+    else {
+      if (name === "Genome") {
+        parametersCopy.dataSection.genomeFile = false;
+        parametersCopy.dataSection.genomeFileList = []
+      } else if (name === "Sequencing") {
+        parametersCopy.dataSection.sequencingFiles = false;
+        parametersCopy.dataSection.sequencingFilesList = []
+        parametersCopy.dataSection.sequencingAccessions = false;
+        parametersCopy.dataSection.sequencingAccessionsList = [];
+      }
+    }
+    if (!parametersCopy.startSection.auto && !parametersCopy.startSection.genome && !parametersCopy.startSection.sequencing) {
       handleSetEnable(name, true);
     }
     else {
       handleSetEnable(name, false);
     }
     
-    setSectionChecked(sectionCheckedCopy);
-    updateFormData(sectionCheckedCopy);
+    updateParameters(parametersCopy);
   };
 
     return (
         <fieldset disabled={!enabled}>
             <legend className="t1_bold">Start</legend>
             <div className="formElement">
-                <SettingsFormElementInputRadio label="Auto" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={sectionChecked.startSection.auto} onChange={handleRadioChange}/>
+                <SettingsFormElementInputRadio label="Auto" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.startSection.auto} onChange={handleRadioChange}/>
             </div>
             <div className="formElement">
-                <SettingsFormElementInputRadio label="Genome" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={sectionChecked.startSection.genome} onChange={handleRadioChange}/>
+                <SettingsFormElementInputRadio label="Genome" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.startSection.genome} onChange={handleRadioChange}/>
             </div>
             <div className="formElement">
-                <SettingsFormElementInputRadio label="Sequencing" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={sectionChecked.startSection.sequencing} onChange={handleRadioChange}/>
+                <SettingsFormElementInputRadio label="Sequencing" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.startSection.sequencing} onChange={handleRadioChange}/>
             </div>
         </fieldset>
     )

@@ -1,67 +1,32 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom"
 import SettingsSectionStart from "../components/form_settings/SettingsSectionStart";
 import Header from "../components/Header"
 import "./Settings.css"
-import { useEffect, useState } from "react";
 import SettingsSectionData from "../components/form_settings/SettingsSectionData";
 import SettingsSectionAssembly from "../components/form_settings/SettingsSectionAssembly";
 import SettingsSectionAnnotation from "../components/form_settings/SettingsSectionAnnotation";
 import SettingsSectionBrownaming from "../components/form_settings/SettingsSectionBrownaming";
+import SettingsSectionBusco from "../components/form_settings/SettingsSectionBusco"
+import axios from 'axios';
+import { useUploadProgress } from '../UploadProgressContext';
+
 
 export default function Settings() {
     // props
-    const { state } = useLocation();
     const navigate = useNavigate();
-    const species = state.loadedSpecies;
-
-    const [isSubmitable, setIsSubmitable] = useState(false)
-    const [downloadEnabled, setDownloadEnabled] = useState(false);
-    const [assemblyEnabled, setAssemblyEnabled] = useState(false);
-    const [annotationEnabled, setAnnotationEnabled] = useState(false);
-    const [brownamingEnabled, setBrownamingEnabled] = useState(false);
-
-    const [formData, setFormData] = useState({
-        id: new Date().getTime(),
-        ready: false,
-        startSection: {
-            auto: false,
-            genome: false,
-            sequencing: false,
-        },
-        dataSection: {
-            auto: false,
-            file: false,
-            accession: false,
-            fileList: [],
-            accessionList: []
-        },
-        assemblySection: {
-            skipFastp: false,
-            skipPhix: false,
-        },
-        annotationSection: {
-            removeStrict: false,
-            removeSoft: false,
-        },
-        brownamingSection: {
-            skip: false,
-            excludedSpeciesList: [],
-            highestRank: null,
-        },
-    });
-
-    
-
-    // comportements
-
-    useEffect(() => {
-        handleSubmitable();
-      }, [formData]);
-
+    const location = useLocation();
+    const { setUploadProgress } = useUploadProgress();
+    const [newParameters, setNewParameters] = useState(location.state.parameters);
+    const [isSubmitable, setIsSubmitable] = useState(newParameters.ready)
+    const [downloadEnabled, setDownloadEnabled] = useState(newParameters.ready);
+    const [assemblyEnabled, setAssemblyEnabled] = useState(newParameters.ready);
+    const [annotationEnabled, setAnnotationEnabled] = useState(newParameters.ready);
+    const [brownamingEnabled, setBrownamingEnabled] = useState(newParameters.ready);
 
     const handleSetStartEnable = (name, isNothing) => {
         if (name === "Auto") {
-            setDownloadEnabled(false)     
+            setDownloadEnabled(true)     
             setAssemblyEnabled(true)
             setAnnotationEnabled(true)
             setBrownamingEnabled(true)  
@@ -87,9 +52,9 @@ export default function Settings() {
         }
     }
 
-    const updateFormData = (newData) => {
-        setFormData({
-            ...formData,
+    const updateParameters = (newData) => {
+        setNewParameters({
+            ...newParameters,
             ...newData,
         });
         handleSubmitable();
@@ -97,47 +62,89 @@ export default function Settings() {
 
     const handleSubmitable = () => {
         // Check startSection
-        const isStartSectionValid = Object.values(formData.startSection).some(value => value === true);
+        const isStartSectionValid = Object.values(newParameters.startSection).some(value => value === true);
         // Check dataSection
         const isDataSectionValid =
-          (formData.startSection.auto === true) ||
-          (formData.startSection.auto === false && (formData.dataSection.auto || formData.dataSection.file || formData.dataSection.accession));
+          (newParameters.startSection.auto === true) ||
+          (newParameters.dataSection.auto === true) ||
+          (newParameters.startSection.genome === true && newParameters.dataSection.genomeFile) ||
+          (newParameters.startSection.sequencing === true && (newParameters.dataSection.sequencingFiles || newParameters.dataSection.sequencingAccessions));
+
         // Check fileList and accessionList
-        const isFileListValid = formData.dataSection.file ? formData.dataSection.fileList.length > 0 : true;
-        const isAccessionListValid = formData.dataSection.accession ? formData.dataSection.accessionList.length > 0 : true;
+        const isGenomeFileListValid = newParameters.dataSection.genomeFile ? newParameters.dataSection.genomeFileList.length > 0 : true;
+        const isSequencingFileListValid = newParameters.dataSection.sequencingFiles ? newParameters.dataSection.sequencingFilesList.length > 0 : true;
+        const isSequencingAccessionsValid = newParameters.dataSection.sequencingAccessions ? newParameters.dataSection.sequencingAccessionsList.length > 0 : true;
 
-        const isReady = isStartSectionValid && isDataSectionValid && isFileListValid && isAccessionListValid;
+        const isReady = isStartSectionValid && isDataSectionValid && isGenomeFileListValid && isSequencingFileListValid && isSequencingAccessionsValid;
 
-        if (isReady !== formData.ready) {
-            setFormData({
-                ...formData,
-                ready: isReady
+        if (isReady !== newParameters.ready) {
+            setNewParameters({
+                ...newParameters,
+                ready: isReady,
+                id: new Date().getTime(),
             });
         }
         setIsSubmitable(isReady);
       };
       
+    const handleSubmit = async (e) => {
+        navigate('/', { state: { newParameters } });
+        
+        e.preventDefault();        
+        const totalFiles = newParameters.dataSection.genomeFileList.length 
+                         + newParameters.dataSection.sequencingFilesList.length 
+                         + newParameters.annotationSection.evidenceFileList.length;
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        navigate('/', {state: {formData}});
-        console.log("SUBMIT")
-    }
+        setUploadProgress({ totalFiles, uploadedFiles: 0 });
+
+        for (const file of newParameters.dataSection.genomeFileList) {
+            await uploadFile(file);
+        }
+        for (const file of newParameters.dataSection.sequencingFilesList) {
+            await uploadFile(file);
+        }
+        for (const file of newParameters.annotationSection.evidenceFileList) {
+            await uploadFile(file);
+        }
+    };
+    
+    const uploadFile = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+    
+        try {
+            const response = await axios.post('http://localhost:5000/upload_file', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setUploadProgress(prevState => ({
+                ...prevState,
+                uploadedFiles: prevState.uploadedFiles + 1
+            }));
+
+        } catch (error) {
+            console.error('Erreur lors du téléchargement du fichier : ', error);
+        }
+    };
+
 
     // affichage
     return (
         <div className="settings t1_bold">
             <Header />
+            <p>{JSON.stringify(newParameters, null, 2)}</p>
             <div className="titleBox">
                 <h2>Settings</h2>
-                <h3>Species : {species.scientificName}</h3>
+                <h3>Species : {newParameters.species.scientificName}</h3>
             </div>
             <form action="submit" className="settingsForm t1_light" onSubmit={handleSubmit}>
-                <SettingsSectionStart enabled={true} handleSetEnable={handleSetStartEnable} updateFormData={updateFormData}/>
-                <SettingsSectionData enabled={downloadEnabled} updateFormData={updateFormData}/>
-                <SettingsSectionAssembly enabled={assemblyEnabled} updateFormData={updateFormData}/>
-                <SettingsSectionAnnotation enabled={annotationEnabled} updateFormData={updateFormData}/>
-                <SettingsSectionBrownaming enabled={brownamingEnabled} updateFormData={updateFormData}/>
+                <SettingsSectionStart enabled={true} handleSetEnable={handleSetStartEnable} updateParameters={updateParameters} parameters={newParameters}/>
+                <SettingsSectionData enabled={downloadEnabled} updateParameters={updateParameters} parameters={newParameters}/>
+                <SettingsSectionAssembly enabled={assemblyEnabled} updateParameters={updateParameters} parameters={newParameters}/>
+                <SettingsSectionAnnotation enabled={annotationEnabled} updateParameters={updateParameters} parameters={newParameters}/>
+                <SettingsSectionBrownaming enabled={brownamingEnabled} updateParameters={updateParameters} parameters={newParameters}/>
+                <SettingsSectionBusco enabled={true} updateParameters={updateParameters} parameters={newParameters}/>
                 <button disabled={!isSubmitable} className="submitButton t2">Save</button>
             </form>
         </div>

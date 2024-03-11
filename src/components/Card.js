@@ -1,6 +1,6 @@
 import "./Card.css"
 
-export default function Card({ title, content, button, colorFilter, handleClick, isDisabled }) {
+export default function Card({ title, content, button, colorFilter, handleClick, isDisabled1, isDisabled2 }) {
     //state
     const buttonContents = button.split(";");
 
@@ -18,11 +18,11 @@ export default function Card({ title, content, button, colorFilter, handleClick,
             <div className="button-div">
                 {buttonContents.length === 2 ? ( // Vérifier s'il y a deux parties après la division
                     <>
-                        <button className="t1_bold" onClick={handleClick[0]} disabled={isDisabled}>{buttonContents[0]}</button>
-                        <button className="t1_bold" onClick={handleClick[1]} disabled={isDisabled}>{buttonContents[1]}</button>
+                        <button className="t1_bold" onClick={handleClick[0]} disabled={isDisabled1}>{buttonContents[0]}</button>
+                        <button className="t1_bold" onClick={handleClick[1]} disabled={isDisabled2}>{buttonContents[1]}</button>
                     </>
                 ) : (
-                    <button className="t1_bold" onClick={handleClick} disabled={isDisabled}>{button}</button>
+                    <button className="t1_bold" onClick={handleClick} disabled={isDisabled1}>{button}</button>
                 )}
             </div>
         </div>

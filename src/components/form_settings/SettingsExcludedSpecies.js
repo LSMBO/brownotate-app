@@ -3,7 +3,7 @@ import SpeciesInput from "../SpeciesInput";
 import HelpIcon from "../../assets/help.png";
 
 
-export default function SettingsExcludedSpecies({ label, help, excludedSpeciesList, handleSetSpecies, removeSpecies }) {
+export default function SettingsExcludedSpecies({ label, help, excludedSpeciesList, handleSetSpecies, removeSpecies, isEnable }) {
     const [errorMsg, setErrorMsg] = useState("");
 
     const handleSetErrorMsg = (message) => {
@@ -12,7 +12,7 @@ export default function SettingsExcludedSpecies({ label, help, excludedSpeciesLi
 
 
     return (
-        <div className="formElement">
+        <div className="formElement" disabled={!isEnable}>
           <div className="radioLabel">
             <label>{label}</label>
             <div className="tooltipContainer">
@@ -26,6 +26,7 @@ export default function SettingsExcludedSpecies({ label, help, excludedSpeciesLi
                 button="Add"
                 handleSetLoadedSpecies={handleSetSpecies}
                 handleSetErrorMsg={handleSetErrorMsg}
+                isEnable={isEnable}
               />
               {errorMsg && <p className="error-message">{errorMsg}</p>}
             </div>

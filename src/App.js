@@ -1,5 +1,6 @@
 import './App.css';
 import {createBrowserRouter, RouterProvider} from "react-router-dom"
+import { UploadProgressProvider } from './UploadProgressContext';
 import About from "./pages/About";
 import DatabaseSearch from "./pages/DatabaseSearch";
 import Home from "./pages/Home";
@@ -26,11 +27,9 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  //state
-
-  //comportements
-
-
-  //affichage (render)
-  return <RouterProvider router={router}/>
+  return (
+    <UploadProgressProvider>
+      <RouterProvider router={router}/>
+    </UploadProgressProvider>
+  )
 }

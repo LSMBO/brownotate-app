@@ -1,17 +1,31 @@
-import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
+import { useState, useEffect } from 'react';
 
-export default function SettingsFormElementInputText({ label, help, checked, onChange, onText }) {
+
+export default function SettingsFormElementInputText({ label, checked, onChange, onText, text }) {
+    const [newText, setNewText] = useState(text);
+
+    useEffect(() => {
+        if (text === "") {
+            setNewText("");
+        }
+    }, [text]);
+    
+    const handleChange = (value) => {
+        setNewText(value);
+      };
 
 
     return (
-        <div className="formElement">
-            <SettingsFormElementInputRadio label={label} help={help} checked={checked} onChange={onChange}/>
-            <textarea
-                disabled={!checked}
-                name={label.toLowerCase()}
-                onChange={(e) => onText(e.target.value)}
-                rows="3"
-            />
-        </div>
+        <textarea
+            disabled={!checked}
+            name={label.toLowerCase()}
+            onChange={(e) => {
+                onText(e.target.value);
+                onChange(label, true);
+                handleChange(e.target.value)
+            }}
+            rows="3"
+            value={newText}
+        />
     )
 }

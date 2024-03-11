@@ -1,51 +1,99 @@
-import { useState, useEffect } from "react";
 import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
+import SettingsFormElementInputFile from "./SettingsFormElementInputFile";
+import HelpIcon from "../../assets/help.png";
 
-export default function SettingsSectionAnnotation({ enabled, updateFormData }) {
-    const [sectionChecked, setSectionChecked] = useState({
-        annotationSection: {
-          removeStrict: false,
-          removeSoft: false,
-        }
-      });
 
+export default function SettingsSectionAnnotation({ enabled, updateParameters, parameters }) {
       const handleRadioChange = (name, isChecked) => {
-        const sectionCheckedCopy = { ...sectionChecked };
-
-        sectionCheckedCopy.annotationSection.removeStrict = false;
-        sectionCheckedCopy.annotationSection.removeSoft = false;
-                    
+        const parametersCopy = { ...parameters };
+               
         if (isChecked) {
-          if (name === "Remove duplicated sequence (strict)") {
-            sectionCheckedCopy.annotationSection.removeStrict = true;
-          } else if (name === "Remove duplicated sequence (soft)") {
-            sectionCheckedCopy.annotationSection.removeSoft = true;
-          }
+          if (name === "100% Identity - Same length (default)") {
+            parametersCopy.annotationSection.removeSoft = false;
+            parametersCopy.annotationSection.removeStrict = true;
+          } else if (name === "100% Identity - lower length") {
+            parametersCopy.annotationSection.removeStrict = false;
+            parametersCopy.annotationSection.removeSoft = true;
+          } else if (name === "Auto (get most relevant evidences)") {
+            parametersCopy.annotationSection.evidenceFile = false;
+            parametersCopy.annotationSection.evidenceAuto = true;
+            parametersCopy.annotationSection.evidenceFileList = [];
+          } else if (name === "File") {
+            parametersCopy.annotationSection.evidenceAuto = false;
+            parametersCopy.annotationSection.evidenceFile = true;
+          } 
         }
-        setSectionChecked(sectionCheckedCopy);
-        updateFormData(sectionCheckedCopy);
+        updateParameters(parametersCopy);
       };
 
-    useEffect(() => {
-        if (!enabled) {
-            setSectionChecked({
-              annotationSection: {
-                removeStrict: false,
-                removeSoft: false,
-              }
-            });
+      const handleFileChange = (event) => {
+        const files = event.target.files;
+    
+        if (files) {
+            const parametersCopy = { ...parameters };
+            if (files.length <= 1) {
+                parametersCopy.annotationSection.evidenceFileList = Array.from(files);
+            } else {
+                console.error("You can only select one file.");
+                parametersCopy.annotationSection.evidenceFileList = [];
+            }
+            updateParameters(parametersCopy);
         }
-      }, [enabled]);
+    };
 
     return (
         <fieldset disabled={!enabled}>
             <legend className="t1_bold">Annotation (proteins prediction)</legend>
-            <div className="formElement">
-                <SettingsFormElementInputRadio label="Remove duplicated sequence (strict)" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={sectionChecked.annotationSection.removeStrict} onChange={handleRadioChange}/>
+            <div className="formSection">
+              <div className="sectionTitle">
+                <label>Protein evidence</label>
+                <div className="tooltipContainer">
+                  <img src={HelpIcon} alt="help" className="helpIcon" />
+                  <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                </div>
+              </div>
+              <div className="formElement">
+                <SettingsFormElementInputRadio 
+                      label="Auto (get most relevant evidences)" 
+                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset."  
+                      checked={parameters.annotationSection.evidenceAuto} 
+                      onChange={handleRadioChange}
+                />
+              </div>
+              <div className="formElement">
+                <SettingsFormElementInputRadio 
+                      label="File" 
+                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset."  
+                      checked={parameters.annotationSection.evidenceFile} 
+                      onChange={handleRadioChange}
+                />
+                <SettingsFormElementInputFile 
+                      label="File"
+                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                      checked={true} 
+                      onChange={handleRadioChange} 
+                      handleFileChange={handleFileChange}
+                />
+              </div>
             </div>
-            <div className="formElement">
-                <SettingsFormElementInputRadio label="Remove duplicated sequence (soft)" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={sectionChecked.annotationSection.removeSoft} onChange={handleRadioChange}/>
+            
+            <div className="formSection">
+            <div className="sectionTitle">
+                <label>Remove duplicated sequence</label>
+                <div className="tooltipContainer">
+                  <img src={HelpIcon} alt="help" className="helpIcon" />
+                  <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                </div>
+              </div>
+              <div className="formElement">
+                  <SettingsFormElementInputRadio label="100% Identity - Same length (default)" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeStrict} onChange={handleRadioChange}/>
+              </div>
+              <div className="formElement">
+                  <SettingsFormElementInputRadio label="100% Identity - lower length" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeSoft} onChange={handleRadioChange}/>
+              </div>
             </div>
+
+           
         </fieldset>
     )
 }
