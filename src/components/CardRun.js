@@ -1,10 +1,10 @@
-import "./Run.css"
-import SettingsCard from "../components/SettingsCard"
+import "./CardRun.css"
+import SettingsCard from "./SettingsCard"
 import { useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons';
 
-const Run = ({ id, data, status, parameters }) => {
+const CardRun = ({ id, data, status, parameters }) => {
     const [cardExpanded, setCardExpanded] = useState(false);
     const [settingsExpanded, setSettingsExpanded] = useState(false);
   
@@ -101,4 +101,4 @@ const Run = ({ id, data, status, parameters }) => {
       );
     };
     
-    export default Run;
+    export default CardRun;

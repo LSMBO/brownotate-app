@@ -152,7 +152,7 @@ export default function CardContainer( {parameters, setParameters, setRuns} ) {
 
     //affichage
     return (
-        <div className="cardContainer" >
+        <div className="cardContainer">
             <Card 
                 title="Data available" 
                 content={cardContent.text_card1} 

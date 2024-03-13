@@ -87,25 +87,65 @@ export default function Settings() {
         setIsSubmitable(isReady);
       };
       
-    const handleSubmit = async (e) => {
+      const handleSubmit = async (e) => {
         navigate('/', { state: { newParameters } });
         
-        e.preventDefault();        
+        e.preventDefault();
+        
         const totalFiles = newParameters.dataSection.genomeFileList.length 
                          + newParameters.dataSection.sequencingFilesList.length 
                          + newParameters.annotationSection.evidenceFileList.length;
-
+    
         setUploadProgress({ totalFiles, uploadedFiles: 0 });
-
+    
+        // Array to store uploaded file paths
+        const uploadedGenomeFiles = [];
+        const uploadedSequencingFiles = [];
+        const uploadedEvidenceFiles = [];
+    
+        // Upload and update genome files
         for (const file of newParameters.dataSection.genomeFileList) {
-            await uploadFile(file);
+            const filePath = await uploadFile(file);
+            if (filePath) {
+                uploadedGenomeFiles.push(filePath);
+            }
         }
+        setNewParameters(prevParams => ({
+            ...prevParams,
+            dataSection: {
+                ...prevParams.dataSection,
+                genomeFileList: uploadedGenomeFiles
+            }
+        }));
+    
         for (const file of newParameters.dataSection.sequencingFilesList) {
-            await uploadFile(file);
+            const filePath = await uploadFile(file);
+            if (filePath) {
+                uploadedSequencingFiles.push(filePath);
+            }
         }
+        setNewParameters(prevParams => ({
+            ...prevParams,
+            dataSection: {
+                ...prevParams.dataSection,
+                sequencingFilesList: uploadedSequencingFiles
+            }
+        }));
+    
+        // Upload and update evidence files
         for (const file of newParameters.annotationSection.evidenceFileList) {
-            await uploadFile(file);
+            const filePath = await uploadFile(file);
+            if (filePath) {
+                uploadedEvidenceFiles.push(filePath);
+            }
         }
+        setNewParameters(prevParams => ({
+            ...prevParams,
+            annotationSection: {
+                ...prevParams.annotationSection,
+                evidenceFileList: uploadedEvidenceFiles
+            }
+        }));
     };
     
     const uploadFile = async (file) => {
@@ -118,13 +158,15 @@ export default function Settings() {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+            const filePath = response.data;
             setUploadProgress(prevState => ({
                 ...prevState,
                 uploadedFiles: prevState.uploadedFiles + 1
             }));
-
+            return filePath;
         } catch (error) {
             console.error('Erreur lors du téléchargement du fichier : ', error);
+            return null;
         }
     };
 
