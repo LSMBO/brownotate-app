@@ -15,14 +15,12 @@ import { useUploadProgress } from '../UploadProgressContext';
 export default function Settings() {
     // props
     const navigate = useNavigate();
-    const location = useLocation();
-    const { setUploadProgress } = useUploadProgress();
-    const [newParameters, setNewParameters] = useState(location.state.parameters);
-    const [isSubmitable, setIsSubmitable] = useState(newParameters.ready)
-    const [downloadEnabled, setDownloadEnabled] = useState(newParameters.ready);
-    const [assemblyEnabled, setAssemblyEnabled] = useState(newParameters.ready);
-    const [annotationEnabled, setAnnotationEnabled] = useState(newParameters.ready);
-    const [brownamingEnabled, setBrownamingEnabled] = useState(newParameters.ready);
+    const { parameters, setParameters, setUploadProgress } = useUploadProgress();
+    const [isSubmitable, setIsSubmitable] = useState(parameters.ready)
+    const [downloadEnabled, setDownloadEnabled] = useState(parameters.ready);
+    const [assemblyEnabled, setAssemblyEnabled] = useState(parameters.ready);
+    const [annotationEnabled, setAnnotationEnabled] = useState(parameters.ready);
+    const [brownamingEnabled, setBrownamingEnabled] = useState(parameters.ready);
 
     const handleSetStartEnable = (name, isNothing) => {
         if (name === "Auto") {
@@ -53,8 +51,8 @@ export default function Settings() {
     }
 
     const updateParameters = (newData) => {
-        setNewParameters({
-            ...newParameters,
+        setParameters({
+            ...parameters,
             ...newData,
         });
         handleSubmitable();
@@ -62,24 +60,24 @@ export default function Settings() {
 
     const handleSubmitable = () => {
         // Check startSection
-        const isStartSectionValid = Object.values(newParameters.startSection).some(value => value === true);
+        const isStartSectionValid = Object.values(parameters.startSection).some(value => value === true);
         // Check dataSection
         const isDataSectionValid =
-          (newParameters.startSection.auto === true) ||
-          (newParameters.dataSection.auto === true) ||
-          (newParameters.startSection.genome === true && newParameters.dataSection.genomeFile) ||
-          (newParameters.startSection.sequencing === true && (newParameters.dataSection.sequencingFiles || newParameters.dataSection.sequencingAccessions));
+          (parameters.startSection.auto === true) ||
+          (parameters.dataSection.auto === true) ||
+          (parameters.startSection.genome === true && parameters.dataSection.genomeFile) ||
+          (parameters.startSection.sequencing === true && (parameters.dataSection.sequencingFiles || parameters.dataSection.sequencingAccessions));
 
         // Check fileList and accessionList
-        const isGenomeFileListValid = newParameters.dataSection.genomeFile ? newParameters.dataSection.genomeFileList.length > 0 : true;
-        const isSequencingFileListValid = newParameters.dataSection.sequencingFiles ? newParameters.dataSection.sequencingFilesList.length > 0 : true;
-        const isSequencingAccessionsValid = newParameters.dataSection.sequencingAccessions ? newParameters.dataSection.sequencingAccessionsList.length > 0 : true;
+        const isGenomeFileListValid = parameters.dataSection.genomeFile ? parameters.dataSection.genomeFileList.length > 0 : true;
+        const isSequencingFileListValid = parameters.dataSection.sequencingFiles ? parameters.dataSection.sequencingFilesList.length > 0 : true;
+        const isSequencingAccessionsValid = parameters.dataSection.sequencingAccessions ? parameters.dataSection.sequencingAccessionsList.length > 0 : true;
 
         const isReady = isStartSectionValid && isDataSectionValid && isGenomeFileListValid && isSequencingFileListValid && isSequencingAccessionsValid;
 
-        if (isReady !== newParameters.ready) {
-            setNewParameters({
-                ...newParameters,
+        if (isReady !== parameters.ready) {
+            setParameters({
+                ...parameters,
                 ready: isReady,
                 id: new Date().getTime(),
             });
@@ -88,13 +86,13 @@ export default function Settings() {
       };
       
       const handleSubmit = async (e) => {
-        navigate('/', { state: { newParameters } });
+        navigate('/', { state: { parameters } });
         
         e.preventDefault();
         
-        const totalFiles = newParameters.dataSection.genomeFileList.length 
-                         + newParameters.dataSection.sequencingFilesList.length 
-                         + newParameters.annotationSection.evidenceFileList.length;
+        const totalFiles = parameters.dataSection.genomeFileList.length 
+                         + parameters.dataSection.sequencingFilesList.length 
+                         + parameters.annotationSection.evidenceFileList.length;
     
         setUploadProgress({ totalFiles, uploadedFiles: 0 });
     
@@ -104,13 +102,13 @@ export default function Settings() {
         const uploadedEvidenceFiles = [];
     
         // Upload and update genome files
-        for (const file of newParameters.dataSection.genomeFileList) {
+        for (const file of parameters.dataSection.genomeFileList) {
             const filePath = await uploadFile(file);
             if (filePath) {
                 uploadedGenomeFiles.push(filePath);
             }
         }
-        setNewParameters(prevParams => ({
+        setParameters(prevParams => ({
             ...prevParams,
             dataSection: {
                 ...prevParams.dataSection,
@@ -118,13 +116,13 @@ export default function Settings() {
             }
         }));
     
-        for (const file of newParameters.dataSection.sequencingFilesList) {
+        for (const file of parameters.dataSection.sequencingFilesList) {
             const filePath = await uploadFile(file);
             if (filePath) {
                 uploadedSequencingFiles.push(filePath);
             }
         }
-        setNewParameters(prevParams => ({
+        setParameters(prevParams => ({
             ...prevParams,
             dataSection: {
                 ...prevParams.dataSection,
@@ -133,13 +131,13 @@ export default function Settings() {
         }));
     
         // Upload and update evidence files
-        for (const file of newParameters.annotationSection.evidenceFileList) {
+        for (const file of parameters.annotationSection.evidenceFileList) {
             const filePath = await uploadFile(file);
             if (filePath) {
                 uploadedEvidenceFiles.push(filePath);
             }
         }
-        setNewParameters(prevParams => ({
+        setParameters(prevParams => ({
             ...prevParams,
             annotationSection: {
                 ...prevParams.annotationSection,
@@ -175,18 +173,18 @@ export default function Settings() {
     return (
         <div className="settings t1_bold">
             <Header />
-            <p>{JSON.stringify(newParameters, null, 2)}</p>
+            <p>{JSON.stringify(parameters, null, 2)}</p>
             <div className="titleBox">
                 <h2>Settings</h2>
-                <h3>Species : {newParameters.species.scientificName}</h3>
+                <h3>Species : {parameters.species.scientificName}</h3>
             </div>
             <form action="submit" className="settingsForm t1_light" onSubmit={handleSubmit}>
-                <SettingsSectionStart enabled={true} handleSetEnable={handleSetStartEnable} updateParameters={updateParameters} parameters={newParameters}/>
-                <SettingsSectionData enabled={downloadEnabled} updateParameters={updateParameters} parameters={newParameters}/>
-                <SettingsSectionAssembly enabled={assemblyEnabled} updateParameters={updateParameters} parameters={newParameters}/>
-                <SettingsSectionAnnotation enabled={annotationEnabled} updateParameters={updateParameters} parameters={newParameters}/>
-                <SettingsSectionBrownaming enabled={brownamingEnabled} updateParameters={updateParameters} parameters={newParameters}/>
-                <SettingsSectionBusco enabled={true} updateParameters={updateParameters} parameters={newParameters}/>
+                <SettingsSectionStart enabled={true} handleSetEnable={handleSetStartEnable} updateParameters={updateParameters} parameters={parameters}/>
+                <SettingsSectionData enabled={downloadEnabled} updateParameters={updateParameters} parameters={parameters}/>
+                <SettingsSectionAssembly enabled={assemblyEnabled} updateParameters={updateParameters} parameters={parameters}/>
+                <SettingsSectionAnnotation enabled={annotationEnabled} updateParameters={updateParameters} parameters={parameters}/>
+                <SettingsSectionBrownaming enabled={brownamingEnabled} updateParameters={updateParameters} parameters={parameters}/>
+                <SettingsSectionBusco enabled={true} updateParameters={updateParameters} parameters={parameters}/>
                 <button disabled={!isSubmitable} className="submitButton t2">Save</button>
             </form>
         </div>

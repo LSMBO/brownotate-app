@@ -16,54 +16,7 @@ export default function Home() {
     //state
     const location = useLocation();
     const navigate = useNavigate();
-    const { uploadProgress } = useUploadProgress();
-    const [parameters, setParameters] = useState(
-        {
-            id: null,
-            species: {
-                scientificName: "Cannabis sativa",
-                taxonID: null
-            },
-            ready: false,
-            startSection: {
-                auto: true,
-                genome: false,
-                sequencing: false,
-            },
-            dataSection: {
-                auto: true,
-                illuminaOnly : false,
-                excludedSRA : false,
-                excludedSRAList : [],
-                genomeFile: false,
-                genomeFileList: [],
-                sequencingFiles : false,
-                sequencingFilesList : [],
-                sequencingAccessions : false,
-                sequencingAccessionsList : []
-            },
-            assemblySection: {
-                skipFastp: false,
-                skipPhix: false,
-            },
-            annotationSection: {
-                evidenceAuto: true,
-                evidenceFile: false,
-                evidenceFileList: [],
-                removeStrict: true,
-                removeSoft: false,
-            },
-            brownamingSection: {
-                skip: false,
-                excludedSpeciesList: [],
-                highestRank: "Suborder",
-            },
-            buscoSection: {
-                assembly: true,
-                annotation: true
-            }
-        }
-    );
+    const { parameters, setParameters, uploadProgress } = useUploadProgress();
     const [runs, setRuns] = useState([]);
 
     useEffect(() => {
@@ -71,17 +24,8 @@ export default function Home() {
             console.log('Upload completed');
         }
     }, [uploadProgress]);
-
-    useEffect(() => {
-        // Cette fonction sera appelée chaque fois que les paramètres changent
-        if (location.state && location.state.newParameters) {
-          const newParams = location.state.newParameters;
-          setParameters(newParams);
-        }
-      }, [location.state]);
-    
+   
     //comportement
-
     const handleSetSpecies = (speciesData) => {
         setParameters((prevParameters) => ({
           ...prevParameters,
