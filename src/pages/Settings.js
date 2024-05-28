@@ -172,7 +172,6 @@ export default function Settings() {
     // affichage
     return (
         <div className="settings t1_bold">
-            <Header />
             <p>{JSON.stringify(parameters, null, 2)}</p>
             <div className="titleBox">
                 <h2>Settings</h2>
