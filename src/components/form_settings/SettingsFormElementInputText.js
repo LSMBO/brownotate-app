@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 
-export default function SettingsFormElementInputText({ label, checked, onChange, onText, text }) {
+export default function SettingsFormElementInputText({ label, disabled, onChange, text }) {
     const [newText, setNewText] = useState(text);
 
     useEffect(() => {
@@ -17,15 +17,14 @@ export default function SettingsFormElementInputText({ label, checked, onChange,
 
     return (
         <textarea
-            disabled={!checked}
+            disabled={disabled}
             name={label.toLowerCase()}
             onChange={(e) => {
-                onText(e.target.value);
-                onChange(label, true);
+                onChange(e.target.value);
                 handleChange(e.target.value)
             }}
             rows="3"
-            value={newText}
+            value={Array.isArray(newText) ? newText.join('\n') : newText}
         />
     )
 }

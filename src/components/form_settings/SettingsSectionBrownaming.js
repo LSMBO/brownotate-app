@@ -2,7 +2,7 @@ import SettingsExcludedSpecies from "./SettingsExcludedSpecies";
 import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
 import SettingsSelect from "./SettingsSelect";
 
-export default function SettingsSectionBrownaming({ enabled, updateParameters, parameters }) {
+export default function SettingsSectionBrownaming({ disabled, updateParameters, parameters }) {
     const rankOptions = ["Species", "Species subgroup", "Species group", "Subgenus", "Genus", "Subtribe", "Tribe", "Subfamily", "Family", "Superfamily", "Parvorder", "Infraorder", "Suborder", "Order", "Superorder", "Subcohort", "Cohort", "Infraclass", "Subclass", "Class", "Superclass", "Subphylum", "Phylum", "Superphylum", "Subkingdom", "Kingdom", "Superkingdom"]
 
     const handleRadioChange = (name, isChecked) => {
@@ -42,13 +42,25 @@ export default function SettingsSectionBrownaming({ enabled, updateParameters, p
   };
 
     return (
-        <fieldset disabled={!enabled}>
-            <legend className="t1_bold">Brownaming (proteins naming)</legend>
+        <fieldset disabled={disabled}>
+            <legend className="t2_bold">Brownaming (proteins naming)</legend>
             <div className="formElement">
                 <SettingsFormElementInputRadio label="Skip Brownaming" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.brownamingSection.skip} onChange={handleRadioChange}/>
             </div>
-            <SettingsExcludedSpecies label="Excluded species" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." excludedSpeciesList={parameters.brownamingSection.excludedSpeciesList} handleSetSpecies={handleSetSpecies} removeSpecies={removeSpecies} isEnable={!parameters.brownamingSection.skip}/>
-            <SettingsSelect label="Highest taxa rank" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." options={rankOptions} defaultOption="Suborder" handleSetMaxRank={handleSetMaxRank} isEnable={!parameters.brownamingSection.skip}/>
+            <SettingsExcludedSpecies 
+                label="Excluded species" 
+                help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                excludedSpeciesList={parameters.brownamingSection.excludedSpeciesList} 
+                handleSetSpecies={handleSetSpecies} 
+                removeSpecies={removeSpecies} 
+                disabled={parameters.brownamingSection.skip}/>
+            <SettingsSelect 
+                label="Highest taxa rank" 
+                help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                options={rankOptions} 
+                defaultOption="Suborder" 
+                handleSetMaxRank={handleSetMaxRank} 
+                disabled={parameters.brownamingSection.skip}/>
         </fieldset>
     )
 }

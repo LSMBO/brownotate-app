@@ -16,7 +16,7 @@ export default function SpeciesInput({ handleSetInputSpecies, isError }) {
     return (
         <div>
             <input
-                className={error ? "t1_light error" : "t1_light"}
+                className={error ? "t2_light error" : "t2_light"}
                 value={content}
                 type="text"
                 placeholder="Enter your species ..."

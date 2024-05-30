@@ -103,8 +103,8 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
     
     return (
         <div>
-            <label className="t1_bold">Data found for {species} :</label>
-            <div className="card-container t1_light">
+            <label className="t2_bold">Data found for {species} :</label>
+            <div className="card-container t2_light">
                 <div className="sequencing-assembly-container">
                     <div className="sequencing-assembly-cards">
                         <CardSequencing

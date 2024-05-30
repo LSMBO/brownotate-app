@@ -12,13 +12,15 @@ export default function SettingsFormElementInputRadio({ disabled, label, help, c
       };
     
     return (
-            <div className={`radioLabel ${checked ? 't1_bold' : ''}`}>
-                <input disabled={disabled} type="radio" onChange={() => {}} onClick={handleClick} checked={checked} />
-                <label>{label}</label>
-                <div className="tooltipContainer">
-                    <img src={HelpIcon} alt="help" className="helpIcon"/>
-                    <span className="helpSpan">{help}</span>
-                </div>
-            </div>
+      <div className={`radioLabel ${checked ? 't2_bold' : ''}`}>
+          <input disabled={disabled} type="radio" onChange={() => {}} onClick={handleClick} checked={checked} />
+          <div className="labelTooltipWrapper">
+              <label>{label}</label>
+              <div className="tooltipContainer">
+                  <img src={HelpIcon} alt="help" className="helpIcon"/>
+                  <span className="helpSpan">{help}</span>
+              </div>
+          </div>
+      </div>
     )
 }

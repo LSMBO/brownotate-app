@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import AssemblyProteinsUnit from './AssemblyProteinsUnit';
 import './CardDatabaseSearch.css';
 

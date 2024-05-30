@@ -1,32 +1,30 @@
 import SpeciesInput from "../components/SpeciesInput"
-import CardRun from "../components/CardRun"
 import Run from "../classes/Run"
 import DatabaseSearch from "../classes/DatabaseSearch"
 import { useState, useEffect } from "react"
-import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useUploadProgress } from '../UploadProgressContext';
+import { getDefaultParameters } from '../utils/defaultParameters';
 import axios from 'axios';
 import CardDatabaseSearch from "../components/CardDatabaseSearch"
 import { handleClickDownload } from '../utils/Download';
-
+import "../components/Loading.css"
 
 export default function Home() {
     //state
-    const location = useLocation();
     const navigate = useNavigate();
-    const { parameters, setParameters, uploadProgress } = useUploadProgress();
+    //const { setParameters } = useUploadProgress();
     const [dbsearch, setDbsearch] = useState({})
     const [dbsearchStatus, setDbsearchStatus] = useState("NULL")
     const [runs, setRuns] = useState([]);
     const [inputSpecies, setInputSpecies] = useState("")
     const [inputSpeciesOK, setInputSpeciesOK] = useState("")
 
-    useEffect(() => {
-        if (uploadProgress.totalFiles > 0 && uploadProgress.uploadedFiles === uploadProgress.totalFiles) {
-            console.log('Upload completed');
-        }
-    }, [uploadProgress]);
+    // useEffect(() => {
+    //     if (uploadProgress.totalFiles > 0 && uploadProgress.uploadedFiles === uploadProgress.totalFiles) {
+    //         console.log('Upload completed');
+    //     }
+    // }, [uploadProgress]);
    
     //comportement    
       const handleClickDBS = () => {
@@ -63,19 +61,36 @@ export default function Home() {
         setInputSpecies(input);
     }
 
-    const handleClickSettings = (selectedData) => {
-        console.log(selectedData)
-        navigate('/settings', {state: { parameters }});
-    }
-
+    const handleClickSettings = async (selectedData) => {
+        const newParameters = getDefaultParameters();
+        newParameters.species.scientificName = inputSpecies;
+    
+        if (selectedData) {
+            if (Array.isArray(selectedData) && typeof selectedData[0] === 'string') {
+                // Sequencing data
+                newParameters.startSection.sequencing = true;
+                newParameters.startSection.sequencingAccessions = true;
+                newParameters.startSection.sequencingAccessionsList = selectedData;
+            } else if (Array.isArray(selectedData) && typeof selectedData[0] === 'object') {
+                // Assembly data
+                newParameters.startSection.genome = true;
+                newParameters.startSection.genomeFile = true;
+                newParameters.startSection.genomeFileList = [{
+                    'name': `${selectedData[0].accession}.fasta`,
+                    'url': selectedData[0].downloadURL}];
+            }
+        }
+        console.log(newParameters);
+        navigate('/settings', { state: { newParameters } });
+    };
 
     //affichage
     return (
     <div id="page">
         <SpeciesInput handleSetInputSpecies={handleSetInputSpecies} isError={inputSpeciesOK}/>
         <div className="startButtonContainer">
-            <button className="t1_bold" onClick={handleClickDBS} disabled={!inputSpecies}>Database Search</button>
-            <button className="t1_bold" onClick={handleClickSettings}>Custom Input</button>
+            <button className="t2_bold" onClick={handleClickDBS} disabled={!inputSpecies}>Database Search</button>
+            <button className="t2_bold" onClick={handleClickSettings}>Custom Input</button>
         </div>
         {dbsearchStatus === "completed" ? 
         (<CardDatabaseSearch species={inputSpecies} data={dbsearch} handleClickSettings={handleClickSettings} handleClickDownload={handleClickDownload}/>)
@@ -92,6 +107,3 @@ export default function Home() {
     </div>
     )
 }
-
-
-

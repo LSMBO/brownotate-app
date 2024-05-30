@@ -3,7 +3,7 @@ import HelpIcon from "../../assets/help.png";
 
 
 
-export default function SettingsSelect({ label, help, options, defaultOption, handleSetMaxRank, isEnable }) {
+export default function SettingsSelect({ label, help, options, defaultOption, handleSetMaxRank, disabled }) {
     const handleChange = (e) => {
         const selectedValue = e.target.value;
         handleSetMaxRank(selectedValue);
@@ -12,13 +12,15 @@ export default function SettingsSelect({ label, help, options, defaultOption, ha
     return (
         <div className="formElement">
             <div className="radioLabel">
-                <label>{label}</label>
-                <div className="tooltipContainer">
-                        <img src={HelpIcon} alt="help" className="helpIcon"/>
-                        <span className="helpSpan">{help}</span>
+                <div className="labelTooltipWrapper">
+                    <label>{label}</label>
+                    <div className="tooltipContainer">
+                            <img src={HelpIcon} alt="help" className="helpIcon"/>
+                            <span className="helpSpan">{help}</span>
+                    </div>
                 </div>
             </div>
-            <select defaultValue={defaultOption} onChange={handleChange} disabled={!isEnable}>
+            <select className="t2_light" defaultValue={defaultOption} onChange={handleChange} disabled={disabled}>
                 {options.map((option, index) => (
                 <option key={index} value={option}>
                     {option}

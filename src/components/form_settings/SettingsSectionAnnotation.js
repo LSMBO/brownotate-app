@@ -1,14 +1,14 @@
 import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
-import SettingsFormElementInputFile from "./SettingsFormElementInputFile";
 import HelpIcon from "../../assets/help.png";
+import SettingsFormElementInputFile from "./SettingsFormElementInputFile";
 
 
-export default function SettingsSectionAnnotation({ enabled, updateParameters, parameters }) {
+export default function SettingsSectionAnnotation({ disabled, updateParameters, parameters }) {
       const handleRadioChange = (name, isChecked) => {
         const parametersCopy = { ...parameters };
                
         if (isChecked) {
-          if (name === "100% Identity - Same length (default)") {
+          if (name === "100% Identity - Same length (recommanded)") {
             parametersCopy.annotationSection.removeSoft = false;
             parametersCopy.annotationSection.removeStrict = true;
           } else if (name === "100% Identity - lower length") {
@@ -17,8 +17,7 @@ export default function SettingsSectionAnnotation({ enabled, updateParameters, p
           } else if (name === "Auto (get most relevant evidences)") {
             parametersCopy.annotationSection.evidenceFile = false;
             parametersCopy.annotationSection.evidenceAuto = true;
-            parametersCopy.annotationSection.evidenceFileList = [];
-          } else if (name === "File") {
+          } else if (name === "Evidence file") {
             parametersCopy.annotationSection.evidenceAuto = false;
             parametersCopy.annotationSection.evidenceFile = true;
           } 
@@ -26,30 +25,32 @@ export default function SettingsSectionAnnotation({ enabled, updateParameters, p
         updateParameters(parametersCopy);
       };
 
-      const handleFileChange = (event) => {
-        const files = event.target.files;
-    
-        if (files) {
-            const parametersCopy = { ...parameters };
-            if (files.length <= 1) {
-                parametersCopy.annotationSection.evidenceFileList = Array.from(files);
-            } else {
-                console.error("You can only select one file.");
-                parametersCopy.annotationSection.evidenceFileList = [];
-            }
-            updateParameters(parametersCopy);
+      const handleFileChange = (e, index) => {
+        e.preventDefault();
+        const parametersCopy = { ...parameters };  
+        if (index !== undefined) {
+          parametersCopy.annotationSection.evidenceFileList.splice(index, 1);
+        } 
+        else {
+          const files = e.target.files;
+          if (files) {
+            parametersCopy.annotationSection.evidenceFileList = Array.from(files);
+          }
         }
-    };
+        updateParameters(parametersCopy);
+      };
 
     return (
-        <fieldset disabled={!enabled}>
-            <legend className="t1_bold">Annotation (proteins prediction)</legend>
+        <fieldset disabled={disabled}>
+            <legend className="t2_bold">Annotation (proteins prediction)</legend>
             <div className="formSection">
               <div className="sectionTitle">
-                <label>Protein evidence</label>
-                <div className="tooltipContainer">
-                  <img src={HelpIcon} alt="help" className="helpIcon" />
-                  <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                <div className="labelTooltipWrapper">
+                  <label>Protein evidence</label>
+                  <div className="tooltipContainer">
+                    <img src={HelpIcon} alt="help" className="helpIcon" />
+                    <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                  </div>
                 </div>
               </div>
               <div className="formElement">
@@ -61,32 +62,34 @@ export default function SettingsSectionAnnotation({ enabled, updateParameters, p
                 />
               </div>
               <div className="formElement">
-                <SettingsFormElementInputRadio 
-                      label="File" 
-                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset."  
-                      checked={parameters.annotationSection.evidenceFile} 
-                      onChange={handleRadioChange}
+                <SettingsFormElementInputRadio
+                    disabled={false}
+                    label="Evidence file" 
+                    help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                    checked={parameters.annotationSection.evidenceFile} 
+                    onChange={handleRadioChange}
                 />
                 <SettingsFormElementInputFile 
-                      label="File"
-                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
-                      checked={true} 
-                      onChange={handleRadioChange} 
-                      handleFileChange={handleFileChange}
+                  label="Evidence file"
+                  disabled={!parameters.annotationSection.evidenceFile}
+                  handleFileChange={handleFileChange}
+                  value={parameters.annotationSection.evidenceFileList}
                 />
               </div>
             </div>
             
             <div className="formSection">
-            <div className="sectionTitle">
-                <label>Remove duplicated sequence</label>
-                <div className="tooltipContainer">
-                  <img src={HelpIcon} alt="help" className="helpIcon" />
-                  <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+              <div className="sectionTitle">
+                <div className="labelTooltipWrapper">
+                  <label>Remove duplicated sequence</label>
+                  <div className="tooltipContainer">
+                    <img src={HelpIcon} alt="help" className="helpIcon" />
+                    <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                  </div>
                 </div>
               </div>
               <div className="formElement">
-                  <SettingsFormElementInputRadio label="100% Identity - Same length (default)" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeStrict} onChange={handleRadioChange}/>
+                  <SettingsFormElementInputRadio label="100% Identity - Same length (recommanded)" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeStrict} onChange={handleRadioChange}/>
               </div>
               <div className="formElement">
                   <SettingsFormElementInputRadio label="100% Identity - lower length" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeSoft} onChange={handleRadioChange}/>

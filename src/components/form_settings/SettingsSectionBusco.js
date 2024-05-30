@@ -1,7 +1,7 @@
 
 import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
 
-export default function SettingsSectionBusco({ enabled, updateParameters, parameters }) {
+export default function SettingsSectionBusco({ disabled, updateParameters, parameters }) {
 
     const handleRadioChange = (name, isChecked) => {
         const parametersCopy = { ...parameters };
@@ -26,8 +26,8 @@ export default function SettingsSectionBusco({ enabled, updateParameters, parame
 
 
     return (
-        <fieldset disabled={!enabled}>
-            <legend className="t1_bold">Busco (completeness evaluation)</legend>
+        <fieldset disabled={disabled}>
+            <legend className="t2_bold">Busco (completeness evaluation)</legend>
             <div className="formElement">
                 <SettingsFormElementInputRadio disabled={parameters.startSection.genome} label="Evaluate the genome completeness" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.buscoSection.assembly} onChange={handleRadioChange}/>
             </div>
