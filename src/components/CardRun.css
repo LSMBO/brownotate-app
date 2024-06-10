@@ -1,0 +1,82 @@
+
+@keyframes zoomIn {
+	0% {
+		transform: scale(10);
+	}
+	100% {
+		transform: scale(1);
+	}
+  }
+  
+  .run-card {
+	  padding: 10px;
+	  margin: 5px auto;
+	  border-radius: 5px;
+	  transition: background-color 0.3s ease;
+	  width: 95%;
+	  animation: zoomIn 0.3s ease;
+	}
+	
+  .run-card.running {
+	  border: 2px solid #a5a202;
+	  background-color: #ffd700;
+  }
+	
+  .run-card.completed {
+	  border: 2px solid #007e11;
+	  background-color: #72e272;
+  }
+  
+  .run-card.error {
+	  border: 2px solid #a80000;
+	  background-color: #e65b5b;
+  }
+  
+  .run-header {
+	  display: flex;
+	  flex-direction: row;
+	  justify-content: space-between;
+	  align-items: center;
+  }
+	
+	
+  .expand-icon {
+	  font-size: 20px;
+	  cursor: pointer;
+  }
+  
+  .parameter {
+	margin-bottom: 10px;
+	display: flex;
+	flex-direction: row;
+  }
+  
+  .parameter-title {
+	font-weight: bold;
+	margin-right: 5px;
+  }
+  
+  .parameter-list {
+	margin-top: 5px;
+	padding-left: 20px;
+  }
+  
+  .parameter-value {
+	margin-left: 5px;
+  }
+  
+  .section-header {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center; 
+  }
+  
+  .section-header h2{
+	margin-right: 10px;
+  }
+  
+  .section-header .expand-icon{
+	font-size: 15px;
+  }
+  

@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 
-export default function SpeciesInput({ handleSetInputSpecies, isError }) {
+export default function SpeciesInput({ handleSetInputSpecies, speciesNotFound }) {
     const [content, setContent] = useState("")
-    const [error, setError] = useState({isError});
-    
-    useEffect(() => {
-        setError(isError);
-    }, [isError]);
 
     const handleChange = (e) => {
         setContent(e.target.value)
@@ -16,14 +11,14 @@ export default function SpeciesInput({ handleSetInputSpecies, isError }) {
     return (
         <div>
             <input
-                className={error ? "t2_light error" : "t2_light"}
+                className={speciesNotFound ? "t2_light error" : "t2_light"}
                 value={content}
                 type="text"
                 placeholder="Enter your species ..."
                 onChange={handleChange}
             />
-            {error!=="" ? 
-            <p className="error-message">Your species {isError} has not been found in UniProt. Please use another species name.</p> :
+            {speciesNotFound!=="" ? 
+            <p className="error-message">Your species {speciesNotFound} has not been found in UniProt. Please use another species name.</p> :
             <p></p>}
         </div>   
     )

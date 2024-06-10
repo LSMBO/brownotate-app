@@ -1,6 +1,7 @@
 import './App.css';
 import {createBrowserRouter, RouterProvider} from "react-router-dom"
-import { UploadProgressProvider } from './UploadProgressContext';
+//import { UploadProgressProvider } from './UploadProgressContext';
+import { ParametersProvider } from './context/ParametersContext';
 import About from "./pages/About";
 import Home from "./pages/Home";
 import Settings from './pages/Settings';
@@ -24,11 +25,11 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <UploadProgressProvider>
+    <ParametersProvider>
       <Header />
       <RouterProvider router={router}/>
       <Footer />
-    </UploadProgressProvider>
+    </ParametersProvider>
     
   )
 }

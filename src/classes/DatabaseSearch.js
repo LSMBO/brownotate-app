@@ -14,6 +14,9 @@ export default class DatabaseSearch {
 		// this.rnaseq = new Sequencing(data["rnaseq"]);
 		this.assembly = new Assembly(data["genome"]);
         this.proteins = new Proteins(data["proteins"]);
+    }	
+
+    setTaxonID(taxonID) {
+        this.taxonID = taxonID;
     }
-	
 }

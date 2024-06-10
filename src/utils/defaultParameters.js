@@ -1,14 +1,17 @@
 // utils/defaultParameters.js
 export const defaultParameters = {
     id: null,
+    ready: false,
+    isRun: false,
     species: {
         scientificName: "Cannabis sativa",
         taxonID: null
     },
-    ready: false,
     startSection: {
         genome: false,
         sequencing: false,
+        genomeFile: false,
+        genomeFileIsURL: false,
         genomeFileList: [],
         sequencingFiles : false,
         sequencingFilesList : [],
@@ -20,6 +23,7 @@ export const defaultParameters = {
     annotationSection: {
         evidenceAuto: true,
         evidenceFile: false,
+        evidenceFileIsURL: false,
         evidenceFileList: [],
         removeStrict: true,
         removeSoft: false,

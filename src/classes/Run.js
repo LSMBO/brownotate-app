@@ -1,16 +1,12 @@
 export default class Run {
-    constructor(id, parameters) {
-        this.id = id;
+    constructor(parameters) {
+        this.id = parameters.id
         this.parameters = parameters;
-        this.data = '';
-        this.status = 'running';
+        this.status = 'uploading files';
     }
 
     updateStatus(status) {
         this.status = status;
     }
 
-    updateData(data) {
-        this.data = data;
-    }
 }

@@ -60,11 +60,14 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
     const parametersCopy = { ...parameters };  
     if (index !== undefined) {
       parametersCopy.startSection.genomeFileList.splice(index, 1);
+      parametersCopy.startSection.genomeFile = false;
+      parametersCopy.startSection.genomeFileIsURL = false;
     } 
     else {
       const files = e.target.files;
       if (files) {
         parametersCopy.startSection.genomeFileList = Array.from(files);
+        parametersCopy.startSection.genomeFile = true;
       }
     }
     updateParameters(parametersCopy);
