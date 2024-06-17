@@ -128,10 +128,6 @@ button:disabled {
     background-color: #ffffff93;
 }
   
-
-
-
-
 .error-message {
     color: red;
     margin-top: 2px;
@@ -162,7 +158,15 @@ label {
     width: 17px;
 }
 
+.downloadIcon {
+    width: 20px;
+}
+
+
 .run-list {
-    display: flex;
-    flex-direction: column-reverse;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 95%;
+    margin: auto;
 }

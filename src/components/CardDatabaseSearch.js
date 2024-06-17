@@ -3,9 +3,10 @@ import CardSequencing from "./CardSequencing";
 import CardAssembly from "./CardAssembly";
 import CardProteins from "./CardProteins";
 import './CardDatabaseSearch.css';
+import { useDBSearch } from '../contexts/DBSearchContext'
 
 const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDownload }) => {
-    const [selectedData, setSelectedData] = useState([]);
+    const { selectedData, setSelectedData } = useDBSearch();
     const [selectedSequencing, setSelectedSequencing] = useState([]);
     const [selectedAssembly, setSelectedAssembly] = useState(null);
     const [selectedProteins, setSelectedProteins] = useState(null);
@@ -14,12 +15,18 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
     const [noProteinsFound, setNoProteinsFound] = useState(false);
 
     useEffect(() => {
-        if (data.assembly) {
-            if (
+        if (selectedData && selectedData[0].data_type === "genome") {
+            setSelectedAssembly(selectedData[0]);
+        }
+        else if (selectedData && selectedData.every(item => typeof item === 'string')) {
+            updateSelectedSequencing(selectedData);   
+        }
+        else {
+            if (data.assembly && (
                 Object.keys(data.assembly.ensembl).length === 0 &&
                 Object.keys(data.assembly.refseq).length === 0 &&
                 Object.keys(data.assembly.genbank).length === 0
-            ) {
+            )) {
                 setNoAssemblyFound(true);
             } else {
                 setNoAssemblyFound(false);
@@ -33,6 +40,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                 }
                 setSelectedAssembly(recommendedAssembly);
                 setSelectedData([recommendedAssembly]);
+                   
             }
 
             if (data.proteins && (
@@ -54,9 +62,13 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                 } else if (Object.keys(data.proteins.genbank).length !== 0) {
                     recommendedProteins = data.proteins.genbank;
                 }
-                setSelectedProteins(recommendedProteins);
-                setSelectedData([recommendedProteins]);
-                setSelectedAssembly()
+                if (!selectedData) {
+                    setSelectedData([recommendedProteins]);
+                    setSelectedProteins(recommendedProteins);
+                    setSelectedAssembly()
+                } else if (selectedData[0].data_type === "proteins") {
+                    setSelectedAssembly(selectedData[0]);
+                }
             }
         }
     }, [data]);
@@ -100,9 +112,18 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
             setSelectedProteins(null);
         }
     };
+
+    const convertForDownload = (data) => {
+       if (data.database == 'uniprot') {
+            handleClickDownload([data.downloadURL, data.accession], 'uniprot')
+       } else {
+            handleClickDownload(data.downloadURL, 'ftp')
+       }    
+    };
     
     return (
         <div>
+            <p>Selected data {JSON.stringify(selectedData, null, 2)}</p>
             <label className="t2_bold">Data found for {species} :</label>
             <div className="card-container t2_light">
                 <div className="sequencing-assembly-container">
@@ -131,7 +152,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                         selectedProteins={selectedProteins}
                         updateSelectedProteins={updateSelectedProteins}
                     />
-                <button disabled={!selectedProteins} onClick={() => handleClickDownload(selectedProteins)}>Download</button>
+                <button disabled={!selectedProteins} onClick={() => convertForDownload(selectedProteins)}>Download</button>
                 </div>
             </div>
         </div>

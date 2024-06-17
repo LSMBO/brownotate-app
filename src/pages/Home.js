@@ -1,49 +1,60 @@
+import "../components/Loading.css"
 import SpeciesInput from "../components/SpeciesInput"
 import CardRun from "../components/CardRun"
 import Run from "../classes/Run"
 import DatabaseSearch from "../classes/DatabaseSearch"
 import { useState, useEffect } from "react"
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useUploadProgress } from '../UploadProgressContext';
 import { getDefaultParameters } from '../utils/defaultParameters';
 import axios from 'axios';
 import CardDatabaseSearch from "../components/CardDatabaseSearch"
 import { handleClickDownload } from '../utils/Download';
-import "../components/Loading.css"
-import { useParameters } from '../context/ParametersContext';
+import { useUser } from '../contexts/UserContext';
+import { useDBSearch } from '../contexts/DBSearchContext'
+import { useParameters } from '../contexts/ParametersContext';
+import { useRuns } from '../contexts/RunsContext';
+import io from 'socket.io-client';
+
+const socket = io("http://134.158.151.129:80");
 
 
 export default function Home() {
     //state
     const navigate = useNavigate();
-    const location = useLocation();
-    //const { setParameters } = useUploadProgress();
     const { parameters, setParameters } = useParameters();
-    const [dbsearch, setDbsearch] = useState(location.state?.dbsearch ?? {});
-    const [dbsearchStatus, setDbsearchStatus] = useState(location.state?.dbsearchStatus ?? "NULL")
-    const [runs, setRuns] = useState([]);
-    const [inputSpecies, setInputSpecies] = useState("")
+    const { user } = useUser();
+    const { dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus } = useDBSearch();
+    const [inputSpecies, setInputSpecies] = useState("Naja naja")
     const [speciesNotFound, setSpeciesNotFound] = useState("")
-
-    useEffect(() => {
-        if (parameters && parameters.isRun) {
-            createRun(parameters);
-        }
-    }, [parameters]);
+    const { runs, fetchUserRuns } = useRuns();
 
     //comportement    
+    useEffect(() => {
+        socket.on('runs_updated', (data) => {
+            fetchUserRuns(user);
+        });
+        return () => {
+            socket.off('runs_updated');
+        };
+    }, []);
+
+    useEffect(() => {
+        fetchUserRuns(user);
+    }, []);
+    
     const speciesExists = async (inputValue) => {
         try {
             if (inputValue==='') {
                 setSpeciesNotFound(" ");
-                setDbsearchStatus('taxoNotFound');
+                setDBSearchStatus('taxoNotFound');
             }
             else {
-                const response = await axios.post('http://localhost:5000/run_species_exists', { argument: inputValue });
+                const response = await axios.post('http://134.158.151.129:80/run_species_exists', { species: inputValue });
                 const lastLine = response.data.split('\n').slice(-2)[0];
                 if (lastLine === `Taxo \"${inputValue}\" not found.`) {
                     setSpeciesNotFound(inputValue);
-                    setDbsearchStatus('taxoNotFound');
+                    setDBSearchStatus('taxoNotFound');
                     return false;
                 } else {
                     setSpeciesNotFound("");
@@ -57,23 +68,21 @@ export default function Home() {
     };
 
       const handleClickDBS = async () => {
-        setDbsearchStatus("loading");
+        setDBSearchStatus("loading");
         console.log(`Database search with ${inputSpecies}`);
         const newDbsearch = new DatabaseSearch(new Date().getTime(), inputSpecies);
         const speciesFound = await speciesExists(inputSpecies);
         if (speciesFound) {
             newDbsearch.setTaxonID(speciesFound[1])
             try {
-                const response = await axios.post('http://localhost:5000/run_script_dbs', { argument: inputSpecies });
-                setDbsearchStatus('completed');
-                const jsonString = response.data.substring(response.data.indexOf("{"));
-                const response_data = JSON.parse(jsonString);
-                newDbsearch.updateData(response_data);
+                const response = await axios.post('http://134.158.151.129:80/run_script_dbs', { species: inputSpecies, user: user });
+                setDBSearchStatus('completed');
+                newDbsearch.updateData(response.data);
             } catch (error) {
                 console.error('Error:', error);
-                setDbsearchStatus('failed');
+                setDBSearchStatus('failed');
             } finally {
-                setDbsearch(newDbsearch);
+                setDBSearch(newDbsearch);
             }
         }
     };
@@ -84,7 +93,7 @@ export default function Home() {
 
     const handleClickSettings = async (selectedData) => {
         const newParameters = getDefaultParameters();
-        if (Object.keys(dbsearch).length > 0) {
+        if (dbsearch) {
             newParameters.species.scientificName = dbsearch.inputSpecies;
             newParameters.species.taxonID = dbsearch.taxonID;
         } else {
@@ -119,41 +128,12 @@ export default function Home() {
         }
         setParameters(newParameters);
         navigate('/settings');
-        //navigate('/settings', { state: { newParameters, dbsearch, dbsearchStatus } });      
     };
-
-    const createRun = (parameters) => {
-        const newRun = new Run(parameters);
-        setRuns(prevRuns => [...prevRuns, newRun]);
-    }
-
-    const handleSubmitLogin = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
     
-        const response = await fetch('http://localhost:5000/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: formData.get('email'),
-                password: formData.get('password')
-            })
-        });
-    
-        const data = await response.json();
-        console.log(data.message); // Affiche le message renvoyé par le serveur
-    }
 
     //affichage
     return (
     <div id="page">
-        <form onSubmit={handleSubmitLogin}>
-            <input type="text" name="email" placeholder="Email" />
-            <input type="password" name="password" placeholder="Password" />
-            <button type="submit">Login</button>
-        </form>
         <SpeciesInput handleSetInputSpecies={handleSetInputSpecies} speciesNotFound={speciesNotFound}/>
         <div className="startButtonContainer">
             <button className="t2_bold" onClick={handleClickDBS} disabled={!inputSpecies}>Database Search</button>
@@ -168,7 +148,7 @@ export default function Home() {
         : (<p></p>)}
         <div className="run-list">
             {runs.map((run, index) => (
-            <CardRun id={run.id} data={run.data} status={run.status} parameters={run.parameters} />
+            <CardRun id={run.id} data={run} status={run.status} parameters={run.parameters} />
             ))}
         </div>
     </div>

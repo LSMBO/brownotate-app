@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 async function downloadUniprotFasta(url, outputName) {
     let allSequences = '';
     try {
@@ -41,15 +43,56 @@ function saveFastaFile(content, outputName) {
     URL.revokeObjectURL(url);
 }
 
-export function handleClickDownload(data) {
-    if (data.database === 'uniprot') {
-        downloadUniprotFasta(data.downloadURL, `${data.accession}.fasta`)
-    } else {
-        const link = document.createElement('a');
-        link.href = data.downloadURL;
-        link.setAttribute('download', '');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+
+function downloadFTP(path) {
+    const link = document.createElement('a');
+    link.href = path;
+    link.setAttribute('download', '');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+async function downloadFromServer(path, extension) {
+    try {
+        let fileList = [path]
+        if (extension) {
+            const response = await axios.post(`http://134.158.151.129:80/server_path`, {'path': path, 'extension': extension});
+            fileList = response.data.results
+        }
+        for (let file of fileList) {
+            const fileResponse = await axios({
+                method: 'post',
+                url: `http://134.158.151.129:80/download_file`,
+                data: { file: file },
+                responseType: 'blob'
+            });
+            let url = window.URL.createObjectURL(new Blob([fileResponse.data]));
+
+            const contentType = fileResponse.headers['content-type'];
+            if (contentType.includes('application/zip')) {
+                url = window.URL.createObjectURL(new Blob([fileResponse.data], { type: 'application/zip' }));
+            }
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', file.split('/').pop());
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+    
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+export function handleClickDownload(path, type, extension = null) {
+    if (type === 'uniprot') {
+        downloadUniprotFasta(path[0], `${path[1]}.fasta`);
+    } else if (type === 'ftp') {
+        downloadFTP(path);
+    } else if (type === 'server') {
+        downloadFromServer(path, extension);
     }
 }

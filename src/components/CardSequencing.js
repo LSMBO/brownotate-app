@@ -4,14 +4,6 @@ import SequencingUnit from './SequencingUnit';
 
 const CardSequencing = ({ dnaseq, noAssemblyFound, noProteinsFound, selectedSequencing, updateSelectedSequencing, sequencingSize, setSequencingSize }) => {
 
-    useEffect(() => {
-        if (noAssemblyFound && noProteinsFound) {
-            updateSelectedSequencing(dnaseq.runs.map(run => run.accession))
-        } else {
-            updateSelectedSequencing([])
-        }
-    }, [noAssemblyFound, noProteinsFound, dnaseq.runs]);
-
     const base_size_conversion_factor = {
         'large': 0.000000000344,
         'low': 0.000000000224

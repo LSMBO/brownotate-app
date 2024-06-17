@@ -1,8 +1,6 @@
-// utils/defaultParameters.js
 export const defaultParameters = {
     id: null,
     ready: false,
-    isRun: false,
     species: {
         scientificName: "Cannabis sativa",
         taxonID: null

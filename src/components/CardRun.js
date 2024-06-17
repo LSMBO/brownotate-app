@@ -1,35 +1,9 @@
 import "./CardRun.css"
-//import SettingsCard from "./SettingsCard"
 import { useState } from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from "react-router-dom";
 
 const CardRun = ({ id, data, status, parameters }) => {
-    const [cardExpanded, setCardExpanded] = useState(false);
-    const [settingsExpanded, setSettingsExpanded] = useState(false);
-  
-    const handleCardExpand = () => {
-        setCardExpanded(!cardExpanded);
-    };
-
-    const handleSettingsExpand = () => {
-        setSettingsExpanded(!settingsExpanded);
-    };
-  
-    let statusText;
-    switch (status) {
-      case "running":
-        statusText = "Loading";
-        break;
-      case "completed":
-        statusText = "Completed";
-        break;
-      case "error":
-        statusText = "Run failed";
-        break;
-      default:
-        statusText = "";
-    }
+    const navigate = useNavigate();
 
     const formatDate = (dateTimeString) => {
         const date = new Date(dateTimeString);
@@ -43,60 +17,15 @@ const CardRun = ({ id, data, status, parameters }) => {
         });
       };
 
-      const renderParameters = (params) => {
-        return Object.entries(params).map(([key, value]) => {
-          if (Array.isArray(value) && value.length > 0) {
-            return (
-              <div key={key} className="parameter">
-                <span className="parameter-title">{key} : </span>
-                <ul className="parameter-list">
-                  {value.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            );
-          } else if (typeof value === 'object' && value !== null) {
-            return (
-              <div key={key} className="parameter">
-                <span className="parameter-title">{key} - </span>
-                <div className="nested-parameters">
-                  {renderParameters(value)}
-                </div>
-              </div>
-            );
-          } else {
-            return (
-              <div key={key} className="parameter">
-                <span className="parameter-title">{key}</span>
-                <span className="parameter-value">{String(value)}</span>
-              </div>
-            );
-          }
-        });
-      };
-    
+      const handleClick = () => {
+        navigate(`run/${parameters.id}`);
+    };
+
       return (
-        <div className={`run-card ${status}`}>
-          <div className="run-header t2_bold" >
-            <div>
-              <span>{formatDate(id)}</span>
-              <span className="t2_light"><i>{parameters.species?.scientificName}</i></span>
-              <span className="t2_light">{statusText}</span>
-            </div>
-            <FontAwesomeIcon icon={cardExpanded ? faAngleUp : faAngleDown} className="expand-icon" onClick={handleCardExpand}/>
-          </div>
-          {cardExpanded && (
-            <div className="run-details">
-              <div className="section-header">
-                <h2 className="t2_bold">Run settings</h2>
-                <FontAwesomeIcon icon={settingsExpanded ? faAngleUp : faAngleDown} className="expand-icon" onClick={handleSettingsExpand}/>
-              </div>
-              {/* {settingsExpanded && (
-                <SettingsCard parameters={parameters}/>
-              )} */}
-            </div>
-          )}
+        <div className={`run-card t2_light ${status}`} onClick={handleClick}>
+          <span><b>Date: </b>{formatDate(parameters.id)}</span>
+          <span><b>Species: </b><i>{parameters.species.scientificName}</i></span>
+          <span><b>Status: </b>{status}</span>
         </div>
       );
     };

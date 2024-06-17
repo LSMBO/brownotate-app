@@ -1,23 +1,25 @@
+import "./Settings.css";
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useParameters } from "../context/ParametersContext";
+import { useNavigate } from "react-router-dom";
+import { useParameters } from "../contexts/ParametersContext";
+import { useUser } from '../contexts/UserContext';
+import { useRuns } from '../contexts/RunsContext'
+import { useDBSearch } from '../contexts/DBSearchContext'
+
 import axios from 'axios';
 import SettingsSectionStart from "../components/form_settings/SettingsSectionStart";
-import "./Settings.css";
 import SettingsSectionAnnotation from "../components/form_settings/SettingsSectionAnnotation";
 import SettingsSectionBrownaming from "../components/form_settings/SettingsSectionBrownaming";
 import SettingsSectionBusco from "../components/form_settings/SettingsSectionBusco";
 
+
 export default function Settings() {
     const navigate = useNavigate();
-    const location = useLocation();
+    const { user } = useUser();
+    const { addRun, updateRuns  } = useRuns()
     const { parameters, setParameters } = useParameters();
-    //const [parameters, setParameters] = useState(location.state ? location.state.newParameters : null);
-    const [isSubmitable, setIsSubmitable] = useState(parameters.ready);
-    const dbsearch = location.state ? location.state.dbsearch : null;
-    const dbsearchStatus = location.state ? location.state.dbsearchStatus : null;
-    
-
+    const [isSubmitable, setIsSubmitable] = useState(parameters.ready);    
+    const { selectedData } = useDBSearch();
     const updateParameters = (newData) => {
         setParameters({
             ...parameters,
@@ -42,102 +44,98 @@ export default function Settings() {
         setIsSubmitable(isReady);
       };
 
-    const uploadFile = async (file) => {
+    const uploadFile = async (files, type) => {
         const formData = new FormData();
-        formData.append('file', file);
-    
+        files.forEach((file, index) => {
+            formData.append(`file${index}`, file);
+        });
+        formData.append('type', type);
+        formData.append('run_id', parameters['id']);
+
         try {
-            const response = await axios.post('http://localhost:5000/upload_file', formData, {
+            const response = await axios.post('http://134.158.151.129:80/upload_file', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            const filePath = response.data;
-            // setUploadProgress(prevState => ({
-            //     ...prevState,
-            //     uploadedFiles: prevState.uploadedFiles + 1
-            // }));
-            return filePath;
+            return response.data;
         } catch (error) {
-            console.error('Erreur lors du téléchargement du fichier : ', error);
+            console.error('Error:', error);
             return null;
         }
-    };
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         navigate('/')
 
-        setParameters(prevParams => ({
-            ...prevParams,
-            isRun: true
-        }));
-
-        const totalFiles = parameters.startSection.genomeFileList.length 
-						   + parameters.startSection.sequencingFilesList.length 
-						   + parameters.annotationSection.evidenceFileList.length;
-        
+        axios.post('http://134.158.151.129:80/create_run', { parameters: parameters, user: user })
+            .then(function (response) {
+                addRun(response.data)
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+            
 		//setUploadProgress({ totalFiles, uploadedFiles: 0 });
-        const uploadedGenomeFiles = [];
-        const uploadedSequencingFiles = [];
-        const uploadedEvidenceFiles = [];
-        
-        // Upload and update genome files
-        for (const file of parameters.startSection.genomeFileList) {
-            let filePath = ''
-            if ('size' in file) {
-                filePath = await uploadFile(file);
+        const urls = {
+            'assembly': null,
+            'evidence': null
+        }
+        // Upload and update assembly file
+        if (parameters.startSection.genomeFileList.length > 0) {
+            if ('size' in parameters.startSection.genomeFileList[0]) {
+                let uploadedAssemblyFile = await uploadFile(parameters.startSection.genomeFileList, 'assembly');
+                setParameters(prevParams => ({
+                    ...prevParams,
+                    startSection: {
+                        ...prevParams.startSection,
+                        genomeFileList: uploadedAssemblyFile
+                    }
+                }));
             } else {
-                filePath = file['url']
+                urls['assembly'] = parameters.startSection.genomeFileList[0]['url']
             }
-            uploadedGenomeFiles.push(filePath);
-        }
-        setParameters(prevParams => ({
-            ...prevParams,
-            startSection: {
-                ...prevParams.startSection,
-                genomeFileList: uploadedGenomeFiles
-            }
-        }));
-
-        // Upload and update sequencing files
-        for (const file of parameters.startSection.sequencingFilesList) {
-            let filePath = await uploadFile(file);
-            if (filePath) {
-                uploadedSequencingFiles.push(filePath);
-            }
-        }
-        setParameters(prevParams => ({
-            ...prevParams,
-            startSection: {
-                ...prevParams.startSection,
-                sequencingFilesList: uploadedSequencingFiles
-            }
-        }));
+        }  
 
         // Upload and update evidence files
-        for (const file of parameters.annotationSection.evidenceFileList) {
-            let filePath = ''
-            if ('size' in file) {
-                filePath = await uploadFile(file);
+        if (parameters.annotationSection.evidenceFileList.length > 0) {
+            if ('size' in parameters.annotationSection.evidenceFileList[0]) {
+                let uploadedEvidenceFile = await uploadFile(parameters.annotationSection.evidenceFileList, 'evidence');
+                setParameters(prevParams => ({
+                    ...prevParams,
+                    annotationSection: {
+                        ...prevParams.annotationSection,
+                        evidenceFileList: uploadedEvidenceFile
+                    }
+                }));
             } else {
-                filePath = file['url']
+                urls['evidence'] = parameters.annotationSection.evidenceFileList[0]['url']
             }
-            uploadedEvidenceFiles.push(filePath);
         }
-        setParameters(prevParams => ({
-            ...prevParams,
-            annotationSection: {
-                ...prevParams.annotationSection,
-                evidenceFileList: uploadedEvidenceFiles
+
+        // Upload and update sequencing files
+        if (parameters.startSection.sequencingFilesList.length > 0) {
+            let uploadedSequencingFiles = await uploadFile(parameters.startSection.sequencingFilesList, 'sequencing');
+            setParameters(prevParams => ({
+                ...prevParams,
+                startSection: {
+                    ...prevParams.startSection,
+                    sequencingFilesList: uploadedSequencingFiles
+                }
+            }));
+        }
+
+        if (urls['assembly'] || urls['evidence']) {
+            try {
+                await axios.post('http://134.158.151.129:80/update_parameters', { run_id: parameters['id'], user: user, urls: urls});
+            } catch (error) {
+                console.error('Error:', error);
             }
-        }));
+        }
 
         try {
-            console.log(parameters)
-            const response = await axios.post('http://localhost:5000/run_script', { argument: parameters });
-            const jsonString = response.data.substring(response.data.indexOf("{"));
-            const response_data = JSON.parse(jsonString);
+            await axios.post('http://134.158.151.129:80/run_script', { run_id: parameters['id'], user: user});
         } catch (error) {
             console.error('Error:', error);
         }
@@ -146,7 +144,7 @@ export default function Settings() {
     // affichage
     return (
         <div className="settings t2_bold">
-            <button onClick={() => navigate('/', { state: { parameters, dbsearch, dbsearchStatus } })} className="t3">Back</button>
+            <p>Selected data {JSON.stringify(selectedData, null, 2)}</p>
             <p>{JSON.stringify(parameters, null, 2)}</p>
             <div className="titleBox">
                 <h2>Settings</h2>

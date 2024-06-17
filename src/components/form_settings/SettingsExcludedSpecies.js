@@ -13,7 +13,7 @@ export default function SettingsExcludedSpecies({ label, help, excludedSpeciesLi
 
     const handleInputSubmit = (inputValue, e) => {
       e.preventDefault();
-      axios.post('http://localhost:5000/run_species_exists', { argument: inputValue })
+      axios.post('http://134.158.151.129:80/run_species_exists', { species: inputValue })
         .then(response => {
             const lastLine = response.data.split('\n').slice(-2)[0];
             if (lastLine === `Taxo \"${inputValue}\" not found.`) {
