@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AssemblyProteinsUnit = ({ isEmpty, data, selectedData, updateSelectedData, recommendedData, label }) => {
+const AssemblyProteinsUnit = ({ data, selectedData, updateSelectedData, label }) => {
     const handleCheckboxChange = (newData) => {
         updateSelectedData(selectedData && newData.accession === selectedData.accession ? null : newData);
     };
@@ -9,7 +9,7 @@ const AssemblyProteinsUnit = ({ isEmpty, data, selectedData, updateSelectedData,
 
     return (
         <div className='assembly-proteins-unit'>
-            {!isEmpty && data && (
+            {data && (
                 <>
                     <input
                         type="checkbox"
@@ -20,10 +20,10 @@ const AssemblyProteinsUnit = ({ isEmpty, data, selectedData, updateSelectedData,
                     <div className={isSelected ? 'infos selected' : 'infos'}>
                         <a href={data.userURL} target="_blank" rel="noopener noreferrer">
                             <p>
-                                {label}: {data.accession} {recommendedData === label && ' (Recommended)'}
+                            {data.accession !== 'swissprot' && data.accession !== 'trembl' ? `${label}: ${data.accession}` : label}
                             </p>
                         </a>
-                        <p>Species: {data.scientific_name}</p>
+                        <p><i>{data.scientific_name}</i></p>
                     </div>
                 </>
             )}

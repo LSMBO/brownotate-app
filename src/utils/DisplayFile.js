@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 function displayBusco(data) {
-    const completePercent = parseFloat(data.results["Complete"]);
-    const singleCopyPercent = parseFloat(data.results["Single copy"]);
-    const multiCopyPercent = parseFloat(data.results["Multi copy"]);
-    const fragmentedPercent = parseFloat(data.results["Fragmented"]);
-    const missingPercent = parseFloat(data.results["Missing"]);
+    const completePercent = parseFloat(data.results["Complete percentage"]);
+    const singleCopyPercent = parseFloat(data.results["Single copy percentage"]);
+    const multiCopyPercent = parseFloat(data.results["Multi copy percentage"]);
+    const fragmentedPercent = parseFloat(data.results["Fragmented percentage"]);
+    const missingPercent = parseFloat(data.results["Missing percentage"]);
 
     const singleCopyWidth = `${singleCopyPercent}%`;
     const multiCopyWidth = `${multiCopyPercent}%`;
@@ -49,7 +49,6 @@ function displayBusco(data) {
 }
 
 export async function displayFile(path) {
-	console.log(`Display ${path}`)
     let file_type = ".txt";
     if (path.endsWith('.json')) {
         file_type = '.json';

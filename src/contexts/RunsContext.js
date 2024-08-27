@@ -11,7 +11,7 @@ export const RunsProvider = ({ children }) => {
     const fetchUserRuns = async (user) => {
         try {
             const response = await axios.post('http://134.158.151.129:80/get_user_runs', { user });
-            setRuns(response.data.runs);
+            setRuns(response.data.data);
         } catch (error) {
             console.error('Error:', error);
         }

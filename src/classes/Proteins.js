@@ -5,26 +5,40 @@ export default class Proteins {
 	genbank = {}
 	
 	constructor(data) {
-		if (data["ensembl"]["url"]!=="") {
-			this.ensembl = data["ensembl"]
+		this.ensembl = data["ensembl"]
+		if (Object.keys(data["ensembl"]).length !== 0 && data["ensembl"]["url"]!=="") {
 			this.ensembl['accession'] = this.getEnsemblAccession(this.ensembl.url)
 			this.ensembl['userURL'] = this.getEnsemblURL(this.ensembl.url, 'user');
 			this.ensembl['downloadURL'] = this.getEnsemblURL(this.ensembl.url, 'download')
 		}
-		if (data["uniprot"]["url"]!=="") {
-			this.uniprot = data["uniprot"]
-			this.uniprot['accession'] = this.uniprot.proteome_id;
-			this.uniprot['userURL'] = this.getUniprotURL(this.uniprot.accession)
-			this.uniprot['downloadURL'] = this.uniprot['url']
+		this.uniprot_proteome = data["uniprot_proteome"]
+		if (Object.keys(data["uniprot_proteome"]).length !== 0 && data["uniprot_proteome"]["url"]!=="") {
+			this.uniprot_proteome['accession'] = this.uniprot_proteome.proteome_id;
+			this.uniprot_proteome['userURL'] = this.getUniprotProteomeURL(this.uniprot_proteome.accession)
+			this.uniprot_proteome['downloadURL'] = this.uniprot_proteome['url']
 		}
-		if (data["refseq"]["url"]!=="") {
-			this.refseq = data["refseq"]
+		this.uniprot_swissprot = data["uniprot_swissprot"]
+		if (Object.keys(data["uniprot_swissprot"]).length !== 0 && data["uniprot_swissprot"]["url"]!=="") {
+			this.uniprot_swissprot['accession'] = 'swissprot'
+			this.uniprot_swissprot['userURL'] = this.getSwissprotURL(this.uniprot_swissprot.taxonId)
+			this.uniprot_swissprot['downloadURL'] = this.uniprot_swissprot['url']
+			this.uniprot_swissprot['count'] = this.uniprot_swissprot['sequence_count']
+		}
+		this.uniprot_trembl = data["uniprot_trembl"]
+		if (Object.keys(data["uniprot_trembl"]).length !== 0 && data["uniprot_trembl"]["url"]!=="") {
+			this.uniprot_trembl['accession'] = 'trembl'
+			this.uniprot_trembl['userURL'] = this.getTremblURL(this.uniprot_trembl.taxonId)
+			this.uniprot_trembl['downloadURL'] = this.uniprot_trembl['url']
+			this.uniprot_trembl['count'] = this.uniprot_trembl['sequence_count']
+		}
+		this.refseq = data["refseq"]
+		if (Object.keys(data["refseq"]).length !== 0 && data["refseq"]["url"]!=="") {
 			this.refseq['accession'] = this.getNCBIAccession(this.refseq.url)
 			this.refseq['userURL'] = this.getNCBIURL(this.refseq.accession, this.refseq.url, 'user');
 			this.refseq['downloadURL'] = this.getNCBIURL(this.refseq.accession, this.refseq.url, 'download');
 		}		
-		if (data["genbank"]["url"]!=="") {
-			this.genbank = data["genbank"]
+		this.genbank = data["genbank"]
+		if (Object.keys(data["genbank"]).length !== 0 && data["genbank"]["url"]!=="") {
 			this.genbank['accession'] = this.getNCBIAccession(this.genbank.url)
 			this.genbank['userURL'] = this.getNCBIURL(this.genbank.accession, this.genbank.url, 'user');
 			this.genbank['downloadURL'] = this.getNCBIURL(this.genbank.accession, this.genbank.url, 'download');
@@ -64,8 +78,17 @@ export default class Proteins {
 		}
 	}
 
-	getUniprotURL(accession) {
+	getUniprotProteomeURL(accession) {
 		return `https://www.uniprot.org/proteomes/${accession}`
+	}
+
+	getSwissprotURL(taxid) {
+		return `https://www.uniprot.org/uniprotkb?query=%28taxonomy_id%3A${taxid}%29+AND+%28reviewed%3Atrue%29`
+		
+	}
+
+	getTremblURL(taxid) {
+		return `https://www.uniprot.org/uniprotkb?query=%28taxonomy_id%3A${taxid}%29+AND+%28reviewed%3Afalse%29`
 	}
 
 }

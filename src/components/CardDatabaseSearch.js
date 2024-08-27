@@ -1,11 +1,13 @@
+import "../components/Loading.css";
 import { useEffect, useState } from "react";
 import CardSequencing from "./CardSequencing";
 import CardAssembly from "./CardAssembly";
 import CardProteins from "./CardProteins";
 import './CardDatabaseSearch.css';
-import { useDBSearch } from '../contexts/DBSearchContext'
+import { useDBSearch } from '../contexts/DBSearchContext';
+import { useUser } from '../contexts/UserContext';
 
-const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDownload }) => {
+const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDownload, rerunDBSearch, setForceNewDBSearch }) => {
     const { selectedData, setSelectedData } = useDBSearch();
     const [selectedSequencing, setSelectedSequencing] = useState([]);
     const [selectedAssembly, setSelectedAssembly] = useState(null);
@@ -13,15 +15,15 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
     const [sequencingSize, setSequencingSize] = useState("0Go");
     const [noAssemblyFound, setNoAssemblyFound] = useState(false);
     const [noProteinsFound, setNoProteinsFound] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const { user } = useUser();
 
     useEffect(() => {
         if (selectedData && selectedData[0].data_type === "genome") {
             setSelectedAssembly(selectedData[0]);
-        }
-        else if (selectedData && selectedData.every(item => typeof item === 'string')) {
+        } else if (selectedData && selectedData.every(item => typeof item === 'string')) {
             updateSelectedSequencing(selectedData);   
-        }
-        else {
+        } else {
             if (data.assembly && (
                 Object.keys(data.assembly.ensembl).length === 0 &&
                 Object.keys(data.assembly.refseq).length === 0 &&
@@ -30,42 +32,21 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                 setNoAssemblyFound(true);
             } else {
                 setNoAssemblyFound(false);
-                let recommendedAssembly = '';
-                if (Object.keys(data.assembly.ensembl).length !== 0) {
-                    recommendedAssembly = data.assembly.ensembl.accession;
-                } else if (Object.keys(data.assembly.refseq).length !== 0) {
-                    recommendedAssembly = data.assembly.refseq.accession;
-                } else if (Object.keys(data.assembly.genbank).length !== 0) {
-                    recommendedAssembly = data.assembly.genbank.accession;
-                }
-                setSelectedAssembly(recommendedAssembly);
-                setSelectedData([recommendedAssembly]);
-                   
             }
 
             if (data.proteins && (
                 Object.keys(data.proteins.ensembl).length === 0 &&
-                Object.keys(data.proteins.uniprot).length === 0 &&
+                Object.keys(data.proteins.uniprot_swissprot).length === 0 &&
+                Object.keys(data.proteins.uniprot_trembl).length === 0 &&
+                Object.keys(data.proteins.uniprot_proteome).length === 0 &&
                 Object.keys(data.proteins.refseq).length === 0 &&
                 Object.keys(data.proteins.genbank).length === 0
             )) {
                 setNoProteinsFound(true);
             } else {
                 setNoProteinsFound(false);
-                let recommendedProteins = {};
-                if (Object.keys(data.proteins.ensembl).length !== 0) {
-                    recommendedProteins = data.proteins.ensembl;
-                } else if (Object.keys(data.proteins.uniprot).length !== 0) {
-                    recommendedProteins = data.proteins.uniprot;
-                }	else if (Object.keys(data.proteins.refseq).length !== 0) {
-                    recommendedProteins = data.proteins.refseq;
-                } else if (Object.keys(data.proteins.genbank).length !== 0) {
-                    recommendedProteins = data.proteins.genbank;
-                }
                 if (!selectedData) {
-                    setSelectedData([recommendedProteins]);
-                    setSelectedProteins(recommendedProteins);
-                    setSelectedAssembly()
+                    setSelectedAssembly();
                 } else if (selectedData[0].data_type === "proteins") {
                     setSelectedAssembly(selectedData[0]);
                 }
@@ -84,9 +65,8 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
             if (selectedProteins) {
                 setSelectedProteins(null);
             }
-        }
-        else {
-            setSelectedAssembly(null)
+        } else {
+            setSelectedAssembly(null);
         }
     };
 
@@ -113,18 +93,31 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
         }
     };
 
-    const convertForDownload = (data) => {
-       if (data.database == 'uniprot') {
-            handleClickDownload([data.downloadURL, data.accession], 'uniprot')
-       } else {
-            handleClickDownload(data.downloadURL, 'ftp')
-       }    
+    const convertForDownload = async (data) => {
+        try {
+            setIsLoading(true);
+            if (data.database === 'uniprot' || data.database === 'swissprot' || data.database === 'trembl') {
+                await handleClickDownload([data.downloadURL, data.accession], 'uniprot', setIsLoading);
+            } else {
+                await handleClickDownload(data.downloadURL, 'ftp', setIsLoading);
+            }
+        } catch (error) {
+            console.error('Error during download:', error);
+        }
     };
-    
+
+    const handleClickDBSearch = async () => {
+        await rerunDBSearch(true)
+    }
+
     return (
         <div>
-            <p>Selected data {JSON.stringify(selectedData, null, 2)}</p>
-            <label className="t2_bold">Data found for {species} :</label>
+           <div className="card-container-header t2_bold">
+                <label>
+                    <i>{data.scientific_name.charAt(0).toUpperCase() + data.scientific_name.slice(1).toLowerCase()}</i> ({data.taxonID}) on {data.date}.
+                </label>
+                <button className="retry-btn t2_bold" onClick={handleClickDBSearch}>Retry the search with today's data</button>
+            </div>
             <div className="card-container t2_light">
                 <div className="sequencing-assembly-container">
                     <div className="sequencing-assembly-cards">
@@ -144,7 +137,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                             updateSelectedAssembly={updateSelectedAssembly}
                         />
                     </div>
-                    <button disabled={!selectedAssembly && selectedSequencing.length === 0} onClick={() => handleClickSettings(selectedData)}>Run</button>
+                    <button className="t2_bold" disabled={!selectedAssembly && selectedSequencing.length === 0} onClick={() => handleClickSettings(selectedData)}>Run</button>
                 </div>
                 <div className="protein-container">
                     <CardProteins
@@ -152,9 +145,14 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                         selectedProteins={selectedProteins}
                         updateSelectedProteins={updateSelectedProteins}
                     />
-                <button disabled={!selectedProteins} onClick={() => convertForDownload(selectedProteins)}>Download</button>
+                    <button className="t2_bold" disabled={!selectedProteins} onClick={() => convertForDownload(selectedProteins)}>Download</button>
                 </div>
             </div>
+            {isLoading && (
+                <div className="window loading">
+                    <span></span>
+                </div>
+            )}
         </div>
     );
 };

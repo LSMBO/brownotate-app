@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 
-export default function SpeciesInput({ handleSetInputSpecies, speciesNotFound }) {
+export default function SpeciesInput({setInputSpecies, speciesNotFound }) {
     const [content, setContent] = useState("")
 
     const handleChange = (e) => {
         setContent(e.target.value)
-        handleSetInputSpecies(e.target.value)
+        setInputSpecies(e.target.value)
     } 
     
     return (

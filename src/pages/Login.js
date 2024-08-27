@@ -32,8 +32,8 @@ export default function Login({setIsLoggedIn}) {
 
   return (
     <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
+      <h2 className='login-h2'>Login</h2>
+      <form className="login-form" onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="Enter your email"
@@ -41,7 +41,7 @@ export default function Login({setIsLoggedIn}) {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Login</button>
+        <button className="t2_bold" type="submit">Login</button>
       </form>
       {error && <p>{error}</p>}
     </div>

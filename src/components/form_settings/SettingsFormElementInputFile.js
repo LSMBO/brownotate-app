@@ -6,6 +6,16 @@ export default function SettingsFormElementInputFile({ label, disabled, handleFi
 
     };
 
+    const displayFileName = (file_url) => {
+        if (typeof file_url === 'string') {
+            const parts = file_url.split('/');
+            return parts[parts.length - 1];;
+        } else if (file_url instanceof File) {
+            return file_url.name;
+        }
+    };
+
+
     return (
         <div className="settingsFormElementInputFile">
             <input
@@ -14,7 +24,7 @@ export default function SettingsFormElementInputFile({ label, disabled, handleFi
                 type="file"
                 disabled={disabled}
                 name={label.toLowerCase().replace(' ', '_')}
-                accept=".fastq, .fq, .fasta, .fna, .fa"
+                accept=".fastq, .fq, .fasta, .fna, .fa, .gz"
                 {...(allowMultiple && { multiple: true })}
                 onChange={handleFileChange}
             />   
@@ -23,7 +33,7 @@ export default function SettingsFormElementInputFile({ label, disabled, handleFi
                 {value.map((file, index) => (
                     <li className="t1" key={index}>
                         <button onClick={(e) => handleFileChange(e, index)}>X</button>
-                        {file.name}{' '}
+                        {displayFileName(file)}{' '}
                     </li>
                 ))}
             </ul>

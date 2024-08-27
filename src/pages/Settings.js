@@ -68,7 +68,6 @@ export default function Settings() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         navigate('/')
-
         axios.post('http://134.158.151.129:80/create_run', { parameters: parameters, user: user })
             .then(function (response) {
                 addRun(response.data)
@@ -84,7 +83,7 @@ export default function Settings() {
         }
         // Upload and update assembly file
         if (parameters.startSection.genomeFileList.length > 0) {
-            if ('size' in parameters.startSection.genomeFileList[0]) {
+            if (Array.isArray(parameters.startSection.genomeFileList)) {
                 let uploadedAssemblyFile = await uploadFile(parameters.startSection.genomeFileList, 'assembly');
                 setParameters(prevParams => ({
                     ...prevParams,
@@ -94,13 +93,13 @@ export default function Settings() {
                     }
                 }));
             } else {
-                urls['assembly'] = parameters.startSection.genomeFileList[0]['url']
+                urls['assembly'] = parameters.startSection.genomeFileList
             }
         }  
 
         // Upload and update evidence files
         if (parameters.annotationSection.evidenceFileList.length > 0) {
-            if ('size' in parameters.annotationSection.evidenceFileList[0]) {
+            if (Array.isArray(parameters.annotationSection.evidenceFileList)) {
                 let uploadedEvidenceFile = await uploadFile(parameters.annotationSection.evidenceFileList, 'evidence');
                 setParameters(prevParams => ({
                     ...prevParams,
@@ -110,7 +109,7 @@ export default function Settings() {
                     }
                 }));
             } else {
-                urls['evidence'] = parameters.annotationSection.evidenceFileList[0]['url']
+                urls['evidence'] = parameters.annotationSection.evidenceFileList
             }
         }
 
@@ -128,14 +127,14 @@ export default function Settings() {
 
         if (urls['assembly'] || urls['evidence']) {
             try {
-                await axios.post('http://134.158.151.129:80/update_parameters', { run_id: parameters['id'], user: user, urls: urls});
+                await axios.post('http://134.158.151.129:80/update_run_parameters', { run_id: parameters['id'], user: user, urls: urls});
             } catch (error) {
                 console.error('Error:', error);
             }
         }
 
         try {
-            await axios.post('http://134.158.151.129:80/run_script', { run_id: parameters['id'], user: user});
+            await axios.post('http://134.158.151.129:80/run_brownotate', { run_id: parameters['id'], user: user});
         } catch (error) {
             console.error('Error:', error);
         }

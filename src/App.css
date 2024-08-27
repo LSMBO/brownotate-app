@@ -53,18 +53,26 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-}
-
-.footer {
-    flex-shrink: 0;
-    width: 100%;
 }
 
 #page {
     display: block;
     height: 100%;
 }
+
+.login-form {
+    display: flex;
+    width: 90%;
+    margin: auto;
+}
+
+.login-h2 {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: normal;
+    font-size: 2rem;
+    text-align: center;
+}
+
 
 input {
     display: flex;

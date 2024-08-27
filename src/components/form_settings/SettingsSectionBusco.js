@@ -29,7 +29,7 @@ export default function SettingsSectionBusco({ disabled, updateParameters, param
         <fieldset disabled={disabled}>
             <legend className="t2_bold">Busco (completeness evaluation)</legend>
             <div className="formElement">
-                <SettingsFormElementInputRadio disabled={parameters.startSection.genome} label="Evaluate the genome completeness" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.buscoSection.assembly} onChange={handleRadioChange}/>
+                <SettingsFormElementInputRadio label="Evaluate the genome completeness" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.buscoSection.assembly} onChange={handleRadioChange}/>
             </div>
             <div className="formElement">
                 <SettingsFormElementInputRadio label="Evaluate the annotation completeness" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.buscoSection.annotation} onChange={handleRadioChange}/>

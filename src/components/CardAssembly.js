@@ -7,14 +7,6 @@ const CardAssembly = ({ assembly, noProteinsFound, selectedAssembly, updateSelec
     const ensemblEmpty = Object.keys(assembly.ensembl).length === 0;
     const refseqEmpty = Object.keys(assembly.refseq).length === 0;
     const genbankEmpty = Object.keys(assembly.genbank).length === 0;
-    let recommendedAssembly = '';
-    if (noProteinsFound && !ensemblEmpty) {
-        recommendedAssembly = 'ENSEMBL';
-    } else if (noProteinsFound && !refseqEmpty) {
-        recommendedAssembly = 'RefSeq';
-    } else if (noProteinsFound && !genbankEmpty) {
-        recommendedAssembly = 'Genbank';
-    }
 
     return (
         <div className="card-assembly">
@@ -23,30 +15,30 @@ const CardAssembly = ({ assembly, noProteinsFound, selectedAssembly, updateSelec
             </div>
             {ensemblEmpty && refseqEmpty && genbankEmpty && <p>No assembly found</p>}
             <ul>
-                <AssemblyProteinsUnit 
-                    isEmpty={ensemblEmpty}
-                    data={assembly.ensembl} 
-                    selectedData={selectedAssembly} 
-                    updateSelectedData={updateSelectedAssembly} 
-                    recommendedData={recommendedAssembly} 
-                    label="ENSEMBL" 
-                />
-                <AssemblyProteinsUnit 
-                    isEmpty={refseqEmpty}
-                    data={assembly.refseq} 
-                    selectedData={selectedAssembly} 
-                    updateSelectedData={updateSelectedAssembly} 
-                    recommendedData={recommendedAssembly} 
-                    label="RefSeq" 
-                />	
-                <AssemblyProteinsUnit 
-                    isEmpty={genbankEmpty}
-                    data={assembly.genbank} 
-                    selectedData={selectedAssembly} 
-                    updateSelectedData={updateSelectedAssembly} 
-                    recommendedData={recommendedAssembly} 
-                    label="Genbank" 
-                />	
+                {!ensemblEmpty && (
+                    <AssemblyProteinsUnit 
+                        data={assembly.ensembl} 
+                        selectedData={selectedAssembly} 
+                        updateSelectedData={updateSelectedAssembly} 
+                        label="ENSEMBL" 
+                    />
+                )}
+                {!refseqEmpty && (
+                    <AssemblyProteinsUnit 
+                        data={assembly.refseq} 
+                        selectedData={selectedAssembly} 
+                        updateSelectedData={updateSelectedAssembly} 
+                        label="RefSeq" 
+                    />	
+                )}
+                {!genbankEmpty && (
+                    <AssemblyProteinsUnit 
+                        data={assembly.genbank} 
+                        selectedData={selectedAssembly} 
+                        updateSelectedData={updateSelectedAssembly} 
+                        label="Genbank" 
+                    />	
+                )}
             </ul>
         </div>
     );

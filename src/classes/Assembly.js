@@ -5,20 +5,20 @@ export default class Assembly {
 	genbank = {}
 	
 	constructor(data) {
-		if (data["ensembl"]["url"]!=="") {
-			this.ensembl = data["ensembl"]
+		this.ensembl = data["ensembl"]
+		if (Object.keys(data["ensembl"]).length !== 0 && data["ensembl"]["url"]!=="") {
 			this.ensembl['accession'] = this.getEnsemblAccession(this.ensembl.url)
 			this.ensembl['userURL'] = this.getEnsemblURL(this.ensembl.url, 'user');
 			this.ensembl['downloadURL'] = this.getEnsemblURL(this.ensembl.url, 'download')
 		}
-		if (data["refseq"]["url"]!=="") {
-			this.refseq = data["refseq"]
+		this.refseq = data["refseq"]
+		if (Object.keys(data["refseq"]).length !== 0 && data["refseq"]["url"]!=="") {
 			this.refseq['accession'] = this.getNCBIAccession(this.refseq.url)
 			this.refseq['userURL'] = this.getNCBIURL(this.refseq.accession, this.refseq.url, 'user');
 			this.refseq['downloadURL'] = this.getNCBIURL(this.refseq.accession, this.refseq.url, 'download');
 		}
-		if (data["genbank"]["url"]!=="") {
-			this.genbank = data["genbank"]
+		this.genbank = data["genbank"]
+		if (Object.keys(data["genbank"]).length !== 0 && data["genbank"]["url"]!=="") {
 			this.genbank['accession'] = this.getNCBIAccession(this.genbank.url)
 			this.genbank['userURL'] = this.getNCBIURL(this.genbank.accession, this.genbank.url, 'user');
 			this.genbank['downloadURL'] = this.getNCBIURL(this.genbank.accession, this.genbank.url, 'download');
@@ -44,7 +44,7 @@ export default class Assembly {
 		if (mode === "user") {
 			return `https://www.ncbi.nlm.nih.gov/datasets/genome/${accession}/`
 		} else {
-			return `https://ftp.ncbi.nlm.nih.gov${url}` 
+			return `ftp.ncbi.nlm.nih.gov${url}` 
 		}		
 	}
 
@@ -54,7 +54,7 @@ export default class Assembly {
 		} else {
 			const urlParts = url.split('/');
 			const newUrl = urlParts.slice(0, -2).join('/') + '/';
-			return `https://ftp.ensembl.org${newUrl}`;
+			return `ftp.ensembl.org${newUrl}`;
 		}
 	}
 }

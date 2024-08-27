@@ -4,29 +4,41 @@ import HelpIcon from "../../assets/help.png";
 
 
 export default function SettingsExcludedSpecies({ label, help, excludedSpeciesList, handleSetSpecies, removeSpecies, disabled }) {
-    const [inputValue, setInputValue] = useState("")
+    const [inputSpecies, setInputSpecies] = useState("")
+    const [speciesNotFound, setSpeciesNotFound] = useState("")
     const [errorMsg, setErrorMsg] = useState("");
 
     const handleChange = (e) => {
-      setInputValue(e.target.value)
+      setInputSpecies(e.target.value)
     } 
 
-    const handleInputSubmit = (inputValue, e) => {
-      e.preventDefault();
-      axios.post('http://134.158.151.129:80/run_species_exists', { species: inputValue })
-        .then(response => {
-            const lastLine = response.data.split('\n').slice(-2)[0];
-            if (lastLine === `Taxo \"${inputValue}\" not found.`) {
-                setErrorMsg(lastLine)
+  const speciesExists = async (inputSpecies) => {
+      try {
+          if (inputSpecies==='') {
+              setSpeciesNotFound(" ");
+              setErrorMsg(`Taxo \"${inputSpecies}\" not found.`);
+          }
+          else {
+              const response = await axios.post('http://134.158.151.129:80/check_species_exists', { species: inputSpecies });
+              setSpeciesNotFound("");
+              return response.data.results;
+          }
+      } catch (error) {
+          console.error('Error:', error);
+          setSpeciesNotFound(inputSpecies);
+          setErrorMsg(`Taxo \"${inputSpecies}\" not found.`);
+          return false;
+      }
+  };
 
-            } else {
-              setErrorMsg('')
-                handleSetSpecies(lastLine.split(';'))
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        })
+    const handleInputSubmit = async (e) => {
+      e.preventDefault();
+      const speciesFound = await speciesExists(inputSpecies);
+      setInputSpecies('');
+      if (speciesFound) {
+        setErrorMsg('');
+        handleSetSpecies(speciesFound);
+      }
     }
 
     return (
@@ -45,13 +57,13 @@ export default function SettingsExcludedSpecies({ label, help, excludedSpeciesLi
               <div className="inputAndButton">
                 <input
                     className={!!errorMsg ? "t2_light error" : "t2_light"}
-                    value={inputValue}
+                    value={inputSpecies}
                     type="text"
                     placeholder="Enter your species ..."
                     onChange={handleChange}
                     disabled={disabled}
                 />
-                <button className="speciesInputBtn t1" disabled={disabled} onClick={(e) => handleInputSubmit(inputValue, e)}>Add</button>
+                <button className="speciesInputBtn t1" disabled={disabled} onClick={(e) => handleInputSubmit(e)}>Add</button>
               </div>
               {errorMsg && <p className="error-message">{errorMsg}</p>}
             </div>
@@ -59,7 +71,7 @@ export default function SettingsExcludedSpecies({ label, help, excludedSpeciesLi
               {excludedSpeciesList.map((species, index) => (
                 <li key={index}>
                   <button onClick={(e) => removeSpecies(e, index)}>X</button>
-                  {species[0]} ({species[1]}){' '}
+                  {species['scientific_name']} ({species['taxID']}){' '}
                 </li>
               ))}
             </ul>
