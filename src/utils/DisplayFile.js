@@ -1,4 +1,5 @@
 import axios from 'axios';
+import CONFIG from '../config';
 
 function displayBusco(data) {
     const completePercent = parseFloat(data.results["Complete percentage"]);
@@ -55,7 +56,7 @@ export async function displayFile(path) {
     }
 
     try {
-        const response = await axios.post('http://134.158.151.129:80/read_file', { path: path, file_type: file_type });
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/read_file`, { path: path, file_type: file_type });
         const fileContent = response.data;
 
         // Formatage du contenu en JSX

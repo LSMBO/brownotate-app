@@ -24,11 +24,9 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
     parametersCopy.startSection.genome = false;
     if (tab === "Sequencing"){
       parametersCopy.startSection.sequencing = true;
-      parametersCopy.buscoSection.assembly = true;
     }
     if (tab === "Assembly"){
       parametersCopy.startSection.genome = true;
-      parametersCopy.buscoSection.assembly = false;
     }
     updateParameters(parametersCopy);
     setActiveTab(tab);
@@ -68,6 +66,8 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
       if (files) {
         parametersCopy.startSection.genomeFileList = Array.from(files);
         parametersCopy.startSection.genomeFile = true;
+        parametersCopy.startSection.sequencingFiles = false;
+        parametersCopy.startSection.sequencingAccessions = false;
       }
     }
     updateParameters(parametersCopy);
@@ -75,14 +75,8 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
 
   const handleRadioChange = (name, isChecked) => {
     const parametersCopy = { ...parameters };
-
     if (isChecked) {
-      if (name === "Genome file"){
-        parametersCopy.startSection.sequencingFiles = false;
-        parametersCopy.startSection.sequencingAccessions = false;
-        parametersCopy.startSection.genomeFile = true;
-      }
-      else if (name === "Sequencing file(s)"){
+      if (name === "Sequencing file(s)"){
           parametersCopy.startSection.genomeFile = false;
           parametersCopy.startSection.sequencingFiles = true;
           parametersCopy.startSection.sequencingAccessions = false;

@@ -15,15 +15,16 @@ import { useDBSearch } from '../contexts/DBSearchContext'
 import { useParameters } from '../contexts/ParametersContext';
 import { useRuns } from '../contexts/RunsContext';
 import io from 'socket.io-client';
+import CONFIG from '../config';
 
-const socket = io.connect("http://134.158.151.129:80");
+const socket = io.connect(CONFIG.API_BASE_URL, {reconnection: false});
 
 export default function Home() {
     //state
     const navigate = useNavigate();
     const { parameters, setParameters } = useParameters();
     const { user } = useUser();
-    const { dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus } = useDBSearch();
+    const { dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus, dbsStderr, setDbsStderr } = useDBSearch();
     const [inputSpecies, setInputSpecies] = useState("Naja naja")
     const [dbsearchSpecies, setDbsearchSpecies] = useState("")
     const [speciesNotFound, setSpeciesNotFound] = useState("")
@@ -49,12 +50,12 @@ export default function Home() {
                 setDBSearchStatus('taxoNotFound');
             }
             else {
-                const response = await axios.post('http://134.158.151.129:80/check_species_exists', { species: inputValue });
+                const response = await axios.post(`${CONFIG.API_BASE_URL}/check_species_exists`, { species: inputValue });
                 setSpeciesNotFound("");
                 return response.data.results;
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error:', error.response.data.message);
             setSpeciesNotFound(inputValue);
             setDBSearchStatus('taxoNotFound');
             return false;
@@ -68,9 +69,10 @@ export default function Home() {
         if (speciesFound) {
             newDbsearch.setTaxonID(speciesFound['taxID'])
             try {
-                const response = await axios.post('http://134.158.151.129:80/database_search', { scientificName: speciesFound['scientific_name'], taxID: speciesFound['taxID'], user: user, force_new_search: force_new_search });
+                const response = await axios.post(`${CONFIG.API_BASE_URL}/database_search`, { scientificName: speciesFound['scientific_name'], taxID: speciesFound['taxID'], user: user, force_new_search: force_new_search });
                 setDBSearchStatus('completed');
                 setDbsearchSpecies(speciesFound["scientific_name"])
+                setDbsStderr(null)
                 if ('data' in response.data) {
                     newDbsearch.updateData(response.data.data);
                 } else {
@@ -79,6 +81,7 @@ export default function Home() {
             } catch (error) {
                 console.error('Error:', error);
                 setDBSearchStatus('failed');
+                setDbsStderr(error.response.data.stderr)
             } finally {
                 setDBSearch(newDbsearch);
             }
@@ -134,7 +137,10 @@ export default function Home() {
         {dbsearchStatus === "completed" ? 
         (<CardDatabaseSearch species={dbsearchSpecies} data={dbsearch} handleClickSettings={handleClickSettings} handleClickDownload={handleClickDownload} rerunDBSearch={handleClickDBS}/>)
         : dbsearchStatus === "failed" ? 
-            (<p>A problem occurred during the search</p>)
+            (<div>
+                <pre>A problem occurred during the search</pre>
+                <pre>{dbsStderr}</pre>
+            </div>)
         : dbsearchStatus === "loading" ?
         (<div className="window loading"><span></span></div>)
         : (<p></p>)}

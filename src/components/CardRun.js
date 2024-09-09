@@ -1,8 +1,9 @@
 import "./CardRun.css"
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRuns } from '../contexts/RunsContext';
 import axios from 'axios';
+import CONFIG from '../config';
+import resumeArrowIcon from "../assets/resume_arrow.png"
 
 const CardRun = ({ user, id, data, status, parameters }) => {
     const navigate = useNavigate();
@@ -20,10 +21,20 @@ const CardRun = ({ user, id, data, status, parameters }) => {
         });
       };
 
-      const handleDeleteRun = async (e) => {
+    const handleDeleteRun = async (e) => {
       e.stopPropagation();
       try {
-        const response = await axios.post('http://134.158.151.129:80/delete_run', { id: data.parameters.id });
+        await axios.post(`${CONFIG.API_BASE_URL}/delete_run`, { id: data.parameters.id });
+        fetchUserRuns(user)
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    const handleResumeRun = async (e) => {
+      e.stopPropagation();
+      try {
+        await axios.post(`${CONFIG.API_BASE_URL}/resume_run`, { id: data.parameters.id });
         fetchUserRuns(user)
       } catch (error) {
         console.error('Error:', error);
@@ -36,7 +47,13 @@ const CardRun = ({ user, id, data, status, parameters }) => {
 
       return (
         <div className={`run-card t2_light ${status}`} onClick={handleClick}>
-          <button onClick={(e) => handleDeleteRun(e)}>X</button>
+          <button className="delete-btn" onClick={(e) => handleDeleteRun(e)}>X</button>
+          {status === "failed" && (
+            <button className="resume-btn" onClick={(e) => handleResumeRun(e)}>
+              <label>RESUME</label>
+              <img src={resumeArrowIcon} alt="Resume icon" className="resume-icon" />
+            </button>
+          )}
           <span><b>Date: </b>{formatDate(parameters.id)}</span>
           <span><b>Species: </b><i>{parameters.species.scientificName}</i></span>
           <span><b>Status: </b>{status}</span>

@@ -6,13 +6,13 @@ import { handleClickDownload } from '../utils/Download';
 import { displayFile } from '../utils/DisplayFile';
 import './Run.css';
 import DownloadIcon from "../assets/download.png";
+import CONFIG from '../config';
 
 const Run = () => {
     const { id } = useParams();
 	const [isLoading, setIsLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState("Results");
     const [run, setRun] = useState(null);
-	const [logFile, setLogFile] = useState(null);
     const [fileContents, setFileContents] = useState({
         logFile: null,
         buscoAssemblyFile: null,
@@ -23,7 +23,7 @@ const Run = () => {
     useEffect(() => {
         const fetchRun = async () => {
             try {
-                const response = await axios.post('http://134.158.151.129:80/get_run', { run_id: id });
+                const response = await axios.post(`${CONFIG.API_BASE_URL}/get_run`, { run_id: id });
                 const data = response.data.data;
                 if (response.status === 200) {
                     setRun(data);
@@ -39,31 +39,43 @@ const Run = () => {
     }, [id]);
 
 	useEffect(() => {
-        const handleDisplayFile = async (filePath, fileType) => {
-            try {
-                const fileContent = await displayFile(filePath);
-                setFileContents(prevState => ({
-                    ...prevState,
-                    [fileType]: fileContent
-                }));
-            } catch (error) {
-                console.error(`Error fetching ${fileType} file:`, error);
-            }
-        };
-
-        if (run && run.status == "completed") {
-			if(run.parameters.buscoSection.assembly) {
-				handleDisplayFile(`${run.results_path}/Busco_genome.json`, 'buscoAssemblyFile');
+		const fetchFiles = async () => {
+			if (!run) return;
+	
+			const handleDisplayFile = async (filePath, fileType) => {
+				try {
+					console.log(filePath);
+					const fileContent = await displayFile(filePath);
+					setFileContents(prevState => ({
+						...prevState,
+						[fileType]: fileContent
+					}));
+				} catch (error) {
+					console.error(`Error fetching ${fileType} file:`, error);
+				}
+			};
+	
+			if (run.status === "completed" || run.status === "incomplete") {
+				if (run.parameters.buscoSection.assembly) {
+					await handleDisplayFile(`${run.results_path}/Busco_genome.json`, 'buscoAssemblyFile');
+				}
 			}
-            if(run.parameters.buscoSection.annotation) {
-				handleDisplayFile(`${run.results_path}/Busco_annotation.json`, 'buscoAnnotationFile');
+	
+			if (run.status === "completed") {
+				if (run.parameters.buscoSection.annotation) {
+					await handleDisplayFile(`${run.results_path}/Busco_annotation.json`, 'buscoAnnotationFile');
+				}
+				if (!run.parameters.brownamingSection.skip) {
+					await handleDisplayFile(`${run.results_path}/brownaming/stats.txt`, 'brownamingStatsFile');
+				}
 			}
-			if(!run.parameters.brownamingSection.skip) {
-				handleDisplayFile(`${run.results_path}/brownaming/stats.txt`, 'brownamingStatsFile');
-			}
-			handleDisplayFile(`${run.results_path}/main.log`, 'logFile');
-        }
-    }, [run]);
+	
+			await handleDisplayFile(`${run.results_path}/main.log`, 'logFile');
+		};
+	
+		fetchFiles();
+	}, [run]);
+	
 
     const getDuplicationMethod = () => {
         if (run.parameters.startSection.removeStrict) {
@@ -99,17 +111,7 @@ const Run = () => {
         );
     };
 
-    const handleDisplayFile = async (filePath, fileType) => {
-        try {
-            const fileContent = await displayFile(filePath);
-            setFileContents(prevState => ({
-                ...prevState,
-                [fileType]: fileContent
-            }));
-        } catch (error) {
-            console.error(`Error fetching ${fileType} file:`, error);
-        }
-    };
+
 
 
     return (
@@ -136,7 +138,7 @@ const Run = () => {
 									</fieldset>
 								</div>
 							)}					
-							{run.status == "completed" && (
+							{(run.status === "completed" || run.status === "incomplete") && (
 								<div className="run-results">
 									<h3>Results</h3>
 									<fieldset className='download-container'>
@@ -149,15 +151,27 @@ const Run = () => {
 											<div className="t2_light">Assembly</div>
 											<img src={DownloadIcon} alt="download" className="downloadIcon"/>
 										</div>
-										<div className='download' onClick={() => handleClickDownload(`${run.results_path}`, 'server', setIsLoading, '.fasta')}>
+										<div className={`download ${run.status === "incomplete" ? 'disabled' : ''}`} onClick={run.status === "completed" ? () => handleClickDownload(`${run.results_path}`, 'server', setIsLoading, '.fasta') : null}>
 											<div className="t2_light">Annotation</div>
 											<img src={DownloadIcon} alt="download" className="downloadIcon"/>
 										</div>
-										<div className='download' onClick={() => handleClickDownload(`${run.results_path}/brownaming`, 'server', setIsLoading)}>
+										<div className={`download ${run.status === "incomplete" ? 'disabled' : ''}`} onClick={run.status === "completed" ? () => handleClickDownload(`${run.results_path}/brownaming`, 'server', setIsLoading) : null}>
 											<div className="t2_light">Brownaming (zipped)</div>
 											<img src={DownloadIcon} alt="download" className="downloadIcon"/>
 										</div>
 									</fieldset>
+
+									{run.status === "incomplete" && (
+										<fieldset>
+											<legend className="t2_bold">Annotation Failed</legend>
+											<div className="t2_light">
+												The annotation process has failed due to an insufficient number of genes identified.
+												This could be caused by poor alignment of the evidences {run.parameters.annotationSection.evidenceFileList} with the assembly. 
+												We recommend trying again with improved genomic data or better evidences.
+											</div>
+										</fieldset>
+									)}
+
 									<fieldset>
 										<legend className="t2_bold">Busco</legend>
 										{run.parameters.buscoSection.assembly &&
@@ -169,7 +183,7 @@ const Run = () => {
 												)}
 											</div>
 										</div>}
-										{run.parameters.buscoSection.annotation &&
+										{(run.status === "completed" && run.parameters.buscoSection.annotation) &&
 										<div>
 											<h4>Annotation completeness</h4>
 											<div className="t2_light file-content">
@@ -179,14 +193,16 @@ const Run = () => {
 											</div>
 										</div>}
 									</fieldset>
-									<fieldset>
-										<legend className="t2_bold">Brownaming statistics</legend>
-										<div className="t2_light">
-											{fileContents.brownamingStatsFile ? fileContents.brownamingStatsFile : (
-												<div>Loading...</div>
-											)}
-										</div>
-									</fieldset>
+									{(run.status === "completed") &&
+										<fieldset>
+											<legend className="t2_bold">Brownaming statistics</legend>
+											<div className="t2_light">
+												{fileContents.brownamingStatsFile ? fileContents.brownamingStatsFile : (
+													<div>Loading...</div>
+												)}
+											</div>
+										</fieldset>
+									}
 									<fieldset>
 										<legend className='t2_bold'>Log</legend>
 										<div className="t2_light">

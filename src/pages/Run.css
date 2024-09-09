@@ -22,6 +22,12 @@
 	border-radius: 10px;
 }
 
+.download.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .download:hover {
 	cursor: pointer;
 	background-color: #3794d3;

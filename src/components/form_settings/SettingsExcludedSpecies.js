@@ -1,7 +1,7 @@
 import { useState } from "react"
 import axios from 'axios';
 import HelpIcon from "../../assets/help.png";
-
+import CONFIG from "../../config";
 
 export default function SettingsExcludedSpecies({ label, help, excludedSpeciesList, handleSetSpecies, removeSpecies, disabled }) {
     const [inputSpecies, setInputSpecies] = useState("")
@@ -19,7 +19,7 @@ export default function SettingsExcludedSpecies({ label, help, excludedSpeciesLi
               setErrorMsg(`Taxo \"${inputSpecies}\" not found.`);
           }
           else {
-              const response = await axios.post('http://134.158.151.129:80/check_species_exists', { species: inputSpecies });
+              const response = await axios.post(`${CONFIG.API_BASE_URL}/check_species_exists`, { species: inputSpecies });
               setSpeciesNotFound("");
               return response.data.results;
           }

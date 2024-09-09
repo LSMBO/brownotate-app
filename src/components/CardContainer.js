@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useUploadProgress } from '../UploadProgressContext';
 import axios from 'axios';
-
+import CONFIG from '../config';
 
 export default function CardContainer( {parameters, setParameters, setRuns} ) {
     const navigate = useNavigate();
@@ -16,7 +16,6 @@ export default function CardContainer( {parameters, setParameters, setRuns} ) {
         }
     }, [uploadProgress]);
 
-    const server = 'http://134.158.151.129/'
     const card1_button = "Search"
     const card2_button = "Run"
     const card3_button = "Settings;Run"
@@ -94,20 +93,6 @@ export default function CardContainer( {parameters, setParameters, setRuns} ) {
                 console.error('Erreur lors de la requête au backend Flask:', error);
             });
     };
-
-    // const sendRequest = async () => {
-    //     const server = 'http://172.16.2.142:3001/api';
-    //     try {
-    //         const response = await fetch(server);
-    //         if (!response.ok) {
-    //             throw new Error('Erreur lors de la requête fetch');
-    //         }
-    //         const data = await response.json();
-    //         console.log(data);
-    //     } catch (error) {
-    //         console.error('Erreur lors de la requête fetch:', error.message);
-    //     }
-    // };
 
     // comportement
     const handleClickDBS = () => {

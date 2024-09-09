@@ -1,4 +1,5 @@
 import axios from 'axios';
+import CONFIG from '../config';
 
 async function downloadUniprotFasta(url, outputName, setIsLoading) {
     let allSequences = '';
@@ -61,20 +62,19 @@ async function downloadFromServer(path, extension, setIsLoading) {
         setIsLoading(true);
         let fileList = [path]
         if (extension) {
-            const response = await axios.post(`http://134.158.151.129:80/server_path`, {'path': path, 'extension': extension});
+            const response = await axios.post(`${CONFIG.API_BASE_URL}/server_path`, {'path': path, 'extension': extension});
             fileList = response.data.results
         }
         for (let file of fileList) {
             const fileResponse = await axios({
                 method: 'post',
-                url: `http://134.158.151.129:80/download_file_server`,
+                url: `${CONFIG.API_BASE_URL}/download_file_server`,
                 data: { file: file },
                 responseType: 'blob'
             });
             let url = window.URL.createObjectURL(new Blob([fileResponse.data]));
 
             const contentType = fileResponse.headers['content-type'];
-            console.log(contentType)
             if (contentType.includes('application/zip')) {
                 url = window.URL.createObjectURL(new Blob([fileResponse.data], { type: 'application/zip' }));
             }

@@ -62,8 +62,13 @@ body {
 
 .login-form {
     display: flex;
+    flex-direction: column;
     width: 90%;
     margin: auto;
+}
+
+.login-form label{
+    margin-top: 30px;
 }
 
 .login-h2 {
@@ -73,11 +78,15 @@ body {
     text-align: center;
 }
 
+.login-form button{
+    width: 30%;
+    margin: 20px auto;
+}
 
 input {
     display: flex;
     width: 90%;
-    margin: auto;
+    margin: 10px auto;
     padding: 0.5%;
 }
 
