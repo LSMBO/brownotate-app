@@ -30,17 +30,32 @@ export default function Home() {
     const [speciesNotFound, setSpeciesNotFound] = useState("")
     const { runs, fetchUserRuns } = useRuns();
 
-    //comportement    
+    //comportement  
     useEffect(() => {
-        socket.on('runs_updated', (data) => {
+        if (!socket) return;
+    
+        const handleRunsUpdated = (data) => {
             console.log('Socket.on runs_updated:', data);
-            fetchUserRuns(user);
-        });
+            fetchUserRuns(user); // Assurez-vous que fetchUserRuns est asynchrone et bien gérée
+        };
+    
+        socket.on('runs_updated', handleRunsUpdated);
     
         return () => {
-            socket.off('runs_updated');
+            socket.off('runs_updated', handleRunsUpdated);
         };
-    }, [socket]);
+    }, [socket, user]); // user dépendance ajoutée
+     
+    // useEffect(() => {
+    //     socket.on('runs_updated', (data) => {
+    //         console.log('Socket.on runs_updated:', data);
+    //         fetchUserRuns(user);
+    //     });
+    
+    //     return () => {
+    //         socket.off('runs_updated');
+    //     };
+    // }, [socket]);
 
 
     const speciesExists = async (inputValue) => {

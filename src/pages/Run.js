@@ -44,7 +44,6 @@ const Run = () => {
 	
 			const handleDisplayFile = async (filePath, fileType) => {
 				try {
-					console.log(filePath);
 					const fileContent = await displayFile(filePath);
 					setFileContents(prevState => ({
 						...prevState,
@@ -54,6 +53,12 @@ const Run = () => {
 					console.error(`Error fetching ${fileType} file:`, error);
 				}
 			};
+
+			if (run && (run.status === 'upload' || run.status === 'running')) {
+				setActiveTab('Parameters');
+			} else {
+				await handleDisplayFile(`${run.results_path}/main.log`, 'logFile');
+			}
 	
 			if (run.status === "completed" || run.status === "incomplete") {
 				if (run.parameters.buscoSection.assembly) {
@@ -69,8 +74,6 @@ const Run = () => {
 					await handleDisplayFile(`${run.results_path}/brownaming/stats.txt`, 'brownamingStatsFile');
 				}
 			}
-	
-			await handleDisplayFile(`${run.results_path}/main.log`, 'logFile');
 		};
 	
 		fetchFiles();
@@ -117,8 +120,13 @@ const Run = () => {
     return (
         <div>
 			<div className="tabs-header">
-				<div className={`tab ${activeTab === 'Results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Results')}>Results</div>
-				<div className={`tab ${activeTab === 'Parameters' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Parameters')}>Parameters</div>
+				{/* Vérification que run est bien défini avant d'accéder à run.status */}
+				{run && (run.status === "completed" || run.status === "incomplete") && (
+					<div className={`tab ${activeTab === 'Results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Results')}>Results</div>
+				)}
+				{run && (
+					<div className={`tab ${activeTab === 'Parameters' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Parameters')}>Parameters</div>
+				)}
 			</div>
 
             {run && (

@@ -1,70 +1,143 @@
-# Getting Started with Create React App
+# Brownotate App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
 
-## Available Scripts
+Brownotate App is a web application built with React.js that facilitates the use of Brownotate to generate a protein sequence database for every species.
 
-In the project directory, you can run:
+## Prerequisites
 
-### `npm start`
+Before you start, ensure you have the following software installed on your server:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Node.js and npm**: Node.js is a JavaScript runtime, and npm is a package manager for JavaScript. For installation instructions, visit the [npm website](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+- **Apache**: A web server for hosting your app. For installation instructions, visit the [Apache website](https://httpd.apache.org/).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+To install these on a system using `apt` (such as Ubuntu), run:
 
-### `npm test`
+```bash
+sudo apt update
+sudo apt install nodejs
+sudo apt install npm
+sudo apt install apache2
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
+## Deployment Instructions
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Follow these steps to deploy the React application:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **Clone the React project repository:**
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    ```bash
+    git clone https://github.com/LSMBO/brownotate-app.git
+    ```
 
-### `npm run eject`
+2. **Navigate to the project directory:**
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+    ```bash
+    cd brownotate-app
+    ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. **Install project dependencies:**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+    ```bash
+    npm install
+    ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+4. **Build the React application:**
 
-## Learn More
+    ```bash
+    npm run build
+    ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+5. **Copy the build files to the Apache web directory:**
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+    ```bash
+    sudo cp -r /path/to/your/build /var/www/brownotate-app
+    ```
 
-### Code Splitting
+6. **Create an Apache configuration file for the application:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+    Create `/etc/apache2/sites-available/brownotate-app.conf` with the following content:
 
-### Analyzing the Bundle Size
+    ```apache
+    <VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+        ServerName <your.ip>
+        DocumentRoot /var/www/brownotate-app
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+        <Directory /var/www/brownotate-app>
+            Options FollowSymLinks
+            AllowOverride All
+            Require all granted
+        </Directory>
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+    </VirtualHost>
+    ```
 
-### Making a Progressive Web App
+7. **Enable the new site configuration:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+    ```bash
+    sudo a2ensite /etc/apache2/sites-available/brownotate-app.conf
+    ```
 
-### Advanced Configuration
+8. **Enable the Apache site configuration and restart Apache:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+    ```bash
+    sudo a2ensite brownotate-app.conf
+	sudo systemctl restart apache2
+    ```
 
-### Deployment
+## Using the Interface
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+To use this interface, you need to set up a server with the Brownotate program installed, along with the associated MongoDB database. You can follow the instructions provided in the [Brownotate GitHub repository](https://github.com/LSMBO/Brownotate) to install and configure these.
 
-### `npm run build` fails to minify
+Once installed and deployed, update the `src/config.js` file with the IP address of your server.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+#### Login
+Upon successful setup, you can access the interface. Start by entering your email and password. These credentials must be added by an administrator in the production database on the Brownotate server (see instructions in [Brownotate GitHub](https://github.com/LSMBO/Brownotate)).
+
+If authentication is successful, you will be redirected to the **Home** page, where you can search for species by entering the Latin name or taxid. You have two options:
+
+1. **Database Search**  
+   This triggers a request to the Brownotate server to find available biological data for the species. The interface displays protein, assembly, and sequencing datasets from NCBI, ENSEMBL, and UniprotKB databases. You can navigate to these datasets' pages and select a protein dataset to download. You may also select an assembly or sequencing dataset and click **Run** to move to the Settings page.
+
+2. **Settings**  
+   You can directly navigate to the **Settings** page.
+
+#### Settings Page
+On this page, you can configure your Brownotate run. Start by specifying whether you are working with a sequencing dataset or an assembly.  
+- If you choose sequencing, you can either upload a fastq file from your computer or provide an accession number to download the dataset automatically.  
+- If you choose assembly, you have to upload a fasta file from your computer. 
+
+If you come from the Database Search, the selected datasets will already be filled in for you.
+
+Next, you can skip certain steps in the Brownotate pipeline or modify parameters. For more information about the Brownotate pipeline, please refer to [Brownotate GitHub](https://github.com/LSMBO/Brownotate).  
+Finally, click **Run** to start the Brownotate process and return to the Home page.
+
+#### Run Cards
+On the Home page, you can view and manage all of your runs. Each run is displayed as a card, showing its current status. There are several possible statuses:
+
+- **Upload**: The initial stage where the input data is being transferred to the Brownotate server.
+- **Running**: Brownotate is actively processing the run.
+- **Completed**: The run finished successfully.
+- **Failed**: An error occurred during the run. A **Resume** button will appear on the run card, allowing you to attempt to restart the run from where it stopped.
+- **Incomplete**: The run finished but did not generate a full protein sequence database. You can still view the assembly results, but you may need to retry the run with different input data.
+
+Each run card also has a delete option. You can remove a run by clicking the **X** button in the card.
+
+Clicking on a run card will take you to the **Run** page, where you can view more detailed information about that specific run.
+
+#### Run Page
+The **Run** page has two sections: **Results** and **Parameters**.
+
+1. **Parameters**  
+   This section shows the settings and input files used for the run.
+
+2. **Results**  
+   This section is visible for all runs except those with the status **Upload** or **Running**.
+   - **Download**: You can download the assembly and annotation FASTA files individually. Additionally, you can download the entire Brownotate working directory, which includes these files along with detailed information about the run. After the protein prediction stage, **Brownaming** is used to assign names to the predicted proteins via BLAST comparison. You can download the Brownaming working directory as a ZIP file, which provides further insights into how protein names were assigned. For more details on Brownaming, please refer to the [Brownotate GitHub](https://github.com/LSMBO/Brownotate).
+   - **Busco Results**: Displays the evaluation of assembly and annotation completeness. For more details on Busco, see [Brownotate GitHub](https://github.com/LSMBO/Brownotate).  
+   - **Log**: Lists all Brownotate execution steps, along with timestamps.  
+   - **stdout** and **stderr**: Standard console outputs, useful for debugging failed runs.
+
+For **Incomplete** runs, downloading annotation and Brownaming results is disabled as the annotation was unsuccessful.
