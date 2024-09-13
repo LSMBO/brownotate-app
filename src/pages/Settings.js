@@ -129,7 +129,6 @@ export default function Settings() {
         }
     };
 
-    // affichage
     return (
         <div className="settings t2_bold">
             <div className="titleBox">

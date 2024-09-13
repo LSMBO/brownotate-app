@@ -7,8 +7,8 @@ import CONFIG from '../config';
 
 export default function Login({setIsLoggedIn}) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('browna@unistra.fr');
-  const [password, setPassword] = useState('LSMBO2024');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { setUser } = useUser();
   const { fetchUserRuns } = useRuns();

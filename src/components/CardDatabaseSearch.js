@@ -137,7 +137,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                             updateSelectedAssembly={updateSelectedAssembly}
                         />
                     </div>
-                    <button className="t2_bold" disabled={!selectedAssembly && selectedSequencing.length === 0} onClick={() => handleClickSettings(selectedData)}>Run</button>
+                    <button className="t2_bold" disabled={!selectedAssembly && selectedSequencing.length === 0} onClick={() => handleClickSettings(selectedData)}>Configure the run with the sequencing/assembly selected</button>
                 </div>
                 <div className="protein-container">
                     <CardProteins
@@ -145,7 +145,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                         selectedProteins={selectedProteins}
                         updateSelectedProteins={updateSelectedProteins}
                     />
-                    <button className="t2_bold" disabled={!selectedProteins} onClick={() => convertForDownload(selectedProteins)}>Download</button>
+                    <button className="t2_bold" disabled={!selectedProteins} onClick={() => convertForDownload(selectedProteins)}>Download the protein dataset</button>
                 </div>
             </div>
             {isLoading && (

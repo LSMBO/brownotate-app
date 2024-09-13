@@ -19,6 +19,7 @@
 
 .sequencing-assembly-container {
     flex: 2;
+    margin-right: 10px;
 }
 
 .protein-container {
@@ -33,6 +34,7 @@
     border: 2px solid #288cbb;
     border-radius: 0;
     height: 50px;
+    margin-top: 10px;
 }
 
 .card-container .card-header {

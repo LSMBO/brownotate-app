@@ -20,23 +20,21 @@ import CONFIG from '../config';
 const socket = io.connect(CONFIG.API_BASE_URL, {reconnection: false});
 
 export default function Home() {
-    //state
     const navigate = useNavigate();
     const { parameters, setParameters } = useParameters();
     const { user } = useUser();
     const { dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus, dbsStderr, setDbsStderr } = useDBSearch();
-    const [inputSpecies, setInputSpecies] = useState("Naja naja")
+    const [inputSpecies, setInputSpecies] = useState("")
     const [dbsearchSpecies, setDbsearchSpecies] = useState("")
     const [speciesNotFound, setSpeciesNotFound] = useState("")
     const { runs, fetchUserRuns } = useRuns();
 
-    //comportement  
     useEffect(() => {
         if (!socket) return;
     
         const handleRunsUpdated = (data) => {
             console.log('Socket.on runs_updated:', data);
-            fetchUserRuns(user); // Assurez-vous que fetchUserRuns est asynchrone et bien gérée
+            fetchUserRuns(user);
         };
     
         socket.on('runs_updated', handleRunsUpdated);
@@ -44,20 +42,8 @@ export default function Home() {
         return () => {
             socket.off('runs_updated', handleRunsUpdated);
         };
-    }, [socket, user]); // user dépendance ajoutée
+    }, [socket, user]);
      
-    // useEffect(() => {
-    //     socket.on('runs_updated', (data) => {
-    //         console.log('Socket.on runs_updated:', data);
-    //         fetchUserRuns(user);
-    //     });
-    
-    //     return () => {
-    //         socket.off('runs_updated');
-    //     };
-    // }, [socket]);
-
-
     const speciesExists = async (inputValue) => {
         try {
             if (inputValue==='') {
@@ -141,7 +127,6 @@ export default function Home() {
     };
     
 
-    //affichage
     return (
     <div id="page">
         <SpeciesInput setInputSpecies={setInputSpecies} speciesNotFound={speciesNotFound}/>

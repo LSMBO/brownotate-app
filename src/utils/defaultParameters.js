@@ -2,7 +2,7 @@ export const defaultParameters = {
     id: null,
     ready: false,
     species: {
-        scientificName: "Cannabis sativa",
+        scientificName: "",
         taxonID: null
     },
     startSection: {
