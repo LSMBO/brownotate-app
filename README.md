@@ -4,6 +4,8 @@
 
 Brownotate App is a web application built with React.js that facilitates the use of Brownotate to generate a protein sequence database for every species.
 
+Before setting up your own Brownotate server, you can try a ***demo version*** without installing anything. Simply contact me at browna@unistra.fr, and I will create an account for you on the server hosted at my institute.
+
 ## Prerequisites
 
 Before you start, ensure you have the following software installed on your server:
