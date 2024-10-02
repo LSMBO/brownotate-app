@@ -70,7 +70,7 @@ export async function displayFile(path) {
             return <pre>{fileContent}</pre>;
         }
     } catch (error) {
-        console.error('Error fetching file:', error);
-        return <p>Error fetching file: {error.message}</p>; // Gestion de l'erreur
+        console.error(`Error fetching file ${path}:`, error);
+        return <p>Error fetching file {path}: {error.message}</p>; // Gestion de l'erreur
     }
 }

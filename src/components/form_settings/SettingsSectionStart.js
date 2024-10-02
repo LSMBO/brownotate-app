@@ -66,6 +66,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
       if (files) {
         parametersCopy.startSection.genomeFileList = Array.from(files);
         parametersCopy.startSection.genomeFile = true;
+        parametersCopy.startSection.genomeFileIsURL = false;
         parametersCopy.startSection.sequencingFiles = false;
         parametersCopy.startSection.sequencingAccessions = false;
       }
@@ -88,18 +89,18 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
           parametersCopy.startSection.sequencingFiles = false;
           parametersCopy.startSection.sequencing = true;
       } 
-      else if (name == "Skip fastp"){
+      else if (name === "Skip fastp"){
         parametersCopy.startSection.skipFastp = true;
       }
-      else if (name == "Skip phix removing"){
+      else if (name === "Skip phix removing"){
         parametersCopy.startSection.skipPhix = true;
       }
     }
     else {
-      if (name == "Skip fastp"){
+      if (name === "Skip fastp"){
         parametersCopy.startSection.skipFastp = false;
       }
-      else if (name == "Skip phix removing"){
+      else if (name === "Skip phix removing"){
         parametersCopy.startSection.skipPhix = false;
       }
     }
@@ -122,7 +123,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                 <SettingsFormElementInputRadio
                   disabled={parameters.startSection.genome}
                   label="Sequencing file(s)" 
-                  help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                  help="DNA sequencing FASTQ file(s). Please enter both the forward and reverse file for paird-end sequencing." 
                   checked={parameters.startSection.sequencingFiles} 
                   onChange={handleRadioChange}
                 />
@@ -138,7 +139,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                 <SettingsFormElementInputRadio 
                   disabled={parameters.startSection.genome}
                   label="SRA accessions" 
-                  help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                  help="SRA accession number of the input DNA sequencing data." 
                   checked={parameters.startSection.sequencingAccessions} 
                   onChange={handleRadioChange}
                 />
@@ -147,6 +148,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                   disabled={!parameters.startSection.sequencingAccessions} 
                   onChange={handleTextAccessionsChange} 
                   text={parameters.startSection.sequencingAccessionsList}
+                  type='textarea'
                 />
               </div>
             </div>
@@ -162,7 +164,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                   <div className="formElement">
                     <SettingsFormElementInputRadio 
                       label="Skip fastp" 
-                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                      help="Fastp filters out low-quality reads in sequencing. If you have already refined your sequencing, you can skip this step." 
                       checked={parameters.startSection.skipFastp} 
                       onChange={handleRadioChange}
                     />
@@ -170,7 +172,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                   <div className="formElement">
                     <SettingsFormElementInputRadio 
                       label="Skip phix removing" 
-                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                      help="Illumina sequencing is often carried out using phix virus to control quality. Eliminating reads that appear to be phix virus is good practice, but you can skip this step if you don't have Illumina sequencing." 
                       checked={parameters.startSection.skipPhix} 
                       onChange={handleRadioChange}
                     />
@@ -183,10 +185,10 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
             <div className="formElement">
               <div className="radioLabel">
                 <div className="labelTooltipWrapper">
-                    <label>Genome file</label>
+                    <label>Assembly file</label>
                     <div className="tooltipContainer">
                         <img src={HelpIcon} alt="help" className="helpIcon"/>
-                        <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                        <span className="helpSpan">Assembly FASTA file.</span>
                     </div>
                 </div>
               </div>

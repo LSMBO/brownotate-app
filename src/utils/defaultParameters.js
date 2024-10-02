@@ -23,6 +23,7 @@ export const defaultParameters = {
         evidenceFile: false,
         evidenceFileIsURL: false,
         evidenceFileList: [],
+        minLength: '0',
         removeStrict: true,
         removeSoft: false,
     },
@@ -34,7 +35,8 @@ export const defaultParameters = {
     buscoSection: {
         assembly: true,
         annotation: true
-    }
+    },
+    cpus: '1'
 };
 
 export const getDefaultParameters = () => {

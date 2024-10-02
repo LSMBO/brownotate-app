@@ -46,7 +46,7 @@ div {
 }
 
 body {
-    background-color: #cddfeb;
+    background: linear-gradient(to bottom, #cddfeb, #f6f7f8 40vh, #f6f7f8);
 }
 
 #root {   
@@ -144,7 +144,7 @@ button:disabled {
     border-color: #968c8c93;
     background-color: #ffffff93;
 }
-  
+
 .error-message {
     color: red;
     margin-top: 2px;
@@ -179,6 +179,32 @@ label {
     width: 20px;
 }
 
+.home-h2 {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: normal;
+    font-size: 2rem;
+    text-align: center;
+    border-top: solid 1px #288cbb;
+    border-bottom: solid 1px #288cbb;
+    padding: 10px;
+}
+
+.home-h2 p {
+    font-size: 1rem;
+    margin: auto;
+    display: block;
+}
+
+.fetch-runs-button button{
+    border-color: #3e28bb;
+    border-radius: 20px;
+    background-color: #c6b7fa;
+    width: 30%;
+    margin: 10px auto;
+}
+.fetch-runs-button button:hover{
+    background-color: #c58ef8;
+}
 
 .run-list {
     display: grid;
@@ -186,4 +212,46 @@ label {
     gap: 10px;
     width: 95%;
     margin: auto;
+}
+
+.cpus-display-container.default {
+    margin-bottom: 20px;
+}
+
+.cpus-display-container.settings {
+    flex-direction: row;
+}
+
+.cpus-display {
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
+    margin: auto;
+}
+
+.cpus-display-settings {
+    margin: 0;
+    justify-content: flex-start;
+}
+
+.cpu-circle {
+    width: 30px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #b0c4de;
+}
+
+.cpu-small {
+    width: 20px;
+    height: 15px;
+}
+
+.cpu-circle.used {
+    background-color: #ff6347;
+}
+
+.cpu-label {
+    margin-bottom: 5px;
+    color: #555;
+    text-align: left;
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import CardSequencing from "./CardSequencing";
 import CardAssembly from "./CardAssembly";
 import CardProteins from "./CardProteins";
+import Loading from "./Loading";
 import './CardDatabaseSearch.css';
 import { useDBSearch } from '../contexts/DBSearchContext';
 import { useUser } from '../contexts/UserContext';
@@ -112,6 +113,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
 
     return (
         <div>
+            <h2 className="home-h2">Database Search</h2>
            <div className="card-container-header t2_bold">
                 <label>
                     <i>{data.scientific_name.charAt(0).toUpperCase() + data.scientific_name.slice(1).toLowerCase()}</i> ({data.taxonID}) on {data.date}.
@@ -149,9 +151,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                 </div>
             </div>
             {isLoading && (
-                <div className="window loading">
-                    <span></span>
-                </div>
+                <Loading/>
             )}
         </div>
     );

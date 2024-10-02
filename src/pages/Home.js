@@ -1,11 +1,9 @@
 import "../components/Loading.css"
 import SpeciesInput from "../components/SpeciesInput"
 import CardRun from "../components/CardRun"
-import Run from "../classes/Run"
 import DatabaseSearch from "../classes/DatabaseSearch"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
-import { useUploadProgress } from '../UploadProgressContext';
 import { getDefaultParameters } from '../utils/defaultParameters';
 import axios from 'axios';
 import CardDatabaseSearch from "../components/CardDatabaseSearch"
@@ -17,7 +15,7 @@ import { useRuns } from '../contexts/RunsContext';
 import io from 'socket.io-client';
 import CONFIG from '../config';
 
-const socket = io.connect(CONFIG.API_BASE_URL, {reconnection: false});
+const socket = io.connect(CONFIG.API_BASE_URL, {reconnection: false, transports: ['polling']});
 
 export default function Home() {
     const navigate = useNavigate();
@@ -27,23 +25,30 @@ export default function Home() {
     const [inputSpecies, setInputSpecies] = useState("")
     const [dbsearchSpecies, setDbsearchSpecies] = useState("")
     const [speciesNotFound, setSpeciesNotFound] = useState("")
-    const { runs, fetchUserRuns } = useRuns();
+    const { runs, fetchCPUs, fetchUserRuns, startRunMonitoring } = useRuns();
 
     useEffect(() => {
         if (!socket) return;
     
         const handleRunsUpdated = (data) => {
-            console.log('Socket.on runs_updated:', data);
+            console.log('Socket.on run_updated:', data);
+            fetchUserRuns(user);
+        };
+    
+        const handleRunStarted = (data) => {
+            console.log('Socket.on run_started:', data);
             fetchUserRuns(user);
         };
     
         socket.on('runs_updated', handleRunsUpdated);
+        socket.on('run_started', handleRunStarted);
     
         return () => {
             socket.off('runs_updated', handleRunsUpdated);
+            socket.off('run_started', handleRunStarted);
         };
     }, [socket, user]);
-     
+
     const speciesExists = async (inputValue) => {
         try {
             if (inputValue==='') {
@@ -123,6 +128,7 @@ export default function Home() {
             }
         }
         setParameters(newParameters);
+        fetchCPUs();
         navigate('/settings');
     };
     
@@ -144,14 +150,20 @@ export default function Home() {
         : dbsearchStatus === "loading" ?
         (<div className="window loading"><span></span></div>)
         : (<p></p>)}
-        <div className="run-list">
-            {runs.map((run, index) => (
-                run.parameters && run.parameters.id ? (
-                    <CardRun key={index} user={user} id={run.id} data={run} status={run.status} parameters={run.parameters} />
-                ) : (
-                <div key={index}></div>
-                )
-            ))}
+        <div className="run-list-container">
+            <h2 className="home-h2">Runs</h2>
+            <div className="run-list">
+                {runs.map((run, index) => (
+                    run.parameters && run.parameters.id ? (
+                        <CardRun key={index} user={user} id={run.id} data={run} status={run.status} parameters={run.parameters} />
+                    ) : (
+                    <div key={index}></div>
+                    )
+                ))}
+            </div>
+            <div className="fetch-runs-button">
+                <button className="t2_bold" onClick={() => fetchUserRuns(user)}>Update Runs</button>
+            </div>
         </div>
     </div>
     )

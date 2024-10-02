@@ -7,7 +7,7 @@ import resumeArrowIcon from "../assets/resume_arrow.png"
 
 const CardRun = ({ user, id, data, status, parameters }) => {
     const navigate = useNavigate();
-    const { fetchUserRuns } = useRuns();
+    const { fetchUserRuns, fetchCPUs } = useRuns();
 
     const formatDate = (dateTimeString) => {
         const date = new Date(dateTimeString);
@@ -26,6 +26,7 @@ const CardRun = ({ user, id, data, status, parameters }) => {
       try {
         await axios.post(`${CONFIG.API_BASE_URL}/delete_run`, { id: data.parameters.id });
         fetchUserRuns(user)
+        fetchCPUs();
       } catch (error) {
         console.error('Error:', error);
       }
@@ -36,12 +37,14 @@ const CardRun = ({ user, id, data, status, parameters }) => {
       try {
         await axios.post(`${CONFIG.API_BASE_URL}/resume_run`, { id: data.parameters.id });
         fetchUserRuns(user)
+        fetchCPUs();
       } catch (error) {
         console.error('Error:', error);
       }
     }
 
     const handleClick = () => {
+        fetchCPUs();
         navigate(`run/${parameters.id}`);
     };
 

@@ -45,20 +45,20 @@ export default function SettingsSectionBrownaming({ disabled, updateParameters, 
         <fieldset disabled={disabled}>
             <legend className="t2_bold">Brownaming (proteins naming)</legend>
             <div className="formElement">
-                <SettingsFormElementInputRadio label="Skip Brownaming" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.brownamingSection.skip} onChange={handleRadioChange}/>
+                <SettingsFormElementInputRadio label="Skip Brownaming" help="Skip the step that assigns names to each protein." checked={parameters.brownamingSection.skip} onChange={handleRadioChange}/>
             </div>
             <SettingsExcludedSpecies 
                 label="Excluded species" 
-                help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                help="Taxonomies excluded from the brownaming search space." 
                 excludedSpeciesList={parameters.brownamingSection.excludedSpeciesList} 
                 handleSetSpecies={handleSetSpecies} 
                 removeSpecies={removeSpecies} 
                 disabled={parameters.brownamingSection.skip}/>
             <SettingsSelect 
                 label="Highest taxa rank" 
-                help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
+                help="Rank from which the blast comparison are stopped." 
                 options={rankOptions} 
-                defaultOption="Suborder" 
+                defaultOption="Suborder"
                 handleSetMaxRank={handleSetMaxRank} 
                 disabled={parameters.brownamingSection.skip}/>
         </fieldset>

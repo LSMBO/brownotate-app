@@ -9,28 +9,31 @@ import SettingsSectionStart from "../components/form_settings/SettingsSectionSta
 import SettingsSectionAnnotation from "../components/form_settings/SettingsSectionAnnotation";
 import SettingsSectionBrownaming from "../components/form_settings/SettingsSectionBrownaming";
 import SettingsSectionBusco from "../components/form_settings/SettingsSectionBusco";
+import SettingsSectionProcesses from "../components/form_settings/SettingsSectionProcesses";
 import CONFIG from '../config';
 
 export default function Settings() {
     const navigate = useNavigate();
     const { user } = useUser();
-    const { addRun } = useRuns()
+    const { fetchCPUs, freeCPUs, addRun, startRunMonitoring } = useRuns();
     const { parameters, setParameters } = useParameters();
     const [isSubmitable, setIsSubmitable] = useState(parameters.ready);    
+
     const updateParameters = (newData) => {
         setParameters({
             ...parameters,
             ...newData,
         });
-        handleSubmitable();
+        handleSubmitable(newData);
     }
 
-    const handleSubmitable = () => {
-        const isStartSectionValid = parameters.startSection.sequencing === true || parameters.startSection.genome === true;
-        const isGenomeFileListValid = parameters.startSection.genome ? parameters.startSection.genomeFileList.length > 0 : true;
-        const isSequencingFileListValid = parameters.startSection.sequencingFiles ? parameters.startSection.sequencingFilesList.length > 0 : true;
-        const isSequencingAccessionsValid = parameters.startSection.sequencingAccessions ? parameters.startSection.sequencingAccessionsList.length > 0 : true;
-        const isReady = isStartSectionValid && isGenomeFileListValid && isSequencingFileListValid && isSequencingAccessionsValid;
+    const handleSubmitable = (newData) => {
+        const isStartSectionValid = newData.startSection.sequencing === true || newData.startSection.genome === true;
+        const isGenomeFileListValid = newData.startSection.genome ? newData.startSection.genomeFileList.length > 0 : true;
+        const isSequencingFileListValid = newData.startSection.sequencingFiles ? newData.startSection.sequencingFilesList.length > 0 : true;
+        const isSequencingAccessionsValid = newData.startSection.sequencingAccessions ? newData.startSection.sequencingAccessionsList.length > 0 : true;
+        const isCPUsValid = parseInt(newData.cpus) <= freeCPUs;
+        const isReady = isStartSectionValid && isGenomeFileListValid && isSequencingFileListValid && isSequencingAccessionsValid && isCPUsValid;
         if (isReady !== parameters.ready) {
             setParameters({
                 ...parameters,
@@ -48,7 +51,6 @@ export default function Settings() {
         });
         formData.append('type', type);
         formData.append('run_id', parameters['id']);
-
         try {
             const response = await axios.post(`${CONFIG.API_BASE_URL}/upload_file`, formData, {
                 headers: {
@@ -64,6 +66,7 @@ export default function Settings() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        fetchCPUs();
         navigate('/')
         try {
             const createRunResponse = await axios.post(`${CONFIG.API_BASE_URL}/create_run`, { parameters: parameters, user: user });
@@ -118,11 +121,13 @@ export default function Settings() {
                     }
                 }));
             }
-
-            if (urls['assembly'] || urls['evidence']) {
-                await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, { run_id: parameters['id'], user: user, urls: urls });
+            if (urls['assembly']) {
+                await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, { run_id: parameters['id'], user: user, type: 'assembly', urls: urls });
             }
-            
+            if (urls['evidence']) {
+                await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, { run_id: parameters['id'], user: user, type: 'evidence', urls: urls });
+            }
+            startRunMonitoring(user)
             await axios.post(`${CONFIG.API_BASE_URL}/run_brownotate`, { run_id: parameters['id'], user: user});
         } catch (error) {
             console.error('Error:', error);
@@ -131,15 +136,17 @@ export default function Settings() {
 
     return (
         <div className="settings t2_bold">
-            <div className="titleBox">
-                <h2>Settings</h2>
-                <h3>Species : {parameters.species.scientificName}</h3>
-            </div>
+            <h2 className="home-h2">
+                Settings
+                <p>Species : {parameters.species.scientificName}</p>
+            </h2>
+            
             <form action="submit" className="settingsForm t2_light" onSubmit={handleSubmit}>
                 <SettingsSectionStart updateParameters={updateParameters} parameters={parameters}/>
                 <SettingsSectionAnnotation disabled={!isSubmitable} updateParameters={updateParameters} parameters={parameters}/>
                 <SettingsSectionBrownaming disabled={!isSubmitable} updateParameters={updateParameters} parameters={parameters}/>
                 <SettingsSectionBusco disabled={!isSubmitable} updateParameters={updateParameters} parameters={parameters}/>
+                <SettingsSectionProcesses updateParameters={updateParameters} parameters={parameters} freeCPUs={freeCPUs}/>
                 <button disabled={!isSubmitable} className="submitButton t3">Run Brownotate</button>
             </form>
         </div>

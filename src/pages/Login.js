@@ -11,7 +11,7 @@ export default function Login({setIsLoggedIn}) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { setUser } = useUser();
-  const { fetchUserRuns } = useRuns();
+  const { fetchUserRuns, fetchCPUs } = useRuns();
 
 
   const handleSubmit = async (e) => {
@@ -22,6 +22,7 @@ export default function Login({setIsLoggedIn}) {
         setIsLoggedIn(true);
 		setUser(email);
     fetchUserRuns(email);
+    fetchCPUs();
 		navigate('/');
       } else {
         setError('Invalid email address or password');

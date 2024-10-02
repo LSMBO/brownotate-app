@@ -72,7 +72,6 @@ fieldset {
 .active-content {
 	display: flex;
     justify-content: center;
-    background-color: #cddfeb;
     border: 1px solid #288cbb;
     border-top: none;
     min-height: 25vh;
@@ -97,14 +96,36 @@ fieldset {
     align-items: center;
 } 
 
+.formSection input[type="text"], .formSection input[type="number"] {
+    border: 2px solid #288cbb;
+    padding: 5px;
+    margin-left: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+
+
 textarea {
     border: 2px solid #288cbb;
-    width: 50%;
     padding: 0.3% 0.5%;
     resize: vertical;
 }
 
+.w50 {
+    width: 50%;
+}
+.w20 {
+    width: 20%;
+}
+.w5 {
+    width: 5%;
+}
+
 textarea:disabled{
+    border-color: #968c8c93;
+}
+.formSection input[type="text"]:disabled{
     border-color: #968c8c93;
 }
 
@@ -141,6 +162,8 @@ input[type="radio"] {
 input[type="file"] {
     margin-bottom: 5px;
 }
+
+
 
 select {
     border: 2px solid #288cbb;

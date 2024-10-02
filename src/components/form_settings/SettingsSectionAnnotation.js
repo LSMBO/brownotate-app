@@ -1,6 +1,8 @@
 import SettingsFormElementInputRadio from "./SettingsFormElementInputRadio";
 import HelpIcon from "../../assets/help.png";
 import SettingsFormElementInputFile from "./SettingsFormElementInputFile";
+import SettingsFormElementInputText from "./SettingsFormElementInputText";
+
 
 
 export default function SettingsSectionAnnotation({ disabled, updateParameters, parameters }) {
@@ -40,6 +42,12 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
         updateParameters(parametersCopy);
       };
 
+      const handleMinLengthChange = (text) => {
+        const parametersCopy = { ...parameters };
+        parametersCopy.annotationSection.minLength = text;
+        updateParameters(parametersCopy)
+      }
+
     return (
         <fieldset disabled={disabled}>
             <legend className="t2_bold">Annotation (proteins prediction)</legend>
@@ -49,14 +57,14 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
                   <label>Protein evidence</label>
                   <div className="tooltipContainer">
                     <img src={HelpIcon} alt="help" className="helpIcon" />
-                    <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
+                    <span className="helpSpan">Set of proteins used to locate few genes in the assembly. These genes are used to train the augustus gene model.</span>
                   </div>
                 </div>
               </div>
               <div className="formElement">
                 <SettingsFormElementInputRadio 
                       label="Auto (get most relevant evidences)" 
-                      help="Searches for a genome and, if unavailable, looks for a sequencing dataset."  
+                      help="Automatically searches for and downloads proteins from the organism closest to the target species"  
                       checked={parameters.annotationSection.evidenceAuto} 
                       onChange={handleRadioChange}
                 />
@@ -65,8 +73,8 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
                 <SettingsFormElementInputRadio
                     disabled={false}
                     label="Evidence file" 
-                    help="Searches for a genome and, if unavailable, looks for a sequencing dataset." 
-                    checked={parameters.annotationSection.evidenceFile} 
+                    help="Select your own fasta file with the proteins of a related organism." 
+                    checked={parameters.annotationSection.evidenceFile}
                     onChange={handleRadioChange}
                 />
                 <SettingsFormElementInputFile 
@@ -77,7 +85,25 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
                 />
               </div>
             </div>
-            
+            <div className="formSection">
+              <div className="sectionTitle">
+                  <div className="labelTooltipWrapper">
+                    <label>Minimal sequence length</label>
+                    <div className="tooltipContainer">
+                      <img src={HelpIcon} alt="help" className="helpIcon" />
+                      <span className="helpSpan">Augustus predicted sequences with a length below this threshold are removed from the annotation.</span>
+                    </div>
+                  </div>
+              </div>
+              <div className="formElement">
+                  <SettingsFormElementInputText 
+                    label="Minimal length"
+                    text={parameters.annotationSection.minLength} 
+                    onChange={handleMinLengthChange}
+                    type='input-number'
+                    width='5'/>
+              </div>
+            </div>
             <div className="formSection">
               <div className="sectionTitle">
                 <div className="labelTooltipWrapper">
@@ -89,10 +115,10 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
                 </div>
               </div>
               <div className="formElement">
-                  <SettingsFormElementInputRadio label="100% Identity - Same length (recommanded)" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeStrict} onChange={handleRadioChange}/>
+                  <SettingsFormElementInputRadio label="100% Identity - Same length (recommanded)" help="Deletes sequences that are strictly identical to another sequence." checked={parameters.annotationSection.removeStrict} onChange={handleRadioChange}/>
               </div>
               <div className="formElement">
-                  <SettingsFormElementInputRadio label="100% Identity - lower length" help="Searches for a genome and, if unavailable, looks for a sequencing dataset." checked={parameters.annotationSection.removeSoft} onChange={handleRadioChange}/>
+                  <SettingsFormElementInputRadio label="100% Identity - lower length" help="Deletes proteins whose sequence is strictly included in another protein sequence." checked={parameters.annotationSection.removeSoft} onChange={handleRadioChange}/>
               </div>
             </div>
 
