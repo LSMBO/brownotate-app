@@ -7,7 +7,7 @@ import resumeArrowIcon from "../assets/resume_arrow.png"
 
 const CardRun = ({ user, id, data, status, parameters }) => {
     const navigate = useNavigate();
-    const { fetchUserRuns, fetchCPUs } = useRuns();
+    const { fetchUserRuns, fetchCPUs, startRunMonitoring } = useRuns();
 
     const formatDate = (dateTimeString) => {
         const date = new Date(dateTimeString);
@@ -38,6 +38,7 @@ const CardRun = ({ user, id, data, status, parameters }) => {
         await axios.post(`${CONFIG.API_BASE_URL}/resume_run`, { id: data.parameters.id });
         fetchUserRuns(user)
         fetchCPUs();
+        startRunMonitoring(user);
       } catch (error) {
         console.error('Error:', error);
       }
