@@ -37,6 +37,7 @@ export default class Assembly {
 		const urlParts = url.split('/');
 		const fullAccession = urlParts[urlParts.length - 2];
 		const accessionParts = fullAccession.split('_');
+		accessionParts[1] = accessionParts[1].split('-RS')[0]  // when accessionParts[1] = '000001405.40-RS']
 		return `${accessionParts[0]}_${accessionParts[1]}`;
 	}
 
@@ -44,7 +45,7 @@ export default class Assembly {
 		if (mode === "user") {
 			return `https://www.ncbi.nlm.nih.gov/datasets/genome/${accession}/`
 		} else {
-			return `ftp.ncbi.nlm.nih.gov${url}` 
+			return `https://ftp.ncbi.nlm.nih.gov/${url}` 
 		}		
 	}
 
@@ -54,7 +55,7 @@ export default class Assembly {
 		} else {
 			const urlParts = url.split('/');
 			const newUrl = urlParts.slice(0, -2).join('/') + '/';
-			return `ftp.ensembl.org${newUrl}`;
+			return `https://ftp.ensembl.org${newUrl}`;
 		}
 	}
 }

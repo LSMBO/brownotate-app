@@ -35,17 +35,10 @@ export default function Home() {
             fetchUserRuns(user);
         };
     
-        const handleRunStarted = (data) => {
-            console.log('Socket.on run_started:', data);
-            fetchUserRuns(user);
-        };
-    
         socket.on('runs_updated', handleRunsUpdated);
-        socket.on('run_started', handleRunStarted);
     
         return () => {
             socket.off('runs_updated', handleRunsUpdated);
-            socket.off('run_started', handleRunStarted);
         };
     }, [socket, user]);
 

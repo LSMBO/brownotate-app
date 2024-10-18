@@ -233,6 +233,9 @@ ul li button:hover {
     min-height: 30px;
 }
 
+.sectionTitle > label {
+    margin-left: 8px;
+}
 .tabs-container label{
     margin-left: 8px;
 }

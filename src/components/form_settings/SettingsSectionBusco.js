@@ -6,7 +6,7 @@ export default function SettingsSectionBusco({ disabled, updateParameters, param
     const handleRadioChange = (name, isChecked) => {
         const parametersCopy = { ...parameters };
         if (isChecked) {
-          if (name === "Evaluate the genome completeness") {
+          if (name === "Evaluate the assembly completeness") {
             parametersCopy.buscoSection.assembly = true;
           } 
           else if (name === "Evaluate the annotation completeness") {
@@ -14,7 +14,7 @@ export default function SettingsSectionBusco({ disabled, updateParameters, param
             }
         }
         else {
-          if (name === "Evaluate the genome completeness") {
+          if (name === "Evaluate the assembly completeness") {
             parametersCopy.buscoSection.assembly = false;
           } 
           else if (name === "Evaluate the annotation completeness") {
@@ -29,7 +29,7 @@ export default function SettingsSectionBusco({ disabled, updateParameters, param
         <fieldset disabled={disabled}>
             <legend className="t2_bold">Busco (completeness evaluation)</legend>
             <div className="formElement">
-                <SettingsFormElementInputRadio label="Evaluate the genome completeness" help="Evaluates the BUSCO completeness evaluation of the assembly." checked={parameters.buscoSection.assembly} onChange={handleRadioChange}/>
+                <SettingsFormElementInputRadio label="Evaluate the assembly completeness" help="Evaluates the BUSCO completeness evaluation of the assembly." checked={parameters.buscoSection.assembly} onChange={handleRadioChange}/>
             </div>
             <div className="formElement">
                 <SettingsFormElementInputRadio label="Evaluate the annotation completeness" help="Evaluates the BUSCO completeness evaluation of the annotation." checked={parameters.buscoSection.annotation} onChange={handleRadioChange}/>

@@ -197,13 +197,14 @@ label {
 
 .fetch-runs-button button{
     border-color: #3e28bb;
-    border-radius: 20px;
-    background-color: #c6b7fa;
+    background-color: #bbb7fa;
+    border-radius: 0;
     width: 30%;
     margin: 10px auto;
 }
+
 .fetch-runs-button button:hover{
-    background-color: #c58ef8;
+    background-color: #ada8f7;
 }
 
 .run-list {

@@ -64,7 +64,7 @@ export default class Proteins {
 		if (mode === "user") {
 			return `https://www.ncbi.nlm.nih.gov/datasets/genome/${accession}/`
 		} else {
-			return `https://ftp.ncbi.nlm.nih.gov${url}` 
+			return `https://ftp.ncbi.nlm.nih.gov/${url}` 
 		}		
 	}
 

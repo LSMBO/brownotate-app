@@ -88,7 +88,7 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
             <div className="formSection">
               <div className="sectionTitle">
                   <div className="labelTooltipWrapper">
-                    <label>Minimal sequence length</label>
+                    <label>Minimal sequence length (in amino acids)</label>
                     <div className="tooltipContainer">
                       <img src={HelpIcon} alt="help" className="helpIcon" />
                       <span className="helpSpan">Augustus predicted sequences with a length below this threshold are removed from the annotation.</span>
@@ -106,13 +106,7 @@ export default function SettingsSectionAnnotation({ disabled, updateParameters, 
             </div>
             <div className="formSection">
               <div className="sectionTitle">
-                <div className="labelTooltipWrapper">
-                  <label>Remove duplicated sequence</label>
-                  <div className="tooltipContainer">
-                    <img src={HelpIcon} alt="help" className="helpIcon" />
-                    <span className="helpSpan">Searches for a genome and, if unavailable, looks for a sequencing dataset.</span>
-                  </div>
-                </div>
+                <label>Remove duplicated sequence</label>
               </div>
               <div className="formElement">
                   <SettingsFormElementInputRadio label="100% Identity - Same length (recommanded)" help="Deletes sequences that are strictly identical to another sequence." checked={parameters.annotationSection.removeStrict} onChange={handleRadioChange}/>
