@@ -76,17 +76,26 @@ To set up the Flask server, please follow the instruction provided in [Brownotat
             Options FollowSymLinks
             AllowOverride All
             Require all granted
+
+            RewriteEngine On
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^ /index.html [L]
+
         </Directory>
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
     </VirtualHost>
     ```
 
-8. **Enable the new site configuration:**
+8. **Enable URL rewriting and site configuration:**
 
     ```bash
+    sudo a2enmod rewrite
     sudo a2ensite /etc/apache2/sites-available/brownotate-app.conf
     ```
+
+These commands enable the rewrite module in Apache, which allow for flexible URL rooting, and then enables the site configuration.
 
 9. **Enable Proxy and Configure SSL for API Communication:**
 
