@@ -80,25 +80,25 @@ const Run = () => {
 		fetchFiles();
 	}, [run]);
 	
-    return (
-        <div>
+	return (
+		<div>
 			<TabsHeader run={run} activeTab={activeTab} setActiveTab={setActiveTab} />
-            {run && (
-                <div className='t2_light'>
+			{run && (
+				<div className='t2_light'>
 					{activeTab === "Results" && (
-						<Results run={run} fileContents={fileContents} isLoading={isLoading} setIsLoading={setIsLoading} />
+						<Results run={run} fileContents={fileContents} setIsLoading={setIsLoading} />
 					)}
 
 					{activeTab === 'Parameters' && (
 						<Parameters run={run} />
 					)}
 				</div>
-            )}
+			)}
 			{isLoading && (
-                <Loading />
-            )}
-        </div>
-    );
+				<Loading />
+			)}
+		</div>
+	);
 };
 
 export default Run;

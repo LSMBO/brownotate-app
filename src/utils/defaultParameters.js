@@ -3,29 +3,30 @@ export const defaultParameters = {
     ready: false,
     species: {
         scientificName: "",
-        taxonID: null
+        taxonID: null,
+        lineage: [],
+        is_bacteria: false,
     },
     startSection: {
-        genome: false,
+        assembly: false,
         sequencing: false,
-        genomeFile: false,
-        genomeFileIsURL: false,
-        genomeFileList: [],
+        assemblyFile: false,
+        assemblyType: null, // custom, ncbi, ensembl
+        assemblyAccession: [],
+        assemblyDownload: null, // type:custom -> null ; type:ncbi -> download_command ; type:ensembl -> download_url
+        assemblyFileList: [], // type:custom -> [FileObj] ; type:ncbi -> [] ; type:ensembl -> []
         sequencingFiles : false,
-        sequencingFilesList : [],
+        sequencingFileList : [],
         sequencingAccessions : false,
-        sequencingAccessionsList : [],
+        sequencingAccessionList : [],
 		skipFastp: false,
         skipPhix: false
     },
     annotationSection: {
-        evidenceAuto: true,
-        evidenceFile: false,
-        evidenceFileIsURL: false,
         evidenceFileList: [],
         minLength: '0',
         removeStrict: true,
-        removeSoft: false,
+        removeSoft: false
     },
     brownamingSection: {
         skip: false,

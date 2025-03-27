@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
-export default function SpeciesInput({setInputSpecies, speciesNotFound }) {
-    const [content, setContent] = useState("")
+export default function SpeciesInput({inputSpecies, setInputSpecies, speciesNotFound }) {
+    const [content, setContent] = useState(inputSpecies)
 
     const handleChange = (e) => {
         setContent(e.target.value)
@@ -18,7 +18,7 @@ export default function SpeciesInput({setInputSpecies, speciesNotFound }) {
                 onChange={handleChange}
             />
             {speciesNotFound!=="" ? 
-            <p className="error-message">Your species {speciesNotFound} has not been found in UniProt. Please use another species name.</p> :
+            <p className="error-message">The taxonomy {speciesNotFound} has not been found in UniProt. Please retry with the taxonID or another name.</p> :
             <p></p>}
         </div>   
     )

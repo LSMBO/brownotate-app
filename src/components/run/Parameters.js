@@ -45,15 +45,15 @@ function Parameters({ run }) {
 			<h3>Selected parameters</h3>
 			<fieldset>
 				<legend className="t2_bold">Started data</legend>
-				<ParameterItem label='Mode' value={run.parameters.startSection.genome ? 'Genome' : 'Sequencing'} />
+				<ParameterItem label='Mode' value={run.parameters.startSection.assembly ? 'Assembly' : 'Sequencing'} />
 				{run.parameters.startSection.sequencingFiles &&
-					<ParameterItem label='Sequencing file(s)' value={listDisplay(run.parameters.startSection.sequencingFilesList)} />
+					<ParameterItem label='Sequencing file(s)' value={listDisplay(run.parameters.startSection.sequencingFileList)} />
 				}
 				{run.parameters.startSection.sequencingAccessions &&
-					<ParameterItem label='Sequencing accession(s)' value={listDisplay(run.parameters.startSection.sequencingAccessionsList)} />
+					<ParameterItem label='Sequencing accession(s)' value={listDisplay(run.parameters.startSection.sequencingAccessionList)} />
 				}
-				{run.parameters.startSection.genomeFile &&
-					<ParameterItem label="Assembly file" value={run.parameters.startSection.genomeFileList} />
+				{run.parameters.startSection.assemblyFile &&
+					<ParameterItem label="Assembly file" value={run.parameters.startSection.assemblyFileList} />
 				}
 				{run.parameters.startSection.sequencing &&
 					<ParameterItem label="Skip fastp" value={run.parameters.startSection.skipFastp ? 'True' : 'False'} />

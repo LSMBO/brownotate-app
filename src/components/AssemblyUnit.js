@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AssemblyProteinsUnit = ({ data, selectedData, updateSelectedData, label }) => {
+const AssemblyUnit = ({ data, selectedData, updateSelectedData, label }) => {
     const handleCheckboxChange = (newData) => {
         updateSelectedData(selectedData && newData.accession === selectedData.accession ? null : newData);
     };
@@ -18,12 +18,12 @@ const AssemblyProteinsUnit = ({ data, selectedData, updateSelectedData, label })
                         onChange={() => handleCheckboxChange(data)}
                     />
                     <div className={isSelected ? 'infos selected' : 'infos'}>
-                        <a href={data.userURL} target="_blank" rel="noopener noreferrer">
+                        <a href={data.url} target="_blank" rel="noopener noreferrer">
                             <p>
                             {data.accession !== 'swissprot' && data.accession !== 'trembl' ? `${label}: ${data.accession}` : label}
                             </p>
                         </a>
-                        <p><i>{data.scientific_name}</i></p>
+                        <p><i>{data.scientific_name} (taxID: {data.taxid})</i></p>
                     </div>
                 </>
             )}
@@ -31,4 +31,4 @@ const AssemblyProteinsUnit = ({ data, selectedData, updateSelectedData, label })
     );
 };
 
-export default AssemblyProteinsUnit;
+export default AssemblyUnit;

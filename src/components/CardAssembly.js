@@ -1,44 +1,47 @@
 import React from 'react';
-import AssemblyProteinsUnit from './AssemblyProteinsUnit';
+import AssemblyUnit from './AssemblyUnit';
 import './CardDatabaseSearch.css';
 
 const CardAssembly = ({ assembly, noProteinsFound, selectedAssembly, updateSelectedAssembly }) => {
 
-    const ensemblEmpty = Object.keys(assembly.ensembl).length === 0;
-    const refseqEmpty = Object.keys(assembly.refseq).length === 0;
-    const genbankEmpty = Object.keys(assembly.genbank).length === 0;
+    const ensemblEmpty = !assembly || Object.keys(assembly.ensembl).length === 0;
+    const refseqEmpty = !assembly || Object.keys(assembly.refseq).length === 0;
+    const genbankEmpty = !assembly || Object.keys(assembly.genbank).length === 0;
 
     return (
         <div className="card-assembly">
             <div className='card-header'>
                 <h3>Assembly</h3>
             </div>
-            {ensemblEmpty && refseqEmpty && genbankEmpty && <p>No assembly found</p>}
+            {ensemblEmpty && refseqEmpty && genbankEmpty && <p>Loading...</p>}
             <ul>
-                {!ensemblEmpty && (
-                    <AssemblyProteinsUnit 
-                        data={assembly.ensembl} 
+                {!ensemblEmpty && assembly.ensembl.map((ass, index) => (
+                    <AssemblyUnit 
+                        key={index}
+                        data={ass} 
                         selectedData={selectedAssembly} 
                         updateSelectedData={updateSelectedAssembly} 
                         label="ENSEMBL" 
                     />
-                )}
-                {!refseqEmpty && (
-                    <AssemblyProteinsUnit 
-                        data={assembly.refseq} 
+                ))}
+                {!refseqEmpty && assembly.refseq.map((ass, index) => (
+                    <AssemblyUnit 
+                        key={index}
+                        data={ass} 
                         selectedData={selectedAssembly} 
                         updateSelectedData={updateSelectedAssembly} 
-                        label="RefSeq" 
+                        label="NCBI RefSeq" 
                     />	
-                )}
-                {!genbankEmpty && (
-                    <AssemblyProteinsUnit 
-                        data={assembly.genbank} 
+                ))}
+                {!genbankEmpty && assembly.genbank.map((ass, index) => (
+                    <AssemblyUnit 
+                        key={index}
+                        data={ass} 
                         selectedData={selectedAssembly} 
                         updateSelectedData={updateSelectedAssembly} 
-                        label="Genbank" 
+                        label="NCBI Genbank" 
                     />	
-                )}
+                ))}
             </ul>
         </div>
     );

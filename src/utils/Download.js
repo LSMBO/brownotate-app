@@ -1,65 +1,46 @@
 import axios from 'axios';
 import CONFIG from '../config';
 
-async function downloadUniprotFasta(url, outputName, setIsLoading) {
-    let allSequences = '';
+export async function downloadUniprot(url, outputName) {
     try {
-        let response = await fetchUrl(url);
-        console.log(url)
-        allSequences += await response.text();
-        // Pagination through next pages
-        while (response.headers.get('Link')) {
-            const nextUrl = getNextPageUrl(response.headers.get('Link'));
-            response = await fetchUrl(nextUrl);
-            allSequences += await response.text();
-        }
-        setIsLoading(false);
-        saveFastaFile(allSequences, outputName);
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/download_uniprot`, {
+            'url': url,
+            'output_name': outputName
+        });
+        return response.data.path;
     } catch (error) {
         console.error('Error fetching data:', error);
+        return null;
     }
 }
 
-async function fetchUrl(url) {
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error('Request failed');
-    }
-    return response;
-}
-
-function getNextPageUrl(linkHeader) {
-    const nextUrlRegex = /<([^>]+)>;\s*rel="next"/;
-    const match = nextUrlRegex.exec(linkHeader);
-    return match ? match[1] : null;
-}
-
-function saveFastaFile(content, outputName) {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = outputName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-
-function downloadFTP(path, setIsLoading) {
-    const link = document.createElement('a');
-    link.href = path;
-    link.setAttribute('download', '');
-    document.body.appendChild(link);
-    setIsLoading(false)
-    link.click();
-    document.body.removeChild(link);
-}
-
-async function downloadFromServer(path, extension, setIsLoading) {
+export async function downloadNCBI(download_command) {
     try {
-        setIsLoading(true);
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/download_ncbi`, {
+            'download_command': download_command,
+        })
+        return response.data.path;
+
+    } catch (error) {  
+        console.error('Error fetching data:', error);
+        return null;
+    } 
+}
+
+export async function downloadEnsemblFTP(download_url, accession, data_type) {
+    try{
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/download_ensembl_ftp`, {
+            'file': download_url, 
+            'output_name': `${accession}_${data_type}.fasta`
+        });
+        return response.data.path;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return null;
+    }
+}
+export async function downloadFromServer(path, extension) {
+    try {
         let fileList = [path]
         if (extension) {
             const response = await axios.post(`${CONFIG.API_BASE_URL}/server_path`, {'path': path, 'extension': extension});
@@ -68,7 +49,7 @@ async function downloadFromServer(path, extension, setIsLoading) {
         for (let file of fileList) {
             const fileResponse = await axios({
                 method: 'post',
-                url: `${CONFIG.API_BASE_URL}/download_file_server`,
+                url: `${CONFIG.API_BASE_URL}/download_server`,
                 data: { file: file },
                 responseType: 'blob'
             });
@@ -82,7 +63,6 @@ async function downloadFromServer(path, extension, setIsLoading) {
             link.href = url;
             link.setAttribute('download', file.split('/').pop());
             document.body.appendChild(link);
-            setIsLoading(false);
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
@@ -93,12 +73,51 @@ async function downloadFromServer(path, extension, setIsLoading) {
     }
 }
 
-export function handleClickDownload(path, type, setIsLoading, extension = null) {
-    if (type === 'uniprot') {
-        downloadUniprotFasta(path[0], `${path[1]}.fasta`, setIsLoading);
-    } else if (type === 'ftp') {
-        downloadFTP(path, setIsLoading);
-    } else if (type === 'server') {
-        downloadFromServer(path, extension, setIsLoading);
+
+export async function mergeFastaFiles(files) {
+    try {
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/merge_fasta_files`, {
+            'files': files
+        });
+        return response.data.path;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return null;
+    }
+}
+
+export async function handleClickDownload(data, type, downloadToClient) {
+    if (type === 'proteins') {
+        let output = null;
+        let proteinFiles = [];
+        const downloadPromises = data.map(async (proteins) => {
+            if (proteins.database === "uniprot") {
+                output = await downloadUniprot(proteins.download_url, `${proteins.accession}.fasta`);
+            } else if (proteins.database === "ensembl") {
+                output = await downloadEnsemblFTP(proteins.download_url, proteins.accession, 'proteins');
+            } else if (proteins.database === "ncbi") {
+                output = await downloadNCBI(proteins.download_command);
+            }
+            if (output) {
+                proteinFiles.push(output);
+            }
+        });
+        await Promise.all(downloadPromises);
+
+        if (proteinFiles.length === 1) {
+            const serverFilePath = proteinFiles[0];
+            if (downloadToClient) {
+                await downloadFromServer(serverFilePath, null);
+            } else {
+                return serverFilePath;
+            }
+        } else {
+            const mergedFilePath = await mergeFastaFiles(proteinFiles);
+            if (downloadToClient) {
+                await downloadFromServer(mergedFilePath, null);
+            } else {
+                return mergedFilePath;
+            }
+        }
     }
 }

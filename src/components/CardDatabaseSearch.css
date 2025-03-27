@@ -30,6 +30,38 @@
     flex-direction: row;
 }
 
+.card-container-footer {
+    width: 95%;
+    margin: auto;
+    flex-direction: row;
+}
+
+.card-container-footer .configure-btn {
+    flex: 2;
+    margin-right: 10px;
+}
+
+.card-container-footer .download-btn {
+    flex: 1;
+}
+
+.dbsearch-status {
+    align-items: center;
+    animation: loadingAnimation 1.5s infinite;
+}
+
+@keyframes loadingAnimation {
+    0% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.3;
+    }
+}
+
 .card-container button {
     border: 2px solid #288cbb;
     border-radius: 0;

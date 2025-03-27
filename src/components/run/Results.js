@@ -3,7 +3,7 @@ import ResultsFailedRun from './ResultsFailedRun';
 import ResultsCompletedRun from './ResultsCompletedRun';
 
 
-function Results({ run, fileContents, isLoading, setIsLoading }) {
+function Results({ run, fileContents, setIsLoading }) {
   return (
       <div>
         {run.status === "failed" && (

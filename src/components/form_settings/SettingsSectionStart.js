@@ -11,22 +11,22 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (parameters.startSection.genome) {
+    if (parameters.startSection.assembly) {
       setActiveTab('Assembly');
     } else {
       setActiveTab('Sequencing');
     }
-  }, [parameters.startSection.genome]);
+  }, [parameters.startSection.assembly]);
 
   const toggleTab = (tab) => {
     const parametersCopy = { ...parameters };
     parametersCopy.startSection.sequencing = false;
-    parametersCopy.startSection.genome = false;
+    parametersCopy.startSection.assembly = false;
     if (tab === "Sequencing"){
       parametersCopy.startSection.sequencing = true;
     }
     if (tab === "Assembly"){
-      parametersCopy.startSection.genome = true;
+      parametersCopy.startSection.assembly = true;
     }
     updateParameters(parametersCopy);
     setActiveTab(tab);
@@ -36,12 +36,12 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
     e.preventDefault();
     const parametersCopy = { ...parameters };  
     if (index !== undefined) {
-      parametersCopy.startSection.sequencingFilesList.splice(index, 1);
+      parametersCopy.startSection.sequencingFileList.splice(index, 1);
     } 
     else {
       const files = e.target.files;
       if (files) {
-        parametersCopy.startSection.sequencingFilesList = Array.from(files);
+        parametersCopy.startSection.sequencingFileList = Array.from(files);
       }
     }
     updateParameters(parametersCopy);
@@ -49,24 +49,24 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
 
   const handleTextAccessionsChange = (text) => {
     const parametersCopy = {...parameters}
-    parametersCopy.startSection.sequencingAccessionsList = text.trim() !== '' ? text.trim().split("\n") : [];
+    parametersCopy.startSection.sequencingAccessionList = text.trim() !== '' ? text.trim().split("\n") : [];
     updateParameters(parametersCopy)
   }
 
-  const handleGenomeFileChange = (e, index) => {
+  const handleAssemblyFileChange = (e, index) => {
     e.preventDefault();
+    
     const parametersCopy = { ...parameters };  
     if (index !== undefined) {
-      parametersCopy.startSection.genomeFileList.splice(index, 1);
-      parametersCopy.startSection.genomeFile = false;
-      parametersCopy.startSection.genomeFileIsURL = false;
-    } 
+      parametersCopy.startSection.assemblyFileList.splice(index, 1);
+      parameters.startSection.assemblyAccession = [];
+    }
     else {
-      const files = e.target.files;
+      let files = e.target.files;
       if (files) {
-        parametersCopy.startSection.genomeFileList = Array.from(files);
-        parametersCopy.startSection.genomeFile = true;
-        parametersCopy.startSection.genomeFileIsURL = false;
+        let assembly_file = files[0];
+        parametersCopy.startSection.assemblyFileList = Array.from(files);
+        parameters.startSection.assemblyAccession = [assembly_file.name];
         parametersCopy.startSection.sequencingFiles = false;
         parametersCopy.startSection.sequencingAccessions = false;
       }
@@ -78,13 +78,13 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
     const parametersCopy = { ...parameters };
     if (isChecked) {
       if (name === "Sequencing file(s)"){
-          parametersCopy.startSection.genomeFile = false;
+          parametersCopy.startSection.assemblyFile = false;
           parametersCopy.startSection.sequencingFiles = true;
           parametersCopy.startSection.sequencingAccessions = false;
           parametersCopy.startSection.sequencing = true;
       } 
       else if (name === "SRA accessions"){
-          parametersCopy.startSection.genomeFile = false;
+          parametersCopy.startSection.assemblyFile = false;
           parametersCopy.startSection.sequencingAccessions = true;
           parametersCopy.startSection.sequencingFiles = false;
           parametersCopy.startSection.sequencing = true;
@@ -121,7 +121,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
               </div>
               <div className="formElement">
                 <SettingsFormElementInputRadio
-                  disabled={parameters.startSection.genome}
+                  disabled={parameters.startSection.assembly}
                   label="Sequencing file(s)" 
                   help="DNA sequencing FASTQ file(s). Please enter both the forward and reverse file for paird-end sequencing." 
                   checked={parameters.startSection.sequencingFiles} 
@@ -131,13 +131,13 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                   label="Sequencing file(s)"
                   disabled={!parameters.startSection.sequencingFiles}
                   handleFileChange={handleSequencingFilesChange}
-                  value={parameters.startSection.sequencingFilesList}
+                  value={parameters.startSection.sequencingFileList}
                   allowMultiple={true}
                 />
               </div>
               <div className="formElement">
                 <SettingsFormElementInputRadio 
-                  disabled={parameters.startSection.genome}
+                  disabled={parameters.startSection.assembly}
                   label="SRA accessions" 
                   help="SRA accession number of the input DNA sequencing data." 
                   checked={parameters.startSection.sequencingAccessions} 
@@ -147,7 +147,7 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                   label="SRA accessions" 
                   disabled={!parameters.startSection.sequencingAccessions} 
                   onChange={handleTextAccessionsChange} 
-                  text={parameters.startSection.sequencingAccessionsList}
+                  text={parameters.startSection.sequencingAccessionList}
                   type='textarea'
                 />
               </div>
@@ -193,9 +193,9 @@ export default function SettingsSectionStart({ updateParameters, parameters }) {
                 </div>
               </div>
               <SettingsFormElementInputFile 
-                label="Genome file"
-                handleFileChange={handleGenomeFileChange}
-                value={parameters.startSection.genomeFileList}
+                label="Assembly file"
+                handleFileChange={handleAssemblyFileChange}
+                value={parameters.startSection.assemblyAccession}
               />
             </div>
           </div>

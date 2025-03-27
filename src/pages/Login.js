@@ -39,7 +39,7 @@ export default function Login({setIsLoggedIn}) {
       <form className="login-form" onSubmit={handleSubmit}>
         <label className="t2_light">Email</label>
         <input
-          type="email"
+          type="text"
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}

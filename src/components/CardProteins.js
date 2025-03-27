@@ -1,27 +1,27 @@
 import React from 'react';
-import AssemblyProteinsUnit from './AssemblyProteinsUnit';
+import ProteinsUnit from './ProteinsUnit';
 import './CardDatabaseSearch.css';
 
 const CardProteins = ({ proteins, selectedProteins, updateSelectedProteins }) => {
 
-    const ensemblEmpty = Object.keys(proteins.ensembl).length === 0;
-	const uniprotProteomeEmpty = Object.keys(proteins.uniprot_proteome).length === 0;
-    const uniprotSwissprotEmpty = Object.keys(proteins.uniprot_swissprot).length === 0;
-    const uniprotTremblEmpty = Object.keys(proteins.uniprot_trembl).length === 0;
-    const refseqEmpty = Object.keys(proteins.refseq).length === 0;
-    const genbankEmpty = Object.keys(proteins.genbank).length === 0;
-    const sp_label = `Swissprot (${proteins.uniprot_swissprot.count} entries)`;
-    const tr_label = `TrEMBL (${proteins.uniprot_trembl.count} entries)`;
+    const ensemblEmpty = !proteins || Object.keys(proteins.ensembl || {}).length === 0;
+    const uniprotProteomeEmpty = !proteins || Object.keys(proteins.uniprot_proteomes || []).length === 0;
+    const uniprotSwissprotEmpty = !proteins || Object.keys(proteins.uniprot_swissprot || {}).length === 0;
+    const uniprotTremblEmpty = !proteins || Object.keys(proteins.uniprot_trembl || {}).length === 0;
+    const refseqEmpty = !proteins || Object.keys(proteins.refseq || {}).length === 0;
+    const genbankEmpty = !proteins || Object.keys(proteins.genbank || {}).length === 0;
+    const sp_label = proteins ? `Swissprot (${proteins.uniprot_swissprot?.count || 0} entries)` : '';
+    const tr_label = proteins ? `TrEMBL (${proteins.uniprot_trembl?.count || 0} entries)` : '';
 
     return (
         <div className="card-proteins">
             <div className='card-header'>
                 <h3>Proteins</h3>
             </div>
-            {ensemblEmpty && uniprotProteomeEmpty && uniprotSwissprotEmpty && uniprotTremblEmpty && refseqEmpty && genbankEmpty && <p>No proteins found</p>}
+            {ensemblEmpty && uniprotProteomeEmpty && uniprotSwissprotEmpty && uniprotTremblEmpty && refseqEmpty && genbankEmpty && <p>Loading...</p>}
             <ul>
                 {!uniprotSwissprotEmpty && (
-                    <AssemblyProteinsUnit
+                    <ProteinsUnit
                         isEmpty={uniprotSwissprotEmpty}
                         data={proteins.uniprot_swissprot} 
                         selectedData={selectedProteins} 
@@ -30,7 +30,7 @@ const CardProteins = ({ proteins, selectedProteins, updateSelectedProteins }) =>
                     />
                 )}
                 {!uniprotTremblEmpty && (
-                    <AssemblyProteinsUnit
+                    <ProteinsUnit
                         isEmpty={uniprotTremblEmpty}
                         data={proteins.uniprot_trembl} 
                         selectedData={selectedProteins} 
@@ -38,42 +38,46 @@ const CardProteins = ({ proteins, selectedProteins, updateSelectedProteins }) =>
                         label={tr_label}
                     />
                 )}
-                {!uniprotProteomeEmpty && (
-                    <AssemblyProteinsUnit 
+                {!uniprotProteomeEmpty && proteins.uniprot_proteomes.map((proteome, index) => (
+                    <ProteinsUnit 
+                        key={index}
                         isEmpty={uniprotProteomeEmpty}
-                        data={proteins.uniprot_proteome} 
-                        selectedData={selectedProteins} 
+                        data={proteome}
+                        selectedData={selectedProteins}
                         updateSelectedData={updateSelectedProteins} 
                         label="Uniprot Proteome" 
-                    />	
-                )}
-                {!ensemblEmpty && (
-                    <AssemblyProteinsUnit 
+                    />
+                ))}
+                {!ensemblEmpty && proteins.ensembl.map((annotation, index) => (
+                    <ProteinsUnit 
+                        key={index}
                         isEmpty={ensemblEmpty}
-                        data={proteins.ensembl} 
+                        data={annotation} 
                         selectedData={selectedProteins} 
                         updateSelectedData={updateSelectedProteins} 
                         label="ENSEMBL" 
                     />
-                )}
-                {!refseqEmpty && (
-                    <AssemblyProteinsUnit 
+                ))}
+                {!refseqEmpty && proteins.refseq.map((annotation, index) => (
+                    <ProteinsUnit 
+                        key={index}
                         isEmpty={refseqEmpty}
-                        data={proteins.refseq} 
+                        data={annotation} 
                         selectedData={selectedProteins} 
                         updateSelectedData={updateSelectedProteins} 
-                        label="RefSeq" 
-                    />	
-                )}
-                {!genbankEmpty && (
-                    <AssemblyProteinsUnit 
-                        isEmpty={genbankEmpty}
-                        data={proteins.genbank} 
-                        selectedData={selectedProteins} 
-                        updateSelectedData={updateSelectedProteins} 
-                        label="Genbank" 
+                        label="NCBI RefSeq" 
                     />
-                )}
+                ))}
+                {!genbankEmpty && proteins.genbank.map((annotation, index) => (
+                    <ProteinsUnit 
+                        key={index}
+                        isEmpty={genbankEmpty}
+                        data={annotation} 
+                        selectedData={selectedProteins} 
+                        updateSelectedData={updateSelectedProteins} 
+                        label="NCBI Genbank" 
+                    />
+                ))}
             </ul>
         </div>
     );

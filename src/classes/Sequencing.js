@@ -19,7 +19,9 @@ export default class Sequencing {
                 accession: run["accession"] || "",
                 totalBases: totalBases,
                 rank: run["rank"] || "",
-                scientific_name: run["scientific_name"] || ""
+                scientific_name: run["scientific_name"] || "",
+                taxid: run["taxid"] || "",
+                entry_id: run["entry_id"] || "",
             });
         }
         return newRuns;

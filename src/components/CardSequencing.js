@@ -46,23 +46,28 @@ const CardSequencing = ({ dnaseq, noAssemblyFound, noProteinsFound, selectedSequ
             <div className='card-header'>
                 <h3>Sequencing</h3>
             </div>
-            <ul>
-                {dnaseq.runs.map((run, index) => (
-                    <SequencingUnit
-                        key={index}
-                        run={run}
-                        handleCheckboxChange={handleCheckboxChange}
-                        convertBaseInSize={convertBaseInSize}
-                        isSelected={selectedSequencing.includes(run.accession)}
-                    />
-                ))}
-            </ul>
-            <div className='card-footer'>
-                <label className='centered'>{selectedSequencing.length} selected</label>
-                <label className='centered'>(Estimated size ~{sequencingSize})</label>
-            </div>
+            {dnaseq ? (
+                <>
+                    <ul>
+                        {dnaseq.runs.map((run, index) => (
+                            <SequencingUnit
+                                key={index}
+                                run={run}
+                                handleCheckboxChange={handleCheckboxChange}
+                                convertBaseInSize={convertBaseInSize}
+                                isSelected={selectedSequencing.includes(run.accession)}
+                            />
+                        ))}
+                    </ul>
+                    <div className='card-footer'>
+                        <label className='centered'>{selectedSequencing.length} selected</label>
+                        <label className='centered'>(Estimated size ~{sequencingSize})</label>
+                    </div>
+                </>
+            ) : (
+                <div className='loading'>Loading...</div>
+            )}
         </div>
     );
-};
-
+}
 export default CardSequencing;

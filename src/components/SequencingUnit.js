@@ -15,7 +15,7 @@ const SequencingUnit = ({ run, handleCheckboxChange, convertBaseInSize, isSelect
                     <p>{run.accession} (≈{convertBaseInSize(run.totalBases)})</p>
                 </a>    
                 <p>{run.platform} {run.library_type}-end</p>
-                <p><i>{run.scientific_name}</i></p>
+                <p><i>{run.scientific_name} (taxID: {run.taxid})</i></p>
 			</div>
         </div>
     );

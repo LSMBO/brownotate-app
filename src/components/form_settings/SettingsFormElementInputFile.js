@@ -9,7 +9,7 @@ export default function SettingsFormElementInputFile({ label, disabled, handleFi
     const displayFileName = (file_url) => {
         if (typeof file_url === 'string') {
             const parts = file_url.split('/');
-            return parts[parts.length - 1];;
+            return parts[parts.length - 1];
         } else if (file_url instanceof File) {
             return file_url.name;
         }

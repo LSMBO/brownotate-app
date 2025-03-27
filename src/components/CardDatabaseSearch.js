@@ -1,23 +1,23 @@
-import "../components/Loading.css";
+
 import { useEffect, useState } from "react";
+import CONFIG from '../config';
+import './CardDatabaseSearch.css';
 import CardSequencing from "./CardSequencing";
 import CardAssembly from "./CardAssembly";
 import CardProteins from "./CardProteins";
+import PhylogenyMap from "./PhylogenyMap";
 import Loading from "./Loading";
-import './CardDatabaseSearch.css';
 import { useDBSearch } from '../contexts/DBSearchContext';
-import { useUser } from '../contexts/UserContext';
 
-const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDownload, rerunDBSearch, setForceNewDBSearch }) => {
+const CardDatabaseSearch = ({ data, dbsearchStatus, handleClickSettings, handleClickDownload, rerunDBSearch }) => {
     const { selectedData, setSelectedData } = useDBSearch();
     const [selectedSequencing, setSelectedSequencing] = useState([]);
     const [selectedAssembly, setSelectedAssembly] = useState(null);
-    const [selectedProteins, setSelectedProteins] = useState(null);
+    const [selectedProteins, setSelectedProteins] = useState([]);
     const [sequencingSize, setSequencingSize] = useState("0Go");
     const [noAssemblyFound, setNoAssemblyFound] = useState(false);
     const [noProteinsFound, setNoProteinsFound] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const { user } = useUser();
 
     useEffect(() => {
         if (selectedData && selectedData[0].data_type === "genome") {
@@ -39,7 +39,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                 Object.keys(data.proteins.ensembl).length === 0 &&
                 Object.keys(data.proteins.uniprot_swissprot).length === 0 &&
                 Object.keys(data.proteins.uniprot_trembl).length === 0 &&
-                Object.keys(data.proteins.uniprot_proteome).length === 0 &&
+                Object.keys(data.proteins.uniprot_proteomes).length === 0 &&
                 Object.keys(data.proteins.refseq).length === 0 &&
                 Object.keys(data.proteins.genbank).length === 0
             )) {
@@ -64,7 +64,7 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                 setSequencingSize('0Go');
             }
             if (selectedProteins) {
-                setSelectedProteins(null);
+                setSelectedProteins([]);
             }
         } else {
             setSelectedAssembly(null);
@@ -72,7 +72,11 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
     };
 
     const updateSelectedProteins = (proteins) => {
-        setSelectedProteins(proteins);
+        if (selectedProteins.some(p => p.accession === proteins.accession)) {
+            setSelectedProteins(selectedProteins.filter(p => p.accession !== proteins.accession));
+        } else {
+            setSelectedProteins([...selectedProteins, proteins]);
+        }
         setSelectedData([proteins]);
         if (proteins && selectedSequencing.length > 0) {
             setSelectedSequencing([]);
@@ -90,20 +94,18 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
             setSelectedAssembly(null);
         }
         if (runs && selectedProteins) {
-            setSelectedProteins(null);
+            setSelectedProteins([]);
         }
     };
 
     const convertForDownload = async (data) => {
         try {
             setIsLoading(true);
-            if (data.database === 'uniprot' || data.database === 'swissprot' || data.database === 'trembl') {
-                await handleClickDownload([data.downloadURL, data.accession], 'uniprot', setIsLoading);
-            } else {
-                await handleClickDownload(data.downloadURL, 'ftp', setIsLoading);
-            }
+            await handleClickDownload(data, 'proteins', true);
         } catch (error) {
             console.error('Error during download:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -114,11 +116,11 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
     return (
         <div>
             <h2 className="home-h2">Database Search</h2>
-           <div className="card-container-header t2_bold">
+            <div className="card-container-header t2_bold">
                 <label>
                     <i>{data.scientific_name.charAt(0).toUpperCase() + data.scientific_name.slice(1).toLowerCase()}</i> ({data.taxonID}) on {data.date}.
                 </label>
-                <button className="retry-btn t2_bold" onClick={handleClickDBSearch}>Retry the search with today's data</button>
+                <button className="retry-btn t2_bold" onClick={handleClickDBSearch}>New search</button>
             </div>
             <div className="card-container t2_light">
                 <div className="sequencing-assembly-container">
@@ -139,7 +141,6 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                             updateSelectedAssembly={updateSelectedAssembly}
                         />
                     </div>
-                    <button className="t2_bold" disabled={!selectedAssembly && selectedSequencing.length === 0} onClick={() => handleClickSettings(selectedData)}>Configure the run with the sequencing/assembly selected</button>
                 </div>
                 <div className="protein-container">
                     <CardProteins
@@ -147,9 +148,35 @@ const CardDatabaseSearch = ({ species, data, handleClickSettings, handleClickDow
                         selectedProteins={selectedProteins}
                         updateSelectedProteins={updateSelectedProteins}
                     />
-                    <button className="t2_bold" disabled={!selectedProteins} onClick={() => convertForDownload(selectedProteins)}>Download the protein dataset</button>
                 </div>
             </div>
+            <div>
+                {dbsearchStatus === 'done' ? (
+                    <div className="card-container-footer">
+                        <button 
+                            className="t2_bold configure-btn" 
+                            disabled={!selectedAssembly && selectedSequencing.length === 0} 
+                            onClick={() => handleClickSettings(selectedData)}>
+                                Configure the run with the sequencing/assembly selected
+                        </button>
+                        <button 
+                            className="t2_bold download-btn" 
+                            disabled={selectedProteins.length === 0} 
+                            onClick={() => convertForDownload(selectedProteins)}>
+                                Download the protein dataset
+                        </button>
+                    </div>
+                ) : (
+                    <div className="dbsearch-status">
+                        Database Search in progress: {dbsearchStatus} ...
+                    </div>
+                )}
+            </div>
+            {data.phylogeny_map && (
+                <PhylogenyMap
+                    file={data.phylogeny_map}
+                />
+            )}
             {isLoading && (
                 <Loading/>
             )}
