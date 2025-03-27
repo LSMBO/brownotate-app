@@ -11,7 +11,7 @@ export default function Header() {
         <div className="header-container">
             <div className="header">
                 <div className="title">
-                    <h1>Brownotate</h1>
+                    <h1>Brownotate 1.1</h1>
                     <h4 className="t2_light">A comprehensive solution to generate a protein sequence database for any species</h4>
                 </div>
                 <img src={logo} alt="logo"/>
