@@ -72,7 +72,7 @@ export default function Settings() {
             // Taxonomy (Uniprot)
             response = await axios.post(`${CONFIG.API_BASE_URL}/dbs_taxonomy`, { 
                 scientificName: species['scientificName'], 
-                taxID: species['taxonID'], 
+                taxid: species['taxonID'], 
                 user: user,
                 createNewDBS: false
             });

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CONFIG from '../config';
 import axios from 'axios';
 
 const PhylogenyMap = ({ file }) => {
@@ -7,7 +8,7 @@ const PhylogenyMap = ({ file }) => {
     useEffect(() => {
         const fetchImage = async () => {
             try {
-                const response = await axios.get(`http://134.158.151.55:80/get_phylogeny_map/${file}`, {
+                const response = await axios.get(`${CONFIG.API_BASE_URL}/get_phylogeny_map/${file}`, {
                     responseType: 'blob',
                 });
                 const url = URL.createObjectURL(response.data);
