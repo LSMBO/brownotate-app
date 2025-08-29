@@ -1,0 +1,140 @@
+.my-annotations-container {
+    width: 99%;
+    margin: 20px auto;
+    border: solid 1px #288cbb;
+    align-items: flex-start;
+}
+
+.annotation-card {
+	padding: 10px;
+	margin: 20px auto;
+	width: 95%;
+	position: relative;
+	border: 2px solid #288cbb;
+	border-radius: 10px;;
+}
+
+.taxonomy-annotation-card {
+	display: flex;
+	flex-direction: row;
+	margin: 10px;
+	align-items: center;
+	font-weight: bold;
+}
+
+.taxonomy-annotation-card img {
+	flex: 0 0 10%;
+	border-radius: 20%;
+	margin-right: 10px;
+}
+
+.taxonomy-annotation-card .annotation-infos {
+    flex: 1 0 90%;
+    text-align: left;
+    min-height: 60px;
+}
+
+.annotation-card .delete-btn {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+    background-color: #ff6666;
+	transition: background-color 0.3s ease, transform 0.3s ease;;
+}
+
+.annotation-card .delete-btn:hover {
+    background-color: #ff4d4d;
+    transform: scale(1.05);
+}
+
+.annotation-card .resume-btn {
+    display: flex;
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	background-color: #288cbb;
+	transition: background-color 0.3s ease, transform 0.3s ease;;
+}
+
+.annotation-card .resume-btn:hover {
+    background-color: #357ABD;
+	transform: scale(1.05);
+}
+
+.annotation-card .resume-btn label {
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.resume-icon {
+	width: 20px;
+	height: 20px;
+	filter: invert(1);
+    margin-left: 5px;
+}
+
+span {
+	margin: 2px 0;
+}
+
+.annotation-error-box>div {
+	margin: 5px 0;
+}
+
+
+.progress-bar-container h4{
+  margin: 10px;
+} 
+
+.progress-bar-container h4.completed{
+  color: #007e11;
+} 
+
+.progress-bar {
+  width: 95%;
+  flex-direction: row;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px auto;
+  min-height: 20px;
+  border: 2px solid #000000;
+}
+
+.progress-bar-segment {
+	transition: background-color 0.5s ease;
+	background-color: #ccc;
+}
+
+.progress-bar-segment.completed {
+	background-color: #288cbb;
+}
+
+.progress-bar-segment.failed {
+	background-color: #ff0000;
+}
+
+.progress-bar-segment.active {
+	animation: pulseActive 2s infinite linear;
+}
+
+@keyframes pulseActive {
+	0% {
+		background-color: #ffb300;
+	}
+	50% {
+		background-color: #ffe066;
+	}
+	100% {
+		background-color: #ffb300;
+	}
+}
+
+.annotation-details {
+	display: flex;
+	flex-direction: row;
+}
+
+.annotation-details button {
+	flex: 1 1 50%;
+}
+

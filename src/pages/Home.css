@@ -1,0 +1,213 @@
+.card-container-header {
+    flex-direction: row;
+    display: flex;
+    width: 100%;
+}
+
+.card-container-header h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.card-container-header label {
+    color: #555;  
+    text-align: center;
+}
+
+.database-search-description {
+    width: 80%;
+    margin: 10px;
+    width: 100%;
+}
+
+.database-search-description .step {
+    flex-direction: row;
+    align-items: center;
+} 
+
+.step svg {
+    cursor: pointer;
+}
+
+.database-search-description label{
+    color: black;
+    font-weight: bold;
+    text-align: left;
+    margin: 10px;
+}
+
+.database-search-description p {
+    display: block;
+    margin: 10px;
+    margin-left: 0;
+}
+
+.rerun-dbsearch {
+    display: flex;
+    flex-direction: row;
+    width: 90%;
+    border-top: 1px solid #288cbb;
+    margin: auto;
+    padding-top: 5px;
+}
+
+.taxonomy-card {
+    border-radius: 6px;
+    margin: 10px;
+    align-items: center;
+    width: 20% !important;
+}
+
+.sequencing-container h3 {
+    margin: 10px 20px;
+}
+
+.batch-container {
+    flex-direction: row;
+}
+
+.batch-container h4 {
+    margin: 0;
+    padding: 20px;
+    border-bottom: solid 1px #ddd;
+}
+
+.batch-container .batch-headers{
+    width: 60%;
+    border-right: solid 1px #ddd;
+}
+
+.batch-expected-size {
+    padding: 5px;
+}
+
+.batch-expected-size p{
+    padding: 5px;
+    display: block;
+}
+
+.batch-container .batch-infos{
+    width: 40%;
+}
+
+table {
+    border-collapse: collapse;
+    max-height: 400px; 
+    overflow-y: auto;
+    display: block;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    width: 1%;
+    white-space: nowrap;
+}
+
+.red {
+    color: red;
+}
+
+.orange {
+    color: orange;
+}
+
+.green {
+    color: #03b803;
+}
+
+.uniprotkb {
+    color: #25b3a0;
+}
+.ensembl {
+    color: #4744b4;
+}
+.ncbi {
+    color: #d84c82;
+}
+
+
+.run-infos {
+    margin: 20px 0;
+    padding: 5px;
+    border: 1px solid #288cbb;
+    border-radius: 10px;;
+    width: auto;
+}
+
+.run-unit {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+
+.run-unit .non-opti {
+    color: red;
+}
+
+.run-unit label {
+    width: 20%;
+    margin-left: 5px;
+}
+
+.run-unit p, .run-unit a {
+    margin-left: 5px;
+    width: 80%;
+}
+
+.card-container-footer {
+    width: 95%;
+    margin: auto;
+    flex-direction: row;
+}
+
+.card-container-footer .configure-btn {
+    flex: 2;
+    margin-right: 10px;
+}
+
+
+.dbsearch-status {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+    margin: auto;
+}
+
+.dbsearch-status span {
+    animation: loadingAnimation 1.5s infinite;
+}
+
+@keyframes loadingAnimation {
+    0% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.3;
+    }
+}
+
+.card-container button {
+    border: 2px solid #288cbb;
+    border-radius: 0;
+    height: 50px;
+    margin-top: 10px;
+}
+
+.card-container .card-header {
+    border-bottom: 2px solid #288cbb;
+}
+
+.card-container .card-footer {
+    border-top: 2px solid #288cbb;
+}
+
+.selected {
+    font-weight: bold;
+}
+

@@ -34,11 +34,11 @@ function displayBusco(data) {
                 </div>
             </div>
 
-            <div className="progress-bar">
-                <div className="progress-segment" style={{ width: singleCopyWidth, backgroundColor: '#aacc30' }}></div>
-                <div className="progress-segment" style={{ width: multiCopyWidth, backgroundColor: '#137c6e' }}></div>
-                <div className="progress-segment" style={{ width: fragmentedWidth, backgroundColor: '#eca15b' }}></div>
-                <div className="progress-segment" style={{ width: missingWidth, backgroundColor: '#2604bd' }}></div>
+            <div className="busco-bar">
+                <div className="busco-segment" style={{ width: singleCopyWidth, backgroundColor: '#aacc30' }}></div>
+                <div className="busco-segment" style={{ width: multiCopyWidth, backgroundColor: '#137c6e' }}></div>
+                <div className="busco-segment" style={{ width: fragmentedWidth, backgroundColor: '#eca15b' }}></div>
+                <div className="busco-segment" style={{ width: missingWidth, backgroundColor: '#2604bd' }}></div>
             </div>
 
 			<div className="busco-stats">

@@ -5,11 +5,15 @@ const DBSearchContext = createContext();
 export const DBSearchProvider = ({ children }) => {
     const [dbsearch, setDBSearch] = useState(null);
     const [dbsearchStatus, setDBSearchStatus] = useState(null);
-    const [dbsStderr, setDbsStderr] = useState(null);
     const [selectedData, setSelectedData] = useState(null);
+
+    const resetDBSearch = () => {
+        setDBSearchStatus(null);
+        setDBSearch(null);  
+    };       
         
     return (
-        <DBSearchContext.Provider value={{ dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus, selectedData, setSelectedData, dbsStderr, setDbsStderr }}>
+        <DBSearchContext.Provider value={{ dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus, selectedData, setSelectedData, resetDBSearch }}>
             {children}
         </DBSearchContext.Provider>
     );

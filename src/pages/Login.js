@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
-import { useRuns } from '../contexts/RunsContext'
+import { useAnnotations } from '../contexts/AnnotationsContext'
 import axios from 'axios';
 import CONFIG from '../config';
 
@@ -11,7 +11,7 @@ export default function Login({setIsLoggedIn}) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { setUser } = useUser();
-  const { fetchUserRuns, fetchCPUs } = useRuns();
+  const { fetchUserAnnotations, fetchCPUs } = useAnnotations();
 
 
   const handleSubmit = async (e) => {
@@ -21,7 +21,7 @@ export default function Login({setIsLoggedIn}) {
       if (response.data.message === 'Login successful') {
         setIsLoggedIn(true);
 		setUser(email);
-    fetchUserRuns(email);
+    fetchUserAnnotations(email, true);
     fetchCPUs();
 		navigate('/');
       } else {
@@ -35,7 +35,7 @@ export default function Login({setIsLoggedIn}) {
 
   return (
     <div>
-      <h2 className='login-h2'>Login</h2>
+      <h2 className="home-h2">Sign In to Your Account</h2>
       <form className="login-form" onSubmit={handleSubmit}>
         <label className="t2_light">Email</label>
         <input
@@ -53,7 +53,7 @@ export default function Login({setIsLoggedIn}) {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button className="t2_bold" type="submit">Login</button>
+        <button className="submit-button t2_bold" type="submit">Login</button>
       </form>
       {error && <p>{error}</p>}
     </div>

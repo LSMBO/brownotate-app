@@ -1,40 +1,35 @@
-
-.settings .titleBox {
-    color: #cacaca;
-    background: linear-gradient(to bottom, #cddfeb 0%, #206d91 10%, #206d91 90%, #cddfeb 100%);
-    align-items: center;
-}
-.settings .titleBox h2{
-    margin-top: 10px;
-    margin-bottom: 2px;
-    font-size: 1.5rem;
-}
-.settings .titleBox h3{
-    margin-top: 2px;
-    margin-bottom: 15px;
-    font-size: 1rem;
-    font-style: italic;
+.settings-container {
+    width: 99%;
+    margin: 20px auto;
+    border: solid 1px #288cbb;
+    align-items: flex-start;
 }
 
-.settingsForm {
-    margin: 0 10%;
+.parameters-section {
+    width: 95%;
+    margin: 0 auto;
+    border: 1px solid #288cbb;
+    border-radius: 10px;
 }
 
-fieldset {
-    border: 0.5px solid #288cbb;
-    border-radius: 10px;   
-    margin: 10px 0;
+.settings-container>h3,
+.start-section>h3 {
+    color: #288cbb;
+    margin: 20px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #cddfeb;
 }
 
-.submitButton {
-    display: flex;
-    margin: 10px auto;
-    width: 100%;
-    justify-content: center;
+.start-section {
+    align-items: flex-start;
 }
 
+/* tab style */
 .tabs-container {
-    margin: 15px auto;
+    width: 95%;
+    margin: 0 auto;
 }
 
 .tabs-header {
@@ -42,7 +37,6 @@ fieldset {
 }
 
 .tab {
-	flex: 1;
 	cursor: pointer;
 	text-align: center;
 	padding: 10px;
@@ -65,92 +59,32 @@ fieldset {
 	display: none;
 }
 
-.tab-content .formElement{
-    margin-left: 2%;
-}
-  
 .active-content {
 	display: flex;
-    justify-content: center;
     border: 1px solid #288cbb;
     border-top: none;
-    min-height: 25vh;
 }
-  
 
-.formElement {
+/* form element style */
+.form-element{
     flex-direction: row;
-    min-height: 30px;
-    margin: 10px 5px;
+    margin: 10px auto;
     align-items: flex-start;
-} 
+}
 
-.labelTooltipWrapper {
+.form-element > :first-child {
+    max-width: 30%;
     flex-direction: row;
     align-items: center;
 }
 
-.radioLabel {
-    flex-direction: row;
-    min-width: 35%;
-    align-items: center;
-} 
-
-.formSection input[type="text"], .formSection input[type="number"] {
-    border: 2px solid #288cbb;
-    padding: 5px;
-    margin-left: 5px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+.form-element > :last-child {
+    margin: auto 10px;
+    width: 100%
 }
 
-
-
-textarea {
-    border: 2px solid #288cbb;
-    padding: 0.3% 0.5%;
-    resize: vertical;
-}
-
-.w50 {
-    width: 50%;
-}
-.w20 {
-    width: 20%;
-}
-.w5 {
-    width: 5%;
-}
-
-textarea:disabled{
-    border-color: #968c8c93;
-}
-.formSection input[type="text"]:disabled{
-    border-color: #968c8c93;
-}
-
-.settingsFormElementInputFile {
-    width: 50%;
-}
-
-
-.tooltipContainer .helpSpan{
-    color: #288cbb ;
-    font-size: smaller;
-    font-weight: normal;
-    position: absolute;
-    z-index: 1;
-    background-color: #cddfeb;
-    border: 1px solid #ccc;
-    padding: 5px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: none;
-    min-width: 50vmax;
-} 
-
-.tooltipContainer:hover .helpSpan {
-    display: block;
+.form-element > :last-child button {
+    width: fit-content;
 }
 
 input[type="radio"] {
@@ -159,11 +93,69 @@ input[type="radio"] {
     margin: 0 10px;
 } 
 
+.radio-label {
+    flex-direction: row;
+    align-items: center;
+}
+
+.label-tooltip-wrapper {
+    flex-direction: row;
+    align-items: center;
+    margin: 10px;
+    margin-right: 0;
+}
+
+.label-tooltip-wrapper label {
+    width: fit-content;
+    margin: 0;
+    margin-right: 10px;
+}
+
+.label-tooltip-wrapper .tooltip-container {
+    width: auto;
+}
+
+.label-tooltip-wrapper .tooltip-container .help-span{
+    color: #288cbb ;
+    font-size: smaller;
+    font-weight: normal;
+    position: absolute;
+    background-color: #cddfeb;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: none;
+    margin-left: 30px;
+} 
+
+.label-tooltip-wrapper .tooltip-container:hover .help-span {
+    display: block;
+}
+
+.expanded-label {
+    flex-direction: row;
+    align-items: center;
+    margin: 10px;
+}
+.expanded-label label {
+    width: fit-content;
+    margin: 0;
+}
+.expanded-label .expand-icon {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.settings-sequencing-runs,
+.exclude-species {
+    display: flex;
+    flex-direction: row;
+}
+
 input[type="file"] {
     margin-bottom: 5px;
 }
-
-
 
 select {
     border: 2px solid #288cbb;
@@ -175,35 +167,11 @@ select:disabled{
     border-color: #968c8c93;
 }
 
-.excludedSpecies {
-    width: 50%;
-}
-
-.excludedSpecies .inputAndButton{
-    flex-direction: row;
-    align-items: center;
-}
-
-.excludedSpecies .inputAndButton button{
-    width: 10%;
-    border: 2px solid #288cbb;
-    margin-left: 5px;
-    height: 90%;
-}
-
-.excludedSpecies .inputAndButton button:disabled{
-    border-color: #968c8c93;
-}
-
 ul  {
-    padding-left: 5px;
+    padding: 5px;
     margin: 5px 0;
 }
 
-.excludedSpecies ul {
-    border: 1px solid #288cbb;
-    border-radius: 5px;
-}
   
 ul li {
     display: flex;
@@ -211,33 +179,29 @@ ul li {
     align-items: center;
 }
   
-ul li button {
+.delete-btn {
     background-color: #ff6666;
     color: #cddfeb;
     border: none;
     padding: 4px 8px;
     cursor: pointer;
     margin-right: 5px;
+} 
+.delete-btn:not(:disabled):hover {
+    background-color: #c82333;
 }
- 
-ul li button:hover {
-    background-color: #ff4d4d;
-}
- 
-
-.sectionTitle {
-    font-style: italic;
-    flex-direction: row;
-    margin-top: 9px;
-    margin-bottom: 5px;
-    min-height: 30px;
+ .delete-btn:active {
+    background-color: #bd2130;
 }
 
-.sectionTitle > label {
-    margin-left: 8px;
+.remove-run-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
 }
-.tabs-container label{
-    margin-left: 8px;
-}
+
+
+
+
 
 

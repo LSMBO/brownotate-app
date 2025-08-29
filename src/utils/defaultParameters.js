@@ -6,38 +6,41 @@ export const defaultParameters = {
         taxonID: null,
         lineage: [],
         is_bacteria: false,
+        imageUrl: "user_download/image_not_found.png"
     },
     startSection: {
-        assembly: false,
-        sequencing: false,
+        assembly: null,
         assemblyFile: false,
-        assemblyType: null, // custom, ncbi, ensembl
-        assemblyAccession: [],
-        assemblyDownload: null, // type:custom -> null ; type:ncbi -> download_command ; type:ensembl -> download_url
-        assemblyFileList: [], // type:custom -> [FileObj] ; type:ncbi -> [] ; type:ensembl -> []
+        assemblyFileOnServer: null,
+        assemblyAccession: null,        
+        sequencing: null,
+        sequencingRuns : false,
+        sequencingRunList : [],        
         sequencingFiles : false,
         sequencingFileList : [],
-        sequencingAccessions : false,
-        sequencingAccessionList : [],
+        sequencingFileListOnServer: [],
 		skipFastp: false,
         skipPhix: false
     },
     annotationSection: {
-        evidenceFileList: [],
+        autoEvidence: true,
+        customEvidence: false,
+        customEvidenceFileList: [],
+        evidenceFileOnServer: [],
         minLength: '0',
         removeStrict: true,
         removeSoft: false
     },
     brownamingSection: {
         skip: false,
-        excludedSpeciesList: [],
+        excludedTaxoList: [],
         highestRank: "Suborder",
     },
     buscoSection: {
         assembly: true,
         annotation: true
     },
-    cpus: '1'
+    cpus: null
 };
 
 export const getDefaultParameters = () => {

@@ -20,7 +20,7 @@ export default class Proteins {
 	setUniprotSwissprot(taxonomy) {
 		this.uniprot_swissprot = {
 			"accession": `${taxonomy.scientificName.toLowerCase().replace(/ /g, '_')}_swissprot`,
-			"database": 'uniprot',
+			"database": 'UniprotKB',
 			"data_type": "swissprot",
 			"scientific_name": taxonomy.scientificName,
 			"taxid": taxonomy.taxonId,
@@ -33,7 +33,7 @@ export default class Proteins {
 	setUniprotTrembl(taxonomy) {
 		this.uniprot_trembl = {
 			"accession": `${taxonomy.scientificName.toLowerCase().replace(/ /g, '_')}_trembl`,
-			"database": 'uniprot',
+			"database": 'UniprotKB',
 			"data_type": "trembl",
 			"scientific_name": taxonomy.scientificName,
 			"taxid": taxonomy.taxonId,
@@ -49,9 +49,5 @@ export default class Proteins {
 
 	setGenbank(data) {
 		this.genbank = data
-	}
-
-	setEnsembl(data) {
-		this.ensembl = data
 	}
 }

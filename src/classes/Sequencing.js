@@ -1,38 +1,37 @@
-export default class Sequencing {
-    runs = [];
-    totalBase = 0;
-    totalSize = 0;
+import SequencingRun from "./SequencingRun.js";
 
-	constructor(data) {
-        this.runs = this.setRuns(data["runs"]);
-        this.totalBase = this.getTotalBase();
+export default class Sequencing {
+    batches = [];
+
+    constructor(data) {
+        this.batches = [];
+        let batch_identifier = 0;
+        for (const batch of data) {
+            let runs = this.setRuns(batch["runs"]);
+            this.batches.push({
+                totalBases: batch['total_size_bases'] || 0,
+                totalSize: batch['total_size_gb'] || 0,
+                scientificName: batch['scientific_name'] || "",
+                taxid: batch['taxid'] || "",
+                isOptimal: batch['optimal_sequencing_set'] || false,
+                optimalSize: batch['optimal_size'] || 0,
+                identifier: batch_identifier++,
+                accessionList: runs.map(run => run.accession),
+                assemblyExpectedSize: batch['assembly_expected_size'] || 0,
+                lowerBound: batch['assembly_expected_size_stats']['lower_bound'] || 0,
+                upperBound: batch['assembly_expected_size_stats']['upper_bound'] || 0,
+                assemblyExpectedSizeStats: batch['assembly_expected_size_stats'] || 0,
+                depth: Math.round(batch['total_size_bases']/batch['assembly_expected_size']) || 0,
+                runs: runs,
+            })
+        }
     }
 
     setRuns(data) {
         const newRuns = [];
         for (const run of data) {
-            const totalBases = run["total_bases"] || 0;
-            newRuns.push({
-                platform: run["platform"] || "",
-                title: run["title"] || "",
-                library_type: run["library_type"] || "",
-                accession: run["accession"] || "",
-                totalBases: totalBases,
-                rank: run["rank"] || "",
-                scientific_name: run["scientific_name"] || "",
-                taxid: run["taxid"] || "",
-                entry_id: run["entry_id"] || "",
-            });
+            newRuns.push(new SequencingRun(run));
         }
         return newRuns;
     }
-
-    getTotalBase() {
-        let totalBases = 0;
-        for (const run of this.runs) {
-            totalBases += parseInt(run["totalBases"]);
-        }
-        return totalBases;
-    }
-
 }

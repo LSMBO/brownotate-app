@@ -1,0 +1,39 @@
+export default class SequencingRun {
+    constructor(run) {
+        this.accession = run["accession"] || "";
+        this.experimentAccession = run["experiment_accession"] || "";
+        this.experimentAlias = run["experiment_alias"] || "";
+        this.experimentDesignDescription = run["experiment_design_description"] || "";
+        this.experimentInstrumentModel = run["experiment_instrument_model"] || "";
+        this.experimentLibraryName = run["experiment_library_name"] || "";
+        this.experimentLibrarySource = run["experiment_library_source"] || "";
+        this.experimentSampleDescriptorAccession = run["experiment_sample_descriptor_accession"] || "";
+        this.layout = run["layout"] || "";
+        this.platform = run["platform"] || "";
+        this.run1Alias = run["run_1_alias"] || "";
+        this.run1BaseACount = run["run_1_base_A_count"] || "";
+        this.run1BaseCCount = run["run_1_base_C_count"] || "";
+        this.run1BaseGCount = run["run_1_base_G_count"] || "";
+        this.run1BaseNCount = run["run_1_base_N_count"] || "";
+        this.run1BaseTCount = run["run_1_base_T_count"] || "";
+        this.run1TotalSpots = run["run_1_total_spots"] || "";
+        this.sampleAccession = run["sample_accession"] || "";
+        this.sampleAlias = run["sample_alias"] || "";
+        this.scientificName = run["scientific_name"] || "";
+        this.selection = run["selection"] || "";
+        this.size = run["size"] || 0;
+        this.strategy = run["strategy"] || "";
+        this.studyAccession = run["study_accession"] || "";
+        this.studyAlias = run["study_alias"] || "";
+        this.studyStudyAbstract = run["study_study_abstract"] || "";
+        this.studyStudyTitle = run["study_study_title"] || "";
+        this.submissionCenterName = run["submission_center_name"] || "";
+        this.submissionLabName = run["submission_lab_name"] || "";
+        this.taxid = run["taxid"] || "";
+        this.title = run["title"] || "";
+        this.totalBases = run["total_bases"] || 0;
+        this.optimalPlatform = run["optimal_platform"] || false;
+        this.optimalStrategy = run["optimal_strategy"] || false;
+        this.optimalSelection = run["optimal_selection"] || false;
+    }
+}

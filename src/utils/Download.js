@@ -91,11 +91,11 @@ export async function handleClickDownload(data, type, downloadToClient) {
         let output = null;
         let proteinFiles = [];
         const downloadPromises = data.map(async (proteins) => {
-            if (proteins.database === "uniprot") {
+            if (proteins.database === "UniprotKB") {
                 output = await downloadUniprot(proteins.download_url, `${proteins.accession}.fasta`);
-            } else if (proteins.database === "ensembl") {
+            } else if (proteins.database === "ENSEMBL") {
                 output = await downloadEnsemblFTP(proteins.download_url, proteins.accession, 'proteins');
-            } else if (proteins.database === "ncbi") {
+            } else if (proteins.database === "NCBI") {
                 output = await downloadNCBI(proteins.download_command);
             }
             if (output) {

@@ -6,6 +6,7 @@ export default class DatabaseSearch {
 
     constructor(id, species) {
         this.id = id;
+        this.run_id = null;
         this.scientific_name = species['scientific_name'];
         this.taxonID = species['taxid'];
         this.is_bacteria = species['is_bacteria'];
@@ -16,6 +17,7 @@ export default class DatabaseSearch {
         this.assembly = new Assembly();
         this.proteins = new Proteins();
         this.phylogeny_map = null;
+        this.taxo_image_url = null;
     }
 
     setTaxonomy(data) {
@@ -23,6 +25,8 @@ export default class DatabaseSearch {
         this.date = this.formatDate(data.date);
         this.proteins.setUniprotSwissprot(data.data.taxonomy);
         this.proteins.setUniprotTrembl(data.data.taxonomy);
+        this.taxo_image_url = data.data.taxo_image_url;
+        this.run_id = data.run_id;
     }
 
     setUniprotProteomes(data) {

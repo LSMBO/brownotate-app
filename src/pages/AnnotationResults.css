@@ -1,0 +1,122 @@
+.annotation-results-container {
+    width: 99%;
+    margin: 20px auto;
+    align-items: flex-start;
+}
+
+.tabs-header-annotation {
+	flex-direction: row;
+	margin: 20px auto;
+}
+
+.run-results, .run-parameters, .run-error-message {
+	width: 95%;
+	margin: 15px auto;
+}
+
+.download-container {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 10px 30px;
+}
+
+.download {
+	background-color: #66a8d3;
+	color: #ffffff;
+	flex-direction: row;
+	padding: 10px;
+	border-radius: 10px;
+	box-sizing: border-box;
+}
+
+.download.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.download:hover {
+	cursor: pointer;
+	background-color: #3794d3;
+}
+
+.downloadIcon {
+	margin: 0 10px;
+	filter: invert(1);
+}
+
+.run-results h3, .run-parameters h3, .run-error-message h3 {
+    border-bottom: 2px solid #288cbb;
+    color: #288cbb;
+	margin: 30px 0 10px 0;
+
+}
+
+fieldset {
+	border: 0.5px solid #288cbb;
+    border-radius: 10px;
+	margin: 10px 0;
+}
+
+.file-content {
+	padding: 10px;
+}
+
+.item {
+    display: flex;
+    flex-direction: row;
+}
+
+
+.label {
+	min-width: 30%;
+}
+
+.value {
+    color: #707070;
+	word-break: break-all;
+}
+
+.run-results p {
+    font-size: 1.1em;
+    color: #999;
+}
+
+.busco-bar {
+	height: 25px;
+	width: 50%;
+	display: flex;
+	flex-direction: row;
+}
+
+.legend {
+	flex-direction: row;
+	width: 50%;
+}
+
+.legend-item {
+	flex-direction: row;
+	margin-bottom: 5px;
+	margin-right: 10px;
+}
+
+.legend-color {
+	min-width: 15px;
+	height: 15px;
+	margin-right: 5px;
+	margin: auto 5px;
+}
+
+.busco-stats {
+	width: 50%;
+}
+
+.busco-percentages {
+	flex-direction: row;
+	align-items: center;
+}
+
+pre {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
