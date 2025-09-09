@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAnnotations } from '../contexts/AnnotationsContext';
 import { useUser } from '../contexts/UserContext';
 import AnnotationCard from "./MyAnnotations/AnnotationCard";
@@ -7,11 +7,17 @@ import Loading from '../components/Loading';
 
 export default function MyAnnotations() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
   const { annotations, fetchUserAnnotations, isLoading } = useAnnotations();
 
   useEffect(() => {
-    fetchUserAnnotations(user, true);
+      if (location.state?.from !== 'annotation-results') {
+        fetchUserAnnotations(user, true);
+      }
+  }, [location.state]);
+
+  useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 

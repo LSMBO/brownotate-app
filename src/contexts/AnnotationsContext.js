@@ -52,6 +52,7 @@ export const AnnotationsProvider = ({ children }) => {
             await fetchUserAnnotations(user, false);
         } catch (error) {
             console.error('Error:', error);
+            throw error;
         }
     };
 
@@ -67,7 +68,7 @@ export const AnnotationsProvider = ({ children }) => {
 
     // startRunMonitoring (add to provider value to return it)
     return (
-        <AnnotationsContext.Provider value={{ annotations, waitingTime, fetchCPUs, fetchUserAnnotations, updateAnnotation, addAnnotation, isLoading }}> 
+        <AnnotationsContext.Provider value={{ annotations, waitingTime, fetchCPUs, fetchUserAnnotations, updateAnnotation, addAnnotation, setIsLoading, isLoading }}> 
             {children}
         </AnnotationsContext.Provider>
     );

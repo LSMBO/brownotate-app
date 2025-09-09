@@ -93,7 +93,7 @@ const AnnotationResults = () => {
 		<div className='page'>
 			<div className="navigation-buttons">
 				<div></div>
-				<button className="t2_bold right" onClick={() => navigate('/my-annotations')}>My Annotations</button>   
+				<button className="t2_bold right" onClick={() => navigate('/my-annotations', { state: { from: 'annotation-results' } })}>My Annotations</button>   
 			</div>
 
 			<div className='annotation-results-container'>

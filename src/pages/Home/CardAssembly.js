@@ -3,7 +3,7 @@ import AssemblyUnit from './AssemblyUnit';
 import { useNavigate } from "react-router-dom";
 
 
-const CardAssembly = ({ assembly, selectedAssembly, updateSelectedAssembly }) => {
+const CardAssembly = ({ assembly, selectedAssembly, updateSelectedAssembly, dbSearchInProgress }) => {
 
     const navigate = useNavigate();
     const ensemblEmpty = !assembly || Object.keys(assembly.ensembl).length === 0;
@@ -57,7 +57,13 @@ const CardAssembly = ({ assembly, selectedAssembly, updateSelectedAssembly }) =>
             <button 
                 className="t2_bold" 
                 disabled={!selectedAssembly || selectedAssembly.length===0} 
-                onClick={() => navigate('/settings')}>
+                onClick={() => {
+                    if (dbSearchInProgress) {
+                        alert('The database search is still in progress, please try again once it is completed.');
+                    } else {
+                        navigate('/settings')
+                    }
+                }}>
                 Create an annotation using the selected assembly dataset
             </button>
         </div>

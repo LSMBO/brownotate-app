@@ -3,7 +3,7 @@ import SequencingBatch from './SequencingBatch';
 import SequencingDetails from '../../components/SequencingDetails';
 import { useNavigate } from "react-router-dom";
 
-const CardSequencing = ({ dnaseq, selectedSequencingBatch, updateSelectedSequencingBatch }) => {
+const CardSequencing = ({ dnaseq, selectedSequencingBatch, updateSelectedSequencingBatch, dbSearchInProgress }) => {
 
     const navigate = useNavigate();
 
@@ -59,7 +59,13 @@ const CardSequencing = ({ dnaseq, selectedSequencingBatch, updateSelectedSequenc
             <button 
                 className="t2_bold" 
                 disabled={!selectedSequencingBatch || Object.keys(selectedSequencingBatch).length === 0} 
-                onClick={() => navigate('/settings')}>
+                onClick={() => {
+                    if (dbSearchInProgress) {
+                        alert('The database search is still in progress, please try again once it is completed.');
+                    } else {
+                        navigate('/settings')
+                    }
+                }}>
                 Create an annotation using the selected sequencing dataset
             </button>
         </div>

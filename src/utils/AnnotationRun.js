@@ -3,16 +3,29 @@ import axios from 'axios';
 import CONFIG from '../config';
 
 
-async function executeRequest(promise, user, runId, updateAnnotation) {
+async function executeRequest(promise, user, runId, updateAnnotation, completed_annotation=false) {
     try {
-        await updateAnnotation(user, runId, 'status', 'running');
-        const response = await promise;
-        return { data: response.data, error: null };
+        if (completed_annotation) {
+            await updateAnnotation(user, runId, 'status', 'completed');
+        } else {
+            await updateAnnotation(user, runId, 'status', 'running');
+        }
     } catch (error) {
         await updateAnnotation(user, runId, 'status', 'failed');
         await updateAnnotation(user, runId, 'error', error.response.data);
-        return { data: null, error };
-    }
+        return { data: null, error: true };
+    }   
+    
+    const response = await promise;
+    if (response.status !== 200) {
+        try {
+        await updateAnnotation(user, runId, 'status', 'failed')
+        await updateAnnotation(user, runId, 'error', response.data.message);
+        } catch (error) {
+            return { data: null, error: true, message: response.data.message };   
+        }
+    } 
+    return { data: response.data, error: null };
 }
 
 function organizeSequencingFiles(sequencingFileList) {
@@ -316,20 +329,20 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             }
         }
 
-        // if (!(resume && runData.resumeData && runData.resumeData.modelOptimized)) {
-        //     await updateAnnotation(user, runId, 'progress', 'Optimizing gene prediction model ...');
-        //     const optimizeModelResult = await executeRequest(
-        //         axios.post(`${CONFIG.API_BASE_URL}/run_optimize_model`, { 'parameters': parameters, 'num_genes': numGenes }),
-        //         user, runId, updateAnnotation
-        //     );
-        //     if (optimizeModelResult.error) {
-        //         console.error('Error optimizing gene prediction model:', optimizeModelResult.error);
-        //         return;
-        //     }
-        //     console.log('Gene prediction model optimization completed in', optimizeModelResult.data.timer);
-        //     await updateAnnotation(user, runId, 'timers', {'Optimizing gene prediction model ...': optimizeModelResult.data.timer})
-        //     await updateAnnotation(user, runId, 'resumeData', {'modelOptimized': true});
-        // }
+        if (!(resume && runData.resumeData && runData.resumeData.modelOptimized)) {
+            await updateAnnotation(user, runId, 'progress', 'Optimizing gene prediction model ...');
+            const optimizeModelResult = await executeRequest(
+                axios.post(`${CONFIG.API_BASE_URL}/run_optimize_model`, { 'parameters': parameters, 'num_genes': numGenes }),
+                user, runId, updateAnnotation
+            );
+            if (optimizeModelResult.error) {
+                console.error('Error optimizing gene prediction model:', optimizeModelResult.error);
+                return;
+            }
+            console.log('Gene prediction model optimization completed in', optimizeModelResult.data.timer);
+            await updateAnnotation(user, runId, 'timers', {'Optimizing gene prediction model ...': optimizeModelResult.data.timer})
+            await updateAnnotation(user, runId, 'resumeData', {'modelOptimized': true});
+        }
         
         if (resume && runData.resumeData && runData.resumeData.annotationFile) {
             annotationFile = runData.resumeData.annotationFile;
@@ -433,14 +446,12 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
         console.log('BUSCO annotation result:', buscoAnnotationResultData);
         await updateAnnotation(user, runId, 'resumeData', {'buscoAnnotation': true});
     }
-
     const setAnnotationCompletedResult = await executeRequest(
-        axios.post(`${CONFIG.API_BASE_URL}/set_annotation_completed`, { 'run_id': runId, 'annotation_file': annotationFile }),
-        user, runId, updateAnnotation
+        await axios.post(`${CONFIG.API_BASE_URL}/set_annotation_completed`, { 'run_id': runId, 'annotation_file': annotationFile }),
+        user, runId, updateAnnotation, true
     );
     if (setAnnotationCompletedResult.error) {
         console.error('Error setting annotation as completed:', setAnnotationCompletedResult.error);
         return;
     }
-    await updateAnnotation(user, runId, 'progress', 'Annotation run completed successfully');
 }

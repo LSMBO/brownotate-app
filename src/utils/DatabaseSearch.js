@@ -84,7 +84,6 @@ export async function executeDBSearchRoute(route, params, cancelToken) {
 }
 
 export async function searchSequencingRun(accession) {
-    console.log('searchSequencingRun called with accession:', accession);
     try {
         const response = await axios.post(`${CONFIG.API_BASE_URL}/search_sequencing_run`, { accession: accession });
         if (response.data.status === 'success') {

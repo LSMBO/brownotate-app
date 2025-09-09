@@ -54,6 +54,10 @@ export default function Home() {
     }, [cancelInProgress]);
 
     const handleClickDBSearch = async (forceNewSearch) => {
+        if (dbsearchStatus!=null && dbsearchStatus !== 'done' && dbsearchStatus !== 'failed') {
+            alert('The database search is still in progress, please try again once it is completed.');
+            return;
+        } 
         if (cancelTokenSource) {
             cancelTokenSource.cancel();
         }
@@ -64,12 +68,13 @@ export default function Home() {
         updateSelectedProteins([]);
         updateSelectedSequencingBatch(null);
         resetDBSearch()
+        setIsLoading(true);
         const currentSpeciesFound = await speciesExists(inputSpecies);
-        
+        setIsLoading(false);
         if (currentSpeciesFound) {
             updateParameters({'species': {
-                'scientificName': currentSpeciesFound.scientific_name,
-                'taxonID': currentSpeciesFound.taxid,
+                'scientificName': currentSpeciesFound.scientificName,
+                'taxonID': currentSpeciesFound.taxonId,
                 'lineage': currentSpeciesFound.lineage,
                 'is_bacteria': currentSpeciesFound.is_bacteria,
                 'imageUrl': currentSpeciesFound.taxo_image_url,
@@ -81,7 +86,7 @@ export default function Home() {
             
             if (!forceNewSearch) {
                 dbSearchResult = await getDBSearch(
-                    currentSpeciesFound['taxid'], 
+                    currentSpeciesFound['taxonId'], 
                     source.token
                 );
                 if (dbSearchResult.success && dbSearchResult.data) {
@@ -100,7 +105,7 @@ export default function Home() {
             if (forceNewSearch || dbSearchResult.success === false || !dbSearchResult?.data) {
                 try {
                     // Waiting time
-                    let response = await axios.post(`${CONFIG.API_BASE_URL}/waiting_time`, { cancelToken: source.token });
+                    let response = await axios.post(`${CONFIG.API_BASE_URL}/waiting_time_dbsearch`, { cancelToken: source.token });
                     setWaitingTime(response.data.data);
                     
                     // (Uniprot) Taxonomy
@@ -186,7 +191,6 @@ export default function Home() {
                         newDbsearch.setPhylogeny(dbsPhylogenyResults.data);
                         setDBSearch({...newDbsearch });
                     }
-                    console.log('DBSearch completed:', newDbsearch);
                     setDBSearchStatus('done');
 
                 } catch (error) {
@@ -270,7 +274,7 @@ export default function Home() {
     const convertForDownload = async (data) => {
         try {
             setIsLoading(true);
-            await handleClickDownload(data, 'proteins', true);
+            await handleClickDownload(data, 'proteins', true, dbsearch.run_id);
         } catch (error) {
             console.error('Error during download:', error);
         } finally {
@@ -303,98 +307,114 @@ export default function Home() {
     return (
         <div id="page">
             <div className="navigation-buttons">
-                <button className="t2_bold left" onClick={() => { navigate('/my-annotations'); }}>
-                    My Annotations
-                </button>   
-                <button className="t2_bold right" onClick={() => {navigate('/settings')}}>Create an Annotation</button>
+            <button className="t2_bold left" onClick={() => {
+                if (!dbsearchStatus || dbsearchStatus === 'done' || dbsearchStatus === 'failed') {
+                    navigate('/my-annotations', { state: { from: 'home' } });
+                } else {
+                    alert('The database search is still in progress, please try again once it is completed.');
+                }
+            }}>
+                My Annotations
+            </button>   
+            <button className="t2_bold right" onClick={() => {
+                if (!dbsearchStatus || dbsearchStatus === 'done' || dbsearchStatus === 'failed') {
+                    navigate('/settings', { state: { from: 'home' } });
+                } else {
+                    alert('The database search is still in progress, please try again once it is completed.');
+                }
+            }}>
+                Create an Annotation
+            </button>
             </div> 
 
             <div className="database-search-container">
-                <h2 className="home-h2">Database Search</h2>
-                <SpeciesInput 
-                    inputSpecies={inputSpecies} 
-                    setInputSpecies={setInputSpecies} 
-                    searchError={searchError}
-                    onClick={() => handleClickDBSearch(false)}
-                    buttonLabel="Search"
-                />
+            <h2 className="home-h2">Database Search</h2>
+            <SpeciesInput 
+                inputSpecies={inputSpecies} 
+                setInputSpecies={setInputSpecies} 
+                searchError={searchError}
+                onClick={() => handleClickDBSearch(false)}
+                buttonLabel="Search"
+            />
 
-                <div className="card-container-header">
-                    {dbsearch && (
-                    <div className="taxonomy-card">
-                        <h3>
-                            <i>{dbsearch.scientific_name.charAt(0).toUpperCase() + dbsearch.scientific_name.slice(1).toLowerCase()}</i>
-                            <br />
-                            [TaxID: {dbsearch.taxonID}]
-                        </h3>
-                        <Image file={dbsearch.taxo_image_url}/>
-                    </div>
-                    )}
-                    <DatabaseSearchDescription />
+            <div className="card-container-header">
+                {dbsearch && (
+                <div className="taxonomy-card">
+                <h3>
+                    <i>{dbsearch.scientificName.charAt(0).toUpperCase() + dbsearch.scientificName.slice(1).toLowerCase()}</i>
+                    <br />
+                    [TaxID: {dbsearch.taxonId}]
+                </h3>
+                <Image file={dbsearch.taxo_image_url}/>
                 </div>
+                )}
+                <DatabaseSearchDescription />
+            </div>
 
-                {dbsearchStatus === "failed" && (
-                <p>A problem occurred during the search</p>
-                )}     
+            {dbsearchStatus === "failed" && (
+            <p>A problem occurred during the search</p>
+            )}     
 
-                {dbsearchStatus && dbsearchStatus !== 'done' && dbsearchStatus !== 'failed' &&
-                <div className="dbsearch-status">
-                    <span>Database Search in progress: {dbsearchStatus} ...</span>
-                    {waitingTime && waitingTime[dbsearchStatus] &&
-                    <span>Estimated waiting time: {waitingTime[dbsearchStatus][0]} to {waitingTime[dbsearchStatus][1]}</span> 
-                    }
-                    <button className='red-btn' onClick={cancelDBSearch}>Cancel</button>
-                </div>
-                }  
+            {dbsearchStatus && dbsearchStatus !== 'done' && dbsearchStatus !== 'failed' &&
+            <div className="dbsearch-status">
+                <span>Database Search in progress: {dbsearchStatus} ...</span>
+                {waitingTime && waitingTime[dbsearchStatus] &&
+                <span>Estimated waiting time: {waitingTime[dbsearchStatus][0]} to {waitingTime[dbsearchStatus][1]}</span> 
+                }
+                <button className='red-btn' onClick={cancelDBSearch}>Cancel</button>
+            </div>
+            }  
 
 
 
-                {dbsearchStatus === 'done' && (
-                <div className="rerun-dbsearch">
-                    <label>Search performed on {dbsearch.date}</label>
-                    <button onClick={() => handleClickDBSearch(true)}>Perform a new search</button>
-                </div>
-                )}            
-                
+            {dbsearchStatus === 'done' && (
+            <div className="rerun-dbsearch">
+                <label>Search performed on {dbsearch.date}</label>
+                <button onClick={() => handleClickDBSearch(true)}>Perform a new search</button>
+            </div>
+            )}            
+            
 
-                {dbsearchStatus && dbsearchStatus !== 'failed' && (
+            {dbsearchStatus && dbsearchStatus !== 'failed' && (
                 <div className="tabs-container">
                 <div className="tabs-header">
-                <div className={`tab ${activeTab === 'Proteins' ? 'active-tab': ''}`} onClick={() => setActiveTab('Proteins')}>Proteins</div>
-                <div className={`tab ${activeTab === 'Assemblies' ? 'active-tab': ''}`} onClick={() => setActiveTab('Assemblies')}>Assemblies</div>
-                <div className={`tab ${activeTab === 'Sequencing' ? 'active-tab': ''}`} onClick={() => setActiveTab('Sequencing')}>Sequencing</div>
-                <div className={`tab ${activeTab === 'Phylogeny' ? 'active-tab': ''}`} onClick={() => setActiveTab('Phylogeny')}>Phylogeny Tree</div>
-                </div>
-                <div className="tabs-content">
-                <div className={`tab-content ${activeTab === 'Proteins' ? 'active-content' : ''}`}>
-                <CardProteins
+                    <div className={`tab ${activeTab === 'Proteins' ? 'active-tab': ''}`} onClick={() => setActiveTab('Proteins')}>Proteins</div>
+                    <div className={`tab ${activeTab === 'Assemblies' ? 'active-tab': ''}`} onClick={() => setActiveTab('Assemblies')}>Assemblies</div>
+                    <div className={`tab ${activeTab === 'Sequencing' ? 'active-tab': ''}`} onClick={() => setActiveTab('Sequencing')}>Sequencing</div>
+                    <div className={`tab ${activeTab === 'Phylogeny' ? 'active-tab': ''}`} onClick={() => setActiveTab('Phylogeny')}>Phylogeny Tree</div>
+                    </div>
+                    <div className="tabs-content">
+                    <div className={`tab-content ${activeTab === 'Proteins' ? 'active-content' : ''}`}>
+                    <CardProteins
                     proteins={dbsearch.proteins}
                     selectedProteins={selectedProteins}
                     updateSelectedProteins={updateSelectedProteins}
                     convertForDownload={convertForDownload}
-                />
-                </div>                    
-                <div className={`tab-content ${activeTab === 'Assemblies' ? 'active-content' : ''}`}>
-                <CardAssembly
+                    />
+                    </div>                    
+                    <div className={`tab-content ${activeTab === 'Assemblies' ? 'active-content' : ''}`}>
+                    <CardAssembly
                     assembly={dbsearch.assembly}
                     selectedAssembly={selectedAssembly}
                     updateSelectedAssembly={updateSelectedAssembly}
-                />
-                </div>
-                <div className={`tab-content ${activeTab === 'Sequencing' ? 'active-content' : ''}`}>
-                <CardSequencing
+                    dbSearchInProgress={dbsearchStatus && dbsearchStatus !== 'done' && dbsearchStatus !== 'failed'}
+                    />
+                    </div>
+                    <div className={`tab-content ${activeTab === 'Sequencing' ? 'active-content' : ''}`}>
+                    <CardSequencing
                     dnaseq={dbsearch.dnaseq}
                     selectedSequencingBatch={selectedSequencingBatch}
                     updateSelectedSequencingBatch={updateSelectedSequencingBatch}
-                />
-                </div>
-                <div className={`tab-content ${activeTab === 'Phylogeny' ? 'active-content' : ''}`}>
+                    dbSearchInProgress={dbsearchStatus && dbsearchStatus !== 'done' && dbsearchStatus !== 'failed'}
+                    />
+                    </div>
+                    <div className={`tab-content ${activeTab === 'Phylogeny' ? 'active-content' : ''}`}>
                     <Image file={dbsearch.phylogeny_map}/>
-                </div>                    
+                    </div>                    
                 </div>
                 </div>  
-                )}         
-                {isLoading && (<Loading/>)}
+            )}         
+            {isLoading && (<Loading/>)}
             </div>
         </div>
         );

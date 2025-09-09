@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
@@ -23,6 +23,7 @@ import Augustus from "./Settings/Augustus";
 import SectionBrownaming from "./Settings/SectionBrownaming";
 import SectionBusco from "./Settings/SectionBusco";
 import Image from "../components/Image";
+import Loading from '../components/Loading';
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -30,9 +31,15 @@ export default function Settings() {
     const [cancelTokenSource, setCancelTokenSource] = useState(null);
     const [inputSpecies, setInputSpecies] = useState("");
     const [speciesSearchError, setSpeciesSearchError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const { fetchCPUs, addAnnotation, updateAnnotation} = useAnnotations();
     const { parameters, updateParameters } = useParameters();
     const { dbsearch } = useDBSearch();
+
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     const uploadFile = async (files, type, run_id) => {
         const formData = new FormData();
@@ -62,7 +69,7 @@ export default function Settings() {
         }
     }
 
-    const proteinDBSearch = async (species) => {
+    const proteinDBSearch = async (species, run_id) => {
         const source = axios.CancelToken.source();
         let proteinsSet = new Proteins();
         let dbSearchResult = await getDBSearch(
@@ -82,7 +89,8 @@ export default function Settings() {
             let params = {
                 user: user,
                 createNewDBS: true,
-                dbsearch: species_snakecase
+                dbsearch: species_snakecase,
+                run_id: run_id
             }
             let dbsTaxonomyResults = await executeDBSearchRoute('dbs_taxonomy', params, source.token);
             if (dbsTaxonomyResults.success && dbsTaxonomyResults.data) {
@@ -210,6 +218,7 @@ export default function Settings() {
             if (parameters.startSection.assembly) {
                 let assemblyFileOnServer;
                 if (parameters.startSection.assembly.database === 'ENSEMBL') {
+                    console.log('Run Downloading assembly file from Ensembl FTP ...');
                     await updateAnnotation(user, runId, 'progress', 'Downloading assembly file from Ensembl FTP ...');
                     assemblyFileOnServer = await downloadEnsemblFTP(parameters.startSection.assembly.download_url, parameters.startSection.assemblyAccession, 'assembly');
                 } else if (parameters.startSection.assembly.database === 'NCBI') {
@@ -228,6 +237,13 @@ export default function Settings() {
                 });
             }
 
+            // Upload and update sequencing files
+            if (parameters.startSection.sequencingFiles) {
+                await updateAnnotation(user, runId, 'progress', 'Uploading sequencing files ...');
+                let uploadedSequencingFiles = await uploadFile(parameters.startSection.sequencingFileList, 'sequencing', runId);
+                updateParameters({startSection: {sequencingFileListOnServer: uploadedSequencingFiles }});
+            }
+
             // Upload and update evidence files
             if (!parameters.species.is_bacteria) {
                 let customEvidenceFileOnServer = [];
@@ -239,7 +255,7 @@ export default function Settings() {
                     let proteinsDBSearch;
                     if (!dbsearch) {
                         await updateAnnotation(user, runId, 'progress', 'Searching for evidences (proteins) in the databases ...');
-                        proteinsDBSearch = await proteinDBSearch(parameters.species);
+                        proteinsDBSearch = await proteinDBSearch(parameters.species, runId);
                         await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, {
                             run_id: runId, 
                             user: user,
@@ -249,7 +265,7 @@ export default function Settings() {
                     }
                     await updateAnnotation(user, runId, 'progress', 'Selecting and downloading evidences (proteins) from the database search ...');
                     proteinsSet = selectProteinSet(proteinsDBSearch);
-                    customEvidenceFileOnServer = await handleClickDownload(proteinsSet, 'proteins', false);
+                    customEvidenceFileOnServer = await handleClickDownload(proteinsSet, 'proteins', false, runId);
                     await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, 
                     { run_id: runId, 
                         user: user, 
@@ -258,16 +274,8 @@ export default function Settings() {
                     });
                 }
                 updateParameters({annotationSection: {customEvidenceFileOnServer: customEvidenceFileOnServer }});
-                
             }
-            // Upload and update sequencing files
-            if (parameters.startSection.sequencingFiles) {
-                await updateAnnotation(user, runId, 'progress', 'Uploading sequencing files ...');
-                let uploadedSequencingFiles = await uploadFile(parameters.startSection.sequencingFileList, 'sequencing', runId);
-                updateParameters({startSection: {sequencingFileListOnServer: uploadedSequencingFiles }});
-            }
-
-            handleAnnotationRun(runId, user, updateAnnotation, false);
+            await handleAnnotationRun(runId, user, updateAnnotation, false);
         } catch (error) {
             console.error('Error:', error);
         }
@@ -279,12 +287,14 @@ export default function Settings() {
         }
 
         const source = axios.CancelToken.source();
-        setCancelTokenSource(source);     
+        setCancelTokenSource(source);
+        setIsLoading(true); 
         const currentSpeciesFound = await speciesExists(inputSpecies);
+        setIsLoading(false);
         if (currentSpeciesFound) {
             updateParameters({'species': {
-                'scientificName': currentSpeciesFound.scientific_name,
-                'taxonID': currentSpeciesFound.taxid,
+                'scientificName': currentSpeciesFound.scientificName,
+                'taxonID': currentSpeciesFound.taxonId,
                 'lineage': currentSpeciesFound.lineage,
                 'is_bacteria': currentSpeciesFound.is_bacteria,
                 'imageUrl': currentSpeciesFound.taxo_image_url
@@ -300,10 +310,31 @@ export default function Settings() {
     const calculateStepLists = () => {
         let stepList = [];
         let stepCount = 0;
-        if (parameters.startSection.sequencing) {
-            if (parameters.startSection.sequencingFiles) {
-                stepList.push({ type: 'major', name: 'Uploading sequencing files ...', number: stepCount++ });
+
+        if (parameters.startSection.sequencing && parameters.startSection.sequencingFiles) {
+            stepList.push({ type: 'major', name: 'Uploading sequencing files ...', number: stepCount++ });
+        } 
+        if (parameters.startSection.assembly) {
+            if (parameters.startSection.assembly.database === 'ENSEMBL') {
+                stepList.push({ type: 'minor', name: 'Downloading assembly file from Ensembl FTP ...', number: stepCount++ });
+            } else if (parameters.startSection.assembly.database === 'NCBI') {
+                stepList.push({ type: 'minor', name: 'Downloading assembly file from NCBI ...', number: stepCount++ });
             } else {
+                stepList.push({ type: 'minor', name: 'Uploading assembly file ...', number: stepCount++ });
+            }
+        }
+        if (!parameters.species.is_bacteria) {
+            if (parameters.annotationSection.customEvidence) {
+                stepList.push({ type: 'minor', name: 'Uploading custom evidence files ...', number: stepCount++ });
+            } else {
+                if (!dbsearch) {
+                    stepList.push({ type: 'major', name: 'Searching for evidences (proteins) in the databases ...', number: stepCount++ });
+                }
+                stepList.push({ type: 'minor', name: 'Selecting and downloading evidences (proteins) from the database search ...', number: stepCount++ });
+            }
+        }   
+        if (parameters.startSection.sequencing) {
+            if (parameters.startSection.sequencingRuns) {
                 stepList.push({ type: 'major', name: 'Downloading sequencing files from SRA ...', number: stepCount++ });
             }
             if (!parameters.startSection.skipFastp) {
@@ -313,14 +344,6 @@ export default function Settings() {
                 stepList.push({ type: 'major', name: 'Removing Phix from sequencing files ...', number: stepCount++ });
             }
             stepList.push({ type: 'major', name: 'Running Megahit assembly ...' });
-        } else {
-            if (parameters.startSection.assembly.database === 'ENSEMBL') {
-                stepList.push({ type: 'minor', name: 'Downloading assembly file from Ensembl FTP ...', number: stepCount++ });
-            } else if (parameters.startSection.assembly.database === 'NCBI') {
-                stepList.push({ type: 'minor', name: 'Downloading assembly file from NCBI ...', number: stepCount++ });
-            } else{
-                stepList.push({ type: 'minor', name: 'Uploading assembly file ...', number: stepCount++ });
-            }
         }
 
         if (parameters.buscoSection.assembly) {
@@ -330,14 +353,6 @@ export default function Settings() {
         if (parameters.species.is_bacteria) {
             stepList.push({ type: 'major', name: 'Running Prokka annotation ...', number: stepCount++ });
         } else {
-            if (parameters.annotationSection.customEvidence) {
-                stepList.push({ type: 'minor', name: 'Uploading custom evidence files ...', number: stepCount++ });
-            } else {
-                if (!dbsearch) {
-                    stepList.push({ type: 'major', name: 'Searching for evidences (proteins) in the databases ...', number: stepCount++ });
-                }
-                stepList.push({ type: 'minor', name: 'Selecting and downloading evidences (proteins) from the database search ...', number: stepCount++ });
-            }
             stepList.push({ type: 'minor', name: 'Splitting assembly for annotation ...', number: stepCount++ });
             stepList.push({ type: 'major', name: 'Running Scipio ...', number: stepCount++ });
             stepList.push({ type: 'major', name: 'Running gene prediction model ...', number: stepCount++ });
@@ -413,6 +428,7 @@ export default function Settings() {
                 <h3>Debugging Information</h3>
                 <pre>{JSON.stringify(parameters, null, 2)}</pre>
             </div> */}
+            {isLoading && (<Loading/>)}
         </div>
     )
 }

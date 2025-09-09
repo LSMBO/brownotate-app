@@ -39,6 +39,7 @@ export async function downloadEnsemblFTP(download_url, accession, data_type) {
         return null;
     }
 }
+
 export async function downloadFromServer(path, extension) {
     try {
         let fileList = [path]
@@ -74,10 +75,11 @@ export async function downloadFromServer(path, extension) {
 }
 
 
-export async function mergeFastaFiles(files) {
+export async function mergeFastaFiles(files, runId) {
     try {
         const response = await axios.post(`${CONFIG.API_BASE_URL}/merge_fasta_files`, {
-            'files': files
+            'files': files,
+            'run_id': runId
         });
         return response.data.path;
     } catch (error) {
@@ -86,7 +88,7 @@ export async function mergeFastaFiles(files) {
     }
 }
 
-export async function handleClickDownload(data, type, downloadToClient) {
+export async function handleClickDownload(data, type, downloadToClient, runId) {
     if (type === 'proteins') {
         let output = null;
         let proteinFiles = [];
@@ -112,7 +114,7 @@ export async function handleClickDownload(data, type, downloadToClient) {
                 return serverFilePath;
             }
         } else {
-            const mergedFilePath = await mergeFastaFiles(proteinFiles);
+            const mergedFilePath = await mergeFastaFiles(proteinFiles, runId);
             if (downloadToClient) {
                 await downloadFromServer(mergedFilePath, null);
             } else {

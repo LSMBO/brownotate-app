@@ -92,7 +92,7 @@ To set up the Flask server, please follow the instruction provided in [Brownotat
 
     ```bash
     sudo a2enmod rewrite
-    sudo a2ensite /etc/apache2/sites-available/brownotate-app.conf
+    sudo a2ensite brownotate-app
     ```
 
 These commands enable the rewrite module in Apache, which allow for flexible URL rooting, and then enables the site configuration.

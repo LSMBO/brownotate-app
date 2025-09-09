@@ -7,8 +7,8 @@ export default class DatabaseSearch {
     constructor(id, species) {
         this.id = id;
         this.run_id = null;
-        this.scientific_name = species['scientific_name'];
-        this.taxonID = species['taxid'];
+        this.scientificName = species['scientificName'];
+        this.taxonId = species['taxonId'];
         this.is_bacteria = species['is_bacteria'];
         this.lineage = null;
         this.date = null;        

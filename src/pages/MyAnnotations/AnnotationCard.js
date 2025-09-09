@@ -10,7 +10,7 @@ import { handleAnnotationRun } from '../../utils/AnnotationRun';
 
 const AnnotationCard = ({ user, annotation }) => {
     const navigate = useNavigate();
-    const { waitingTime, fetchUserAnnotations, fetchCPUs, updateAnnotation } = useAnnotations();
+    const { waitingTime, fetchUserAnnotations, fetchCPUs, updateAnnotation, setIsLoading } = useAnnotations();
 
     const formatDate = (dateTimeString) => {
       const date = new Date(dateTimeString);
@@ -30,12 +30,15 @@ const AnnotationCard = ({ user, annotation }) => {
       if (!confirmDelete) {
         return;
       }
+      setIsLoading(true);
       try {
         await axios.post(`${CONFIG.API_BASE_URL}/delete_run`, { id: annotation.parameters.id });
         fetchUserAnnotations(user, true)
         fetchCPUs();
       } catch (error) {
         console.error('Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -52,7 +55,7 @@ const AnnotationCard = ({ user, annotation }) => {
 
     return (
       <div className={`annotation-card t2_light ${annotation.status}`}>
-        <button className="delete-btn" onClick={(e) => handleDeleteRun(e)}>X</button>
+        <button className="delete-btn" onClick={async (e) => { await handleDeleteRun(e); }}>X</button>
 
         <div className="taxonomy-annotation-card">
           <Image file={annotation.parameters.species.imageUrl}/>
