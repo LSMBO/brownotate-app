@@ -97,7 +97,7 @@ export default function SectionStart({ updateParameters, parameters }) {
               <FormElementInputRadio
                 disabled={parameters.startSection.assembly}
                 label="Custom Sequencing file(s)" 
-                help="DNA sequencing FASTQ file(s). Please enter both the forward and reverse file for paird-end sequencing." 
+                help="DNA sequencing FASTQ file(s). Please enter both the forward and reverse file for paired-end sequencing." 
                 checked={parameters.startSection.sequencingFiles} 
                 onChange={handleRadioChange}
               />

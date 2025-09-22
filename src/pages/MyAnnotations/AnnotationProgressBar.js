@@ -21,6 +21,9 @@ const AnnotationProgressBar = ({ annotation, waitingTime }) => {
         }
         break;
       }
+      else if (!mergedProgressList.includes('Annotation run completed successfully')) {
+        newActiveStep = stepName;
+      }
     }
     if (!newActiveStep) {
       newActiveStep = 'Annotation run completed successfully';
@@ -58,7 +61,7 @@ const AnnotationProgressBar = ({ annotation, waitingTime }) => {
           } else if (progressList.includes(step.name)) {
             state = 'completed';
           }
-          if (annotation.status === 'failed') {
+          if (annotation.status === 'failed' && progressList.includes(step.name)) {
             state = 'failed';
           }
           return (

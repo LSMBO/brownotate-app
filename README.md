@@ -59,7 +59,7 @@ To set up the Flask server, please follow the instruction provided in [Brownotat
 6. **Copy the build files to the Apache web directory:**
 
     ```bash
-    sudo cp -r /path/to/your/build /var/www/brownotate-app
+    sudo cp -r /path/to/your/build/* /var/www/brownotate-app
     ```
 
 7. **Create an Apache configuration file for the application:**

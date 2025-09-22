@@ -59,7 +59,7 @@ const SequencingDetails = ({runs, displaySpecies}) => {
                             <p>{run.scientificName}</p>
                         </div>
                     )}
-                    {displaySpecies && parameters.species.scientificName !== run.scientificName && (
+                    {displaySpecies && parameters.species.scientificName && parameters.species.scientificName !== run.scientificName && (
                         <div className="run-unit">
                             <label></label>
                             <p className='non-opti'><i>Warning: The sequenced organism differs from {parameters.species.scientificName}</i></p>

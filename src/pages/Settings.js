@@ -201,6 +201,7 @@ export default function Settings() {
         e.preventDefault();
         const freeCpus = await fetchCPUs();
         if (!checkParameters() || freeCpus === 0) {
+            alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
             return;
         }
         console.log('freeCpus:', freeCpus);
@@ -421,7 +422,6 @@ export default function Settings() {
                 <SectionBrownaming updateParameters={updateParameters} parameters={parameters}/>
                 <h3>Busco completness evaluation</h3>
                 <SectionBusco updateParameters={updateParameters} parameters={parameters}/>
-                <h3>Computational resource management</h3>
                 <button className="submit-button t3" onClick={handleSubmit}>Run Brownotate</button>
             </div>
             {/* <div className="debugging-container">

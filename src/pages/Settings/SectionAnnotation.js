@@ -42,7 +42,7 @@ export default function SectionAnnotation({ updateParameters, parameters }) {
             width='5'
           />
         </div>
-        
+        <p className='form-warning'><i>Warning: More confident identifications are generally obtained when filtering out short predicted proteins</i></p>
         <div className="form-element">
           <div className="label-tooltip-wrapper">
             <label>Remove duplicated sequence</label>

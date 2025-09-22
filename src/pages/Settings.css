@@ -153,6 +153,12 @@ input[type="radio"] {
     flex-direction: row;
 }
 
+.form-warning {
+    color: #b33a3a;
+    font-size: smaller;
+    margin: 0 10px;
+}
+
 input[type="file"] {
     margin-bottom: 5px;
 }

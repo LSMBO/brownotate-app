@@ -7,7 +7,6 @@ function Parameters({ annotation }) {
 		if (!Array.isArray(list)) {
 			return list;
 		}
-		console.log('listDisplay', list);
 		return (
 			<div>
 				{list.map((item, index) => (
