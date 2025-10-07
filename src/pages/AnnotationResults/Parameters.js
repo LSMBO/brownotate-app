@@ -84,7 +84,7 @@ function Parameters({ annotation }) {
 					</>
 				)}
 				
-				<ParameterItem label="Removed duplicated sequences" value={getDuplicationMethod()} />
+				<ParameterItem label="Remove duplicate sequences" value={getDuplicationMethod()} />
 				<ParameterItem label="Minimal sequence length" value={annotation.parameters.annotationSection.minLength} />
 			</fieldset>
 			<fieldset>

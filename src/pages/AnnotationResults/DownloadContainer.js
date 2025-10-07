@@ -35,7 +35,7 @@ function DownloadContainer({ annotation, setIsLoading }) {
 				<div className="t2_light">Annotation</div>
 				<img src={DownloadIcon} alt="download" className="downloadIcon" />
 			</div>
-			<div className={`download ${annotation.status === "incomplete" ? 'disabled' : ''}`} onClick={annotation.status === "completed" ? () => handleClickDownload(`${annotation.results_path}/brownaming`) : null}>
+			<div className={`download ${(annotation.status === "incomplete" || annotation.parameters.brownamingSection.skip) ? 'disabled' : ''}`} onClick={annotation.status === "completed" ? () => handleClickDownload(`${annotation.results_path}/brownaming`) : null}>
 				<div className="t2_light">Brownaming (zipped)</div>
 				<img src={DownloadIcon} alt="download" className="downloadIcon" />
 			</div>

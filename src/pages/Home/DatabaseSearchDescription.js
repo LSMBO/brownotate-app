@@ -41,22 +41,22 @@ const DatabaseSearchDescription = () => {
             </div>
             {step3Expanded && (
                 <p>
-                    <p>Sequencing datasets are retrieved from NCBI SRA database. Each dataset groups until 8 runs, and details are shown when a dataset is selected.
-                    First, the best dataset for the input taxonomy is retrieved. An <span className='green'>optimal dataset</span> have the following features:</p>
+                    <p>Sequencing datasets are retrieved from NCBI SRA database. Each dataset groups up to 8 runs, and details are shown when a dataset is selected.</p>
+                    <p><b>I.</b> Search an <span className='green'>optimal dataset</span> for the input taxonomy</p>
                     <ul>
-                        <li><b>Supported Platforms</b>&nbsp; (for each run of the dataset): Illumina, BGISEQ, IonTorrent </li>
-                        <li><b>Strategy</b>&nbsp; (for each run of the dataset): WGS</li>
-                        <li><b>Selection</b>&nbsp; (for each run of the dataset): RANDOM</li>
-                        <li><b>Sequencing depth</b>&nbsp; (sum of each run): Between 50 and 80</li>
-                        <li><i>&nbsp;&nbsp;&nbsp;Definition: Average number of times each base in the assembly is covered by sequencing reads</i></li>
+                        <li>An <span className='green'>optimal dataset</span> have the following features:</li>
+                        <li>&nbsp;<b>Supported Platforms</b>&nbsp; (for each run of the dataset): Illumina, BGISEQ, IonTorrent </li>
+                        <li>&nbsp;<b>Strategy</b>&nbsp; (for each run of the dataset): WGS</li>
+                        <li>&nbsp;<b>Selection</b>&nbsp; (for each run of the dataset): RANDOM</li>
+                        <li>&nbsp;<b>Sequencing depth</b>&nbsp; (sum of each run): Between 50 and 80</li>
+                        <li><i>&nbsp;&nbsp;&nbsp;&nbsp;Definition: Average number of times each base in the assembly is covered by sequencing reads</i></li>
 
                     </ul>
 
-                    <p>If no <span className='green'>optimal dataset</span> is found, the filters are relaxed, allowing datasets that may include runs from <span className='red'>other platforms, strategies and selections</span>. 
-                    The dataset size can be smaller or larger than expected for the group, which means the accepted sequencing depth range is widened (first <span className='orange'>1.5 times longer/shorter</span>, then <span className='red'>with no size limit</span>). </p>
-
-                    <p>Then, while no <span className='green'>optimal dataset</span> is found, the search is expanded to broader taxonomic levels. <b>The database search always return at 
-                        least one sequencing dataset of the input taxonomy, and one <span className='green'>optimal dataset</span></b>.</p>
+                    <p><b>II.</b> If no <span className='green'>optimal dataset</span> is found for the input taxonomy:</p>
+                    <p>&nbsp;- The search continues for the input species using relaxed filters, allowing datasets that may include runs from <span className='red'>other platforms, strategies and selections</span>. 
+                        The dataset size can be smaller or larger than expected for the group, which means the accepted sequencing depth range is widened (first <span className='orange'>1.5 times longer/shorter</span>, then <span className='red'>with no size limit</span>).</p>
+                    <p>&nbsp;- The search of <span className='green'>optimal datasets</span> is expanded to broader taxonomic levels.</p>
                 </p>
             )}
 
