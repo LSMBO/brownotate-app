@@ -1,4 +1,4 @@
 const CONFIG = {
-  API_BASE_URL: 'https://lsmbo-brownotate.u-strasbg.fr/api'
+  API_BASE_URL: 'http://134.158.151.55:80'
 };
 export default CONFIG;

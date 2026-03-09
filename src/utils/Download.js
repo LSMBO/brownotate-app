@@ -42,6 +42,7 @@ export async function downloadEnsemblFTP(download_url, accession, data_type) {
 
 export async function downloadFromServer(path, extension) {
     try {
+        console.log(`Requesting download for path: ${path} with extension: ${extension}`);
         let fileList = [path]
         if (extension) {
             const response = await axios.post(`${CONFIG.API_BASE_URL}/server_path`, {'path': path, 'extension': extension});

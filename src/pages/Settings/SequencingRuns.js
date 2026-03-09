@@ -10,6 +10,15 @@ export default function SequencingRuns({ disabled }) {
     const [searchError, setSearchError] = useState(null);
 
     const searchSequencing = async () => {
+        const alreadyExists = parameters.startSection.sequencingRunList.some(
+            run => run.accession === accession.trim()
+        );
+        
+        if (alreadyExists) {
+            setSearchError(`${accession} is already in the list`);
+            return;
+        }
+        
         const data = await searchSequencingRun(accession);
         if (data.success) {
             setSearchError(null);

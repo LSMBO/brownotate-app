@@ -1,0 +1,265 @@
+import { useState } from 'react';
+import './DatabaseSearchOptions.css';
+
+export default function DatabaseSearchOptions({ options, setOptions, disabled }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleCheckboxChange = (key) => {
+        setOptions(prev => ({
+            ...prev,
+            [key]: { ...prev[key], active: !prev[key].active }
+        }));
+    };
+
+    const handleDnaseqOptionChange = (field, value) => {
+        setOptions(prev => ({
+            ...prev,
+            dnaseq: {
+                ...prev.dnaseq,
+                [field]: value
+            }
+        }));
+    };
+
+    const handlePlatformToggle = (platform) => {
+        const currentPlatforms = options.dnaseq.platforms || [];
+        const newPlatforms = currentPlatforms.includes(platform)
+            ? currentPlatforms.filter(p => p !== platform)
+            : [...currentPlatforms, platform];
+        
+        if (newPlatforms.length === 0) {
+            return; // Don't allow deselecting all platforms
+        }
+        
+        handleDnaseqOptionChange('platforms', newPlatforms);
+    };
+
+
+    return (
+                <div className='dbsearch-options-container'>
+                    <ul>
+                        <li 
+                            data-color="uniprot"
+                            onClick={() => !disabled && handleCheckboxChange('uniprot')}
+                            className={disabled ? 'disabled' : ''}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={options.uniprot.active}
+                                onChange={() => {}} // Handled by li onClick
+                                disabled={disabled}
+                                readOnly
+                            />
+                            <label>Uniprot</label>
+                        </li>
+                        <li 
+                            data-color="ensembl"
+                            onClick={() => !disabled && handleCheckboxChange('ensembl')}
+                            className={disabled ? 'disabled' : ''}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={options.ensembl.active}
+                                onChange={() => {}} // Handled by li onClick
+                                disabled={disabled}
+                                readOnly
+                            />
+                            <label>Ensembl</label>
+                        </li>
+                        <li 
+                            data-color="refseq"
+                            onClick={() => !disabled && handleCheckboxChange('refseq')}
+                            className={disabled ? 'disabled' : ''}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={options.refseq.active}
+                                onChange={() => {}} // Handled by li onClick
+                                disabled={disabled}
+                                readOnly
+                            />
+                            <label>NCBI RefSeq</label>
+                        </li>                    
+                        <li 
+                            data-color="genbank"
+                            onClick={() => !disabled && handleCheckboxChange('genbank')}
+                            className={disabled ? 'disabled' : ''}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={options.genbank.active}
+                                onChange={() => {}} // Handled by li onClick
+                                disabled={disabled}
+                                readOnly
+                            />
+                            <label>NCBI GenBank</label>
+                        </li>
+                        <li 
+                            data-color="dnaseq"
+                            onClick={() => !disabled && handleCheckboxChange('dnaseq')}
+                            className={disabled ? 'disabled' : ''}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={options.dnaseq.active}
+                                onChange={() => {}} // Handled by li onClick
+                                disabled={disabled}
+                                readOnly
+                            />
+                            <label>DNA Sequencing (NCBI SRA)</label>
+                        </li>
+                    </ul>        
+                {options.dnaseq.active && (
+                    <div className="dnaseq-options-section">
+                        <label>DNA Sequencing Options</label>
+                        <div>
+                            <div className="dnaseq-options-block">
+                                <div className="dnaseq-options-group">
+                                    <label className="dnaseq-group-label">Platforms</label>
+                                    <div className="platform-checkboxes">
+                                        {['ILLUMINA', 'BGISEQ', 'ION_TORRENT', 'PACBIO_SMRT', 'OXFORD_NANOPORE'].map(platform => (
+                                            <label key={platform}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={options.dnaseq.platforms?.includes(platform)}
+                                                    onChange={() => handlePlatformToggle(platform)}
+                                                    disabled={disabled}
+                                                />
+                                                {platform.replace('_', ' ')}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="dnaseq-options-group">
+                                    <label className="dnaseq-group-label">Layout</label>
+                                    <div className="radio-group">
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="layout"
+                                                checked={options.dnaseq.layout === 'any'}
+                                                onChange={() => handleDnaseqOptionChange('layout', 'any')}
+                                                disabled={disabled}
+                                            />
+                                            Any
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="layout"
+                                                checked={options.dnaseq.layout === 'PAIRED'}
+                                                onChange={() => handleDnaseqOptionChange('layout', 'PAIRED')}
+                                                disabled={disabled}
+                                            />
+                                            Paired
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="layout"
+                                                checked={options.dnaseq.layout === 'SINGLE'}
+                                                onChange={() => handleDnaseqOptionChange('layout', 'SINGLE')}
+                                                disabled={disabled}
+                                            />
+                                            Single
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div className="dnaseq-options-group">
+                                    <label className="dnaseq-group-label">Strategy</label>
+                                    <div className="radio-group">
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="strategy"
+                                                checked={options.dnaseq.strategy === 'WGS'}
+                                                onChange={() => handleDnaseqOptionChange('strategy', 'WGS')}
+                                                disabled={disabled}
+                                            />
+                                            WGS
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="strategy"
+                                                checked={options.dnaseq.strategy === 'any'}
+                                                onChange={() => handleDnaseqOptionChange('strategy', 'any')}
+                                                disabled={disabled}
+                                            />
+                                            Any
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="dnaseq-options-group">
+                                    <label className="dnaseq-group-label">Selection</label>
+                                    <div className="radio-group">
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="selection"
+                                                checked={options.dnaseq.selection === 'RANDOM'}
+                                                onChange={() => handleDnaseqOptionChange('selection', 'RANDOM')}
+                                                disabled={disabled}
+                                            />
+                                            RANDOM
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="selection"
+                                                checked={options.dnaseq.selection === 'any'}
+                                                onChange={() => handleDnaseqOptionChange('selection', 'any')}
+                                                disabled={disabled}
+                                            />
+                                            Any
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div className="dnaseq-options-block">
+                                <div className="dnaseq-options-group">
+                                    <label className="dnaseq-group-label">Coverage Range</label>
+                                    <div className="coverage-inputs">
+                                        <input
+                                            type="number"
+                                            value={options.dnaseq.coverageLower}
+                                            onChange={(e) => handleDnaseqOptionChange('coverageLower', parseInt(e.target.value) || 0)}
+                                            disabled={disabled}
+                                            min="0"
+                                            placeholder="Min"
+                                        />
+                                        <span>x to</span>
+                                        <input
+                                            type="number"
+                                            value={options.dnaseq.coverageUpper}
+                                            onChange={(e) => handleDnaseqOptionChange('coverageUpper', parseInt(e.target.value) || 0)}
+                                            disabled={disabled}
+                                            min="0"
+                                            placeholder="Max"
+                                        />
+                                        <span>x</span>
+                                    </div>                                     
+                                </div>
+                                <div className="dnaseq-options-group">
+                                    <label className="dnaseq-checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.dnaseq.inputTaxonomyOnly}
+                                            onChange={(e) => handleDnaseqOptionChange('inputTaxonomyOnly', e.target.checked)}
+                                            disabled={disabled}
+                                        />
+                                        Search input taxonomy only (don't look to parents)
+                                    </label>
+                                </div> 
+                            </div>
+                        </div>
+                    </div>
+                )}
+                </div>
+            )
+
+}

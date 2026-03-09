@@ -1,8 +1,6 @@
-import React from 'react';
-
 const SequencingBatch = ({ batch, handleCheckboxChange, isSelected }) => {
     return (
-        <tr className={`sequencing-batch${isSelected ? ' selected' : ''} ${batch.isOptimal ? ' greena' : ''}`}>
+        <tr className={`sequencing-batch${isSelected ? ' selected' : ''}`}>
             <td>
                 <input
                     type="checkbox"
@@ -12,11 +10,11 @@ const SequencingBatch = ({ batch, handleCheckboxChange, isSelected }) => {
             </td>
             <td>{batch.scientificName} [TaxID: {batch.taxid}]</td>
             <td>{batch.runs.length} runs</td>
-            <td className={batch.optimalSize === 0 ? 'red' : batch.optimalSize === 1 ? 'orange' : 'green'}>
+            <td>
                 {Math.round(batch.totalBases / 1e6).toLocaleString()} Mbp
             </td>
-            <td className={batch.optimalSize === 0 ? 'red' : batch.optimalSize === 1 ? 'orange' : 'green'}>
-                {batch.depth}
+            <td>
+                {batch.depth.toFixed(1)}
             </td>
         </tr>
     );

@@ -24,14 +24,16 @@ const Image = ({ file }) => {
     }, [file]);
 
     return (
-        <div style={{ maxWidth: '100%' }}>
-            {imageUrl ? (
-                <img src={imageUrl} style={{ maxWidth: '100%' }} />
-            ) : (
-                <div className="image-loader-spinner"/>
+        <div style={{ maxWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {(
+                imageUrl ? (
+                    <img src={imageUrl} style={{ maxWidth: '100%' }} />
+                ) : (
+                    <div className="image-loader-spinner" />
+                )
             )}
         </div>
     );
 };
 
-export default Image;;
+export default Image;

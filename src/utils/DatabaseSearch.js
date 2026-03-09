@@ -10,7 +10,7 @@ export async function speciesExists(inputValue) {
         else {
             const response = await axios.post(`${CONFIG.API_BASE_URL}/check_species_exists`, { species: inputValue });
             if (response.data.status === 'success') {
-                return response.data.results;
+                return response.data.data;
             } else {
                 console.error('Error:', response.data.message);
                 return false;
@@ -27,22 +27,44 @@ export async function getDBSearch(taxid, cancelToken) {
             taxid: taxid
         }, { cancelToken: cancelToken });
 
-        if (response.data.data) {
-            const past_dbsearch = response.data.data;
-            return {
-                success: true,
-                data: past_dbsearch
-            };
+        if (response.data && response.data.status === 'success') {
+            return response.data;
         } else {
             return {
-                success: false,
+                status: 'failed',
                 data: null
             };
         }
     } catch (error) {
         console.error('Error in getDBSearch:', error);
         return {
-            success: false,
+            status: 'failed',
+            data: null,
+            error: error
+        };
+    }
+}
+
+export async function getDBSearches(taxid = null) {
+    try {       
+        const payload = taxid ? { taxid: taxid } : {};
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/get_dbsearches`, payload);
+
+        if (response.data && response.data.status === 'success') {
+            return {
+                status: 'success',
+                data: response.data
+            };
+        } else {
+            return {
+                status: 'failed',
+                data: null
+            };
+        }
+    } catch (error) {
+        console.error('Error in getDBSearches:', error);
+        return {
+            status: 'failed',
             data: null,
             error: error
         };

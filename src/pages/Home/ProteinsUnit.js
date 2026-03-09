@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ProteinsUnit = ({ data, isSelected, handleCheckboxChange, label }) => {
 
     return (

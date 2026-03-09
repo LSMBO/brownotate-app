@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { displayFile } from '../utils/DisplayFile';
@@ -16,10 +16,12 @@ const AnnotationResults = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState("Parameters");
     const [annotation, setAnnotation] = useState(null);
+	const [isFunctionalAnnotation, setIsFunctionalAnnotation] = useState(false);
     const [fileContents, setFileContents] = useState({
         buscoAssemblyFile: null,
         buscoAnnotationFile: null,
-        brownamingStatsFile: null
+        brownamingStatsFile: null,
+        brownamingLogFile: null
     });
 
     useEffect(() => {
@@ -59,6 +61,10 @@ const AnnotationResults = () => {
 	useEffect(() => {
 		const fetchFiles = async () => {
 			if (!annotation) return;
+			
+			const isFunctional = annotation.parameters?.type === 'functional';
+			setIsFunctionalAnnotation(isFunctional);
+			
 			const handleDisplayFile = async (filePath, fileType) => {
 				try {
 					const fileContent = await displayFile(filePath);
@@ -71,18 +77,34 @@ const AnnotationResults = () => {
 				}
 			};
 	
-			if (annotation.status === "completed" || annotation.status === "incomplete") {
-				if (annotation.parameters.buscoSection.assembly) {
-					await handleDisplayFile(`${annotation.results_path}/Busco_genome.json`, 'buscoAssemblyFile');
+			// Only load Busco files for non-functional annotations
+			if (!isFunctional) {
+				if (annotation.status === "completed" || annotation.status === "incomplete") {
+					if (annotation.parameters.buscoSection && annotation.parameters.buscoSection.assembly) {
+						await handleDisplayFile(`${annotation.results_path}/Busco_genome.json`, 'buscoAssemblyFile');
+					}
+				}
+				
+				if (annotation.status === "completed") {
+					if (annotation.parameters.buscoSection && annotation.parameters.buscoSection.annotation) {
+						await handleDisplayFile(`${annotation.results_path}/Busco_annotation.json`, 'buscoAnnotationFile');
+					}
 				}
 			}
-	
-			if (annotation.status === "completed") {
-				if (annotation.parameters.buscoSection.annotation) {
-					await handleDisplayFile(`${annotation.results_path}/Busco_annotation.json`, 'buscoAnnotationFile');
-				}
-				if (!annotation.parameters.brownamingSection.skip) {
-					await handleDisplayFile(`${annotation.results_path}/brownaming/stats.txt`, 'brownamingStatsFile');
+			
+			if (annotation.status === "completed" && !annotation.parameters.brownamingSection.skip) {
+				if (annotation.resumeData?.brownamingResults) {
+					const brownamingResults = annotation.resumeData.brownamingResults;
+
+					setFileContents(prevState => ({
+						...prevState,
+						brownamingStatsFile: `${annotation.results_path}/${brownamingResults.stats}`,
+					}));
+					
+					// Load log file content
+					if (brownamingResults.log) {
+						await handleDisplayFile(`${annotation.results_path}/${brownamingResults.log}`, 'brownamingLogFile');
+					}
 				}
 			}
 		};
@@ -97,27 +119,27 @@ const AnnotationResults = () => {
 			</div>
 
 			<div className='annotation-results-container'>
-
 				<h2 className="home-h2" dangerouslySetInnerHTML={{__html: annotationTitle}} />
-
-				{annotation && annotation.status === "completed" && (
-					<div className='tabs-header-annotation'>
-						<div className={`tab ${activeTab === 'Results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Results')}>Results</div>
-						<div className={`tab ${activeTab === 'Parameters' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Parameters')}>Parameters</div>
-					</div>
-				)}
-
-				{annotation && (
-					<div className='t2_light'>
-						{activeTab === "Results" && (
-							<Results annotation={annotation} fileContents={fileContents} setIsLoading={setIsLoading} />
-						)}
-
-						{activeTab === 'Parameters' && (
-							<Parameters annotation={annotation} />
-						)}
-					</div>
-				)}
+				
+				<div className='tabs-container'>
+					{annotation && annotation.status === "completed" && (
+						<div className='tabs-header'>
+							<div className={`tab ${activeTab === 'Results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Results')}>Results</div>
+							<div className={`tab ${activeTab === 'Parameters' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Parameters')}>Parameters</div>
+						</div>
+					)}
+					
+					{annotation && (
+						<div className='tabs-content'>
+							<div className={`tab-content ${activeTab === 'Results' ? 'active-content' : ''}`}>
+								<Results annotation={annotation} fileContents={fileContents} setIsLoading={setIsLoading} />
+							</div>
+							<div className={`tab-content ${activeTab === 'Parameters' ? 'active-content' : ''}`}>
+								<Parameters annotation={annotation} functionalAnnotationRun={isFunctionalAnnotation}/>
+							</div>
+						</div>
+					)}
+				</div>
 			</div>
 
 			{isLoading && (

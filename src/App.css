@@ -26,6 +26,13 @@
     font-size: 1.2rem;
 }
 
+h3 {
+    margin: 10px;
+}
+
+h1 {
+    margin: 15px;
+}
 
 @media screen and (max-width: 680px) {
     .t1 {
@@ -46,7 +53,6 @@ div {
 }
 
 body {
-    background: linear-gradient(to bottom, #cddfeb, #f6f7f8 40vh, #f6f7f8);
     font-family: 'Oxygen', sans-serif;
 }
 
@@ -161,7 +167,7 @@ p {
 }
 
 .navigation-buttons .left {
-    background: linear-gradient(to right, #288cbb 40%, #ebf1f5 80%, #ebf1f5);
+    background: linear-gradient(to right, #288cbb 40%, #ffffff 80%, #ffffff);
     text-align: left;
     padding-left: 5%;
       clip-path: polygon(
@@ -173,11 +179,11 @@ p {
 }
 
 .navigation-buttons .left:hover {
-    background: linear-gradient(to right, #206a94 40%, #ebf1f5 80%, #ebf1f5);
+    background: linear-gradient(to right, #206a94 40%, #ffffff 80%, #ffffff);
 }
 
 .navigation-buttons .right {
-    background: linear-gradient(to left, #288cbb 40%, #ebf1f5 80%, #ebf1f5);
+    background: linear-gradient(to left, #288cbb 40%, #ffffff 80%, #ffffff);
     text-align: right;
     padding-right: 5%;
       clip-path: polygon(
@@ -189,7 +195,7 @@ p {
 }
 
 .navigation-buttons .right:hover {
-    background: linear-gradient(to left, #206a94 40%, #ebf1f5 80%, #ebf1f5);
+    background: linear-gradient(to left, #206a94 40%, #ffffff 80%, #ffffff);
 }
 
 .species-input {
@@ -256,8 +262,93 @@ input[type="file"]{
 
 button:disabled {
     cursor: auto;
-    border-color: #968c8c93;
     background-color: #ffffff93;
+}
+
+/* Generic button-tab style (buttons that act like tabs with active/inactive states) */
+.btn-tab-style {
+    padding: 12px 20px;
+    border: 2px solid #288cbb;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+    color: #288cbb;
+    align-items: center;
+    font-weight: bold;
+}
+
+.btn-tab-style:hover:not(:disabled):not(.active) {
+    background-color: #e6f3f9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 140, 187, 0.2);
+}
+
+.btn-tab-style.active {
+    background-color: #288cbb;
+    border-color: #288cbb;
+    color: white;
+}
+
+.btn-tab-style.active:hover:not(:disabled) {
+    background-color: #206a94;
+    border-color: #206a94;
+}
+
+.btn-tab-style.disabled,
+.btn-tab-style:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #999;
+    border-color: #e0e0e0;
+    pointer-events: none;    
+}
+
+/* Generic tabs system */
+.tabs-container {
+    width: 95%;
+    margin: 10px auto;
+}
+
+.tabs-header {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.tab {
+    cursor: pointer;
+    text-align: center;
+    padding: 12px 20px;
+    border: 1px solid #288cbb;
+    border-radius: 12px 12px 0 0;
+    background-color: white;
+    color: #288cbb;
+    font-weight: bold;
+}
+
+.tab.active-tab {
+    padding: 12px 20px;
+    background-color: #288cbb;
+    border-color: #288cbb;
+    color: white;
+}
+
+.tab.active-tab:hover {
+    background-color: #206a94;
+    border-color: #206a94;
+}
+
+.tab-content {
+    display: none;
+}
+
+.active-content {
+    display: flex;
+    padding: 20px;
+    border: 1px solid #288cbb;
+    border-radius: 0 0 8px 8px;
+    margin-top: -1px;
 }
 
 .error-message {
@@ -333,9 +424,9 @@ a {
 }
 
 .database-search-container {
-    width: 99%;
-    margin: 20px auto;
-    border: solid 1px #288cbb;
+    width: calc(100% - 40px);
+    max-width: 100%;
+    margin: 20px;
     align-items: flex-start;
 }
 
@@ -382,7 +473,7 @@ a {
 .image-loader-spinner {
     border: 4px solid #2196f3;
     border-top: 4px solid transparent;
-    width: 20%;
+    width: 10%;
     aspect-ratio: 1 / 1;
     animation: spin 1s linear infinite;
     margin: auto;

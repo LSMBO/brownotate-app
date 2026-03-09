@@ -2,19 +2,13 @@ import ExcludedTaxo from "./ExcludedTaxo";
 import FormElementInputRadio from "./FormElementInputRadio";
 import HelpIcon from "../../assets/help.png";
 
-export default function SectionBrownaming({ disabled, updateParameters, parameters }) {
-    const rankOptions = ["Species", "Species subgroup", "Species group", "Subgenus", "Genus", "Subtribe", "Tribe", "Subfamily", "Family", "Superfamily", "Parvorder", "Infraorder", "Suborder", "Order", "Superorder", "Subcohort", "Cohort", "Infraclass", "Subclass", "Class", "Superclass", "Subphylum", "Phylum", "Superphylum", "Subkingdom", "Kingdom", "Superkingdom"]
-
+export default function SectionBrownaming({ disabled, updateParameters, parameters, showSkipOption = true }) {
     const handleRadioChange = (name, isChecked) => {
-        if (isChecked) {
-            updateParameters({brownamingSection: {skip: true}});
-        } else {
-            updateParameters({brownamingSection: {skip: false}});
-        }
+        updateParameters({brownamingSection: {[name]: isChecked}});
     };
 
     const addExcludedTaxo = (taxo) => {
-        const updatedTaxoList = [...parameters.brownamingSection.excludedTaxoList, taxo];
+        const updatedTaxoList = [...parameters.brownamingSection.excludedTaxoList, {scientific_name: taxo.scientific_name, taxid: taxo.taxid}];
         updateParameters({brownamingSection: {excludedTaxoList: updatedTaxoList}});
     };
    
@@ -25,20 +19,26 @@ export default function SectionBrownaming({ disabled, updateParameters, paramete
   };
 
 
-    const handleSetMaxRank = (e) => {
-        updateParameters({brownamingSection: {highestRank: e.target.value}});
-    };    
+    const handleSetLastTaxid = (e) => {
+        const value = e.target.value;
+        updateParameters({brownamingSection: {lastTaxid: value === "" ? null : parseInt(value)}});
+    };
+
+    const lineage = parameters.species?.lineage || [];    
     
     return (
         <div className="parameters-section">
-            <div className="form-element">
-                <FormElementInputRadio 
-                  label="Skip Brownaming" 
-                  help="Skip the step that assigns names to each protein." 
-                  checked={parameters.brownamingSection.skip} 
-                  onChange={handleRadioChange}
-                />
-            </div>
+            {showSkipOption && (
+                <div className="form-element">
+                    <FormElementInputRadio 
+                      name="skip"
+                      label="Skip" 
+                      help="Skip the step that assigns names to each protein." 
+                      checked={parameters.brownamingSection.skip} 
+                      onChange={handleRadioChange}
+                    />
+                </div>
+            )}
             <ExcludedTaxo 
                 label="Excluded species" 
                 help="Taxonomies excluded from the brownaming search space." 
@@ -47,23 +47,37 @@ export default function SectionBrownaming({ disabled, updateParameters, paramete
                 removeExcludedTaxo={removeExcludedTaxo} 
                 disabled={parameters.brownamingSection.skip}/>
 
-
             <div className="form-element">
                 <div className="label-tooltip-wrapper">
-                    <label>Highest taxa rank</label>
+                    <label>Taxonomic Expansion Limit</label>
                     <div className="tooltip-container">
                         <img src={HelpIcon} alt="help" className="helpIcon"/>
-                        <span className="help-span">Rank from which the blast comparison are stopped.</span>
+                        <span className="help-span">Stops sequence comparisons once the selected taxonomic level is reached.</span>
                     </div>
                 </div>
-                <select className="t2_light" value={parameters.brownamingSection.highestRank || "Suborder"} onChange={handleSetMaxRank} disabled={parameters.brownamingSection.skip}>
-                    {rankOptions.map((option, index) => (
-                    <option key={index} value={option}>
-                        {option}
-                    </option>
+                <select 
+                    className="t2_light" 
+                    value={parameters.brownamingSection.lastTaxid || ""} 
+                    onChange={handleSetLastTaxid} 
+                    disabled={parameters.brownamingSection.skip || lineage.length === 0}
+                >
+                    <option value="">Select a taxonomic level</option>
+                    {lineage.map((taxon, index) => (
+                        <option key={index} value={taxon.taxonId}>
+                            {taxon.scientificName} (taxID: {taxon.taxonId} | rank: {taxon.rank})
+                        </option>
                     ))}
-                </select>    
-            </div>        
+                </select>
+            </div>
+            <div className='form-element'>
+                <FormElementInputRadio 
+                    name="excludeTrembl"
+                    label="Exclude trEMBL from search space" 
+                    help="Exclude trEMBL sequences from the sequence comparison search space. Look only at SwissProt sequences." 
+                    checked={parameters.brownamingSection.excludeTrembl} 
+                    onChange={handleRadioChange}
+                />                
+            </div>
         </div>
     )
 }

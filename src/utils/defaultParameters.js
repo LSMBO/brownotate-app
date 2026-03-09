@@ -1,5 +1,6 @@
 export const defaultParameters = {
     id: null,
+    run_id: null,
     ready: false,
     species: {
         scientificName: "",
@@ -19,8 +20,14 @@ export const defaultParameters = {
         sequencingFiles : false,
         sequencingFileList : [],
         sequencingFileListOnServer: [],
-		skipFastp: false,
-        skipPhix: false
+        skipPhix: false,
+        platform: ""
+    },
+    assemblySection: {
+        canu: true,
+        megahit: false,
+        runFastp: true,
+        runBowtie2: true
     },
     annotationSection: {
         autoEvidence: true,
@@ -34,7 +41,8 @@ export const defaultParameters = {
     brownamingSection: {
         skip: false,
         excludedTaxoList: [],
-        highestRank: "Suborder",
+        lastTaxid: null,
+        excludeTrembl: false
     },
     buscoSection: {
         assembly: true,

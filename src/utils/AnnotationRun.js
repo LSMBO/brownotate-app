@@ -4,26 +4,29 @@ import CONFIG from '../config';
 
 
 async function executeRequest(promise, user, runId, updateAnnotation, completed_annotation=false) {
-    try {
-        if (completed_annotation) {
+    // Only update status to 'completed' when annotation is done
+    // Status is already 'running' from create_run, no need to set it again
+    if (completed_annotation) {
+        try {
             await updateAnnotation(user, runId, 'status', 'completed');
-        } else {
-            await updateAnnotation(user, runId, 'status', 'running');
+        } catch (error) {
+            console.error('Error updating status to completed:', error);
         }
+    }
+    
+    let response;
+    try {
+        response = await promise;
     } catch (error) {
         await updateAnnotation(user, runId, 'status', 'failed');
-        await updateAnnotation(user, runId, 'error', error.response.data);
+        await updateAnnotation(user, runId, 'error', error.response?.data || error.message);
         return { data: null, error: true };
     }   
     
-    const response = await promise;
     if (response.status !== 200) {
-        try {
-        await updateAnnotation(user, runId, 'status', 'failed')
-        await updateAnnotation(user, runId, 'error', response.data.message);
-        } catch (error) {
-            return { data: null, error: true, message: response.data.message };   
-        }
+        await updateAnnotation(user, runId, 'status', 'failed');
+        await updateAnnotation(user, runId, 'error', response.data?.message || 'Request failed');
+        return { data: null, error: true, message: response.data?.message };
     } 
     return { data: response.data, error: null };
 }
@@ -112,9 +115,11 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
         console.log('Sequencing files:', sequencingFileList);
         await updateAnnotation(user, runId, 'resumeData', {'sequencingFileList': sequencingFileList});
         
+        let sequencingFileListProcessed;
         
+        // Preprocessing: run fastp if requested (skip if using CANU - it has its own correction/trimming)
         let sequencingFileListAfterFastp;
-        if (!parameters.startSection.skipFastp) {
+        if (parameters.assemblySection.runFastp && !parameters.assemblySection.canu) {
             if (resume && runData.resumeData && runData.resumeData.sequencingFileListAfterFastp) {
                 sequencingFileListAfterFastp = runData.resumeData.sequencingFileListAfterFastp;
             } else {
@@ -131,15 +136,16 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
                 console.log('Fastp completed in', fastpResult.data.timer);
                 await updateAnnotation(user, runId, 'timers', {'Running fastp on sequencing files ...': fastpResult.data.timer})
                 sequencingFileListAfterFastp = fastpResult.data.data;
-        }
+            }
         } else {
             sequencingFileListAfterFastp = sequencingFileList;
         }
         console.log('Sequencing files after fastp:', sequencingFileListAfterFastp);
         await updateAnnotation(user, runId, 'resumeData', {'sequencingFileListAfterFastp': sequencingFileListAfterFastp});
 
-        let sequencingFileListAfterRemovePhix;;
-        if (!parameters.startSection.skipPhix) {
+        // Preprocessing: run bowtie2 (PhiX removal) if requested (skip if using CANU)
+        let sequencingFileListAfterRemovePhix;
+        if (parameters.assemblySection.runBowtie2 && !parameters.assemblySection.canu) {
             if (resume && runData.resumeData && runData.resumeData.sequencingFileListAfterRemovePhix) {
                 sequencingFileListAfterRemovePhix = runData.resumeData.sequencingFileListAfterRemovePhix;
             } else {
@@ -162,25 +168,44 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
         }
         console.log('Sequencing files after remove phix:', sequencingFileListAfterRemovePhix);
         await updateAnnotation(user, runId, 'resumeData', {'sequencingFileListAfterRemovePhix': sequencingFileListAfterRemovePhix});
-
+        
+        // For CANU, always use raw files; for Megahit, use processed files
+        sequencingFileListProcessed = parameters.assemblySection.canu ? sequencingFileList : sequencingFileListAfterRemovePhix;
 
 
         if (resume && runData.resumeData && runData.resumeData.assemblyFile) {
             assemblyFile = runData.resumeData.assemblyFile;
         } else {
-            await updateAnnotation(user, runId, 'progress', 'Running Megahit assembly ...');
-            const megahitResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_megahit`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileListAfterRemovePhix }),
-                user, runId, updateAnnotation
-            );
-            if (megahitResult.error) {
-                console.error('Error running Megahit:', megahitResult.error);
-                return;
-            } 
-            console.log('Megahit completed in', megahitResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running Megahit assembly ...': megahitResult.data.timer})
-            assemblyFile = megahitResult.data.data;
-            await updateAnnotation(user, runId, 'resumeData', {'assemblyFile': assemblyFile});
+            // Run assembler based on selected assembler in parameters
+            if (parameters.assemblySection.canu) {
+                await updateAnnotation(user, runId, 'progress', 'Running CANU assembly ...');
+                const canuResult = await executeRequest(
+                    axios.post(`${CONFIG.API_BASE_URL}/run_canu`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileListProcessed }),
+                    user, runId, updateAnnotation
+                );
+                if (canuResult.error) {
+                    console.error('Error running CANU:', canuResult.error);
+                    return;
+                } 
+                console.log('CANU completed in', canuResult.data.timer);
+                await updateAnnotation(user, runId, 'timers', {'Running CANU assembly ...': canuResult.data.timer})
+                assemblyFile = canuResult.data.data;
+                await updateAnnotation(user, runId, 'resumeData', {'assemblyFile': assemblyFile});
+            } else {
+                await updateAnnotation(user, runId, 'progress', 'Running Megahit assembly ...');
+                const megahitResult = await executeRequest(
+                    axios.post(`${CONFIG.API_BASE_URL}/run_megahit`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileListProcessed }),
+                    user, runId, updateAnnotation
+                );
+                if (megahitResult.error) {
+                    console.error('Error running Megahit:', megahitResult.error);
+                    return;
+                } 
+                console.log('Megahit completed in', megahitResult.data.timer);
+                await updateAnnotation(user, runId, 'timers', {'Running Megahit assembly ...': megahitResult.data.timer})
+                assemblyFile = megahitResult.data.data;
+                await updateAnnotation(user, runId, 'resumeData', {'assemblyFile': assemblyFile});
+            }
         }    
     } else {
         assemblyFile = parameters.startSection.assemblyFileOnServer;
@@ -415,7 +440,13 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
         } else {
             await updateAnnotation(user, runId, 'progress', 'Running Brownaming ...');
             const brownamingResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_brownaming`, { 'parameters': parameters, 'annotation_file': annotationFile }),
+                axios.post(`${CONFIG.API_BASE_URL}/run_brownaming`, { 
+                    'parameters': parameters, 
+                    'annotation_file': annotationFile,
+                    'run_id': runId,
+                    'cpus': parameters.cpus,
+                    'resume': resume
+                }),
                 user, runId, updateAnnotation
             );
             if (brownamingResult.error) {
@@ -424,14 +455,20 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             }
             console.log('Brownaming completed in', brownamingResult.data.timer);
             await updateAnnotation(user, runId, 'timers', {'Running Brownaming ...': brownamingResult.data.timer})
-            annotationFile = brownamingResult.data.data;
+            annotationFile = `runs/${runId}/${brownamingResult.data.output_files.fasta}`;
             console.log('Brownaming annotation file:', annotationFile);
-            await updateAnnotation(user, runId, 'resumeData', {'annotationFile': annotationFile, 'brownaming': true});
+            await updateAnnotation(user, runId, 'resumeData', {
+                'annotationFile': annotationFile, 
+                'brownaming': true,
+                'brownamingResults': brownamingResult.data.output_files,
+                'brownaming_dir': brownamingResult.data.brownaming_dir
+            });
         }
     }
 
     if (parameters.buscoSection.annotation && !(resume && runData.resumeData && runData.resumeData.buscoAnnotation)) {
         await updateAnnotation(user, runId, 'progress', 'Running BUSCO on annotation ...');
+        console.log('Running BUSCO on annotation with file:', annotationFile);
         const buscoAnnotationResult = await executeRequest(
             axios.post(`${CONFIG.API_BASE_URL}/run_busco`, { 'parameters': parameters, 'input_file': annotationFile, 'mode': 'proteins' }),
             user, runId, updateAnnotation

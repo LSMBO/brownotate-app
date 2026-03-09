@@ -3,17 +3,17 @@ import React, { createContext, useState, useContext } from 'react';
 const DBSearchContext = createContext();
 
 export const DBSearchProvider = ({ children }) => {
-    const [dbsearch, setDBSearch] = useState(null);
-    const [dbsearchStatus, setDBSearchStatus] = useState(null);
+    const [dbs, setDBS] = useState(null);
+    const [dbsStatus, setDBSStatus] = useState(null);
     const [selectedData, setSelectedData] = useState(null);
 
-    const resetDBSearch = () => {
-        setDBSearchStatus(null);
-        setDBSearch(null);  
+    const resetDBS = () => {
+        setDBSStatus(null);
+        setDBS(null);  
     };       
         
     return (
-        <DBSearchContext.Provider value={{ dbsearch, setDBSearch, dbsearchStatus, setDBSearchStatus, selectedData, setSelectedData, resetDBSearch }}>
+        <DBSearchContext.Provider value={{ dbs, setDBS, dbsStatus, setDBSStatus, selectedData, setSelectedData, resetDBS }}>
             {children}
         </DBSearchContext.Provider>
     );

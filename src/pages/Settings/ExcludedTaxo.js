@@ -19,7 +19,7 @@ export default function ExcludedTaxo({ label, help, excludedTaxoList, addExclude
           else {
               const response = await axios.post(`${CONFIG.API_BASE_URL}/check_species_exists`, { species: inputTaxo });
               setErrorMsg(null);
-              return response.data.results;
+              return response.data.data;
           }
       } catch (error) {
           console.error('Error:', error);
@@ -57,14 +57,14 @@ export default function ExcludedTaxo({ label, help, excludedTaxoList, addExclude
                   onChange={handleChange}
                   disabled={disabled}
               />
-              <button className="speciesInputBtn t1" disabled={disabled} onClick={(e) => handleInputSubmit(e)}>Add</button>
+              <button className="speciesInputBtn" disabled={disabled} onClick={(e) => handleInputSubmit(e)}>Add</button>
             </div>
             {errorMsg && <div className="error-message">{errorMsg}</div>}
             <ul style={{ display: excludedTaxoList.length === 0 ? "none" : "block" }}>
               {excludedTaxoList.map((species, index) => (
                 <li key={index}>
                   <button className="delete-btn" onClick={(e) => removeExcludedTaxo(e, index)}>X</button>
-                  {species['scientific_name']} ({species['taxid']}){' '}
+                  {species['scientific_name'].charAt(0).toUpperCase() + species['scientific_name'].slice(1)} ({species['taxid']}){' '}
                 </li>
               ))}
             </ul>

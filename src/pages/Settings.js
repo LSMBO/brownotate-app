@@ -5,7 +5,10 @@ import axios from 'axios';
 import CONFIG from '../config';
 import "./Settings.css";
 
-import Proteins from "../classes/Proteins";
+import DBSUniprot from "../classes/DBSUniprot";
+import DBSEnsembl from "../classes/DBSEnsembl";
+import DBSRefSeq from "../classes/DBSRefSeq";
+import DBSGenBank from "../classes/DBSGenBank";
 
 import { useParameters } from "../contexts/ParametersContext";
 import { useUser } from '../contexts/UserContext';
@@ -13,11 +16,12 @@ import { useAnnotations } from '../contexts/AnnotationsContext';
 import { useDBSearch } from '../contexts/DBSearchContext';
 
 import { downloadEnsemblFTP, downloadNCBI, handleClickDownload } from '../utils/Download';
-import { speciesExists, getDBSearch, executeDBSearchRoute } from '../utils/DatabaseSearch';
+import { speciesExists, getDBSearches, executeDBSearchRoute } from '../utils/DatabaseSearch';
 import { handleAnnotationRun } from '../utils/AnnotationRun';
 
 import SpeciesInput from "../components/SpeciesInput";
 import SectionStart from "./Settings/SectionStart";
+import SectionAssembly from "./Settings/SectionAssembly";
 import SectionAnnotation from "./Settings/SectionAnnotation";
 import Augustus from "./Settings/Augustus";
 import SectionBrownaming from "./Settings/SectionBrownaming";
@@ -34,12 +38,45 @@ export default function Settings() {
     const [isLoading, setIsLoading] = useState(false);
     const { fetchCPUs, addAnnotation, updateAnnotation} = useAnnotations();
     const { parameters, updateParameters } = useParameters();
-    const { dbsearch } = useDBSearch();
+    const { dbs } = useDBSearch();
 
 
     useEffect(() => {
-        window.scrollTo(0, 0);
+        const initializeSpecies = async () => {
+            window.scrollTo(0, 0);
+            if (parameters.startSection.assembly) {
+                await handleClickSpeciesSearch(parameters.startSection.assembly.scientific_name);
+            }
+            else if (parameters.startSection.sequencing) {
+                await handleClickSpeciesSearch(parameters.startSection.sequencing.scientificName);
+            }
+        };
+        initializeSpecies();
     }, []);
+
+    // Automatically set assembler based on sequencing platform
+    useEffect(() => {
+        if (parameters.startSection.sequencing) {
+            let platform = parameters.startSection.platform || '';
+            
+            // If using run accessions AND they are selected, get platform from the first run
+            if (parameters.startSection.sequencingRuns && parameters.startSection.sequencingRunList.length > 0) {
+                const firstRun = parameters.startSection.sequencingRunList[0];
+                platform = firstRun.platform || '';
+            }
+            
+            // Determine assembler based on platform
+            if (platform.includes("PACBIO_SMRT") || platform.includes("OXFORD_NANOPORE")) {
+                // Long read platforms: use CANU
+                updateParameters({assemblySection: {runFastp: false, runBowtie2: false}});
+                updateParameters({assemblySection: {canu: true, megahit: false}});
+            } else if (platform) {
+                // Short read platforms: use Megahit and enable fastp and bowtie2
+                updateParameters({assemblySection: {runFastp: true, runBowtie2: true}});
+                updateParameters({assemblySection: {canu: false, megahit: true}});
+            }
+        }
+    }, [parameters.startSection.sequencingRunList, parameters.startSection.platform, parameters.startSection.sequencingRuns, parameters.startSection.sequencingFiles]);
 
     const uploadFile = async (files, type, run_id) => {
         const formData = new FormData();
@@ -69,97 +106,133 @@ export default function Settings() {
         }
     }
 
-    const proteinDBSearch = async (species, run_id) => {
+    const proteinDBSearch = async (species) => {
         const source = axios.CancelToken.source();
-        let proteinsSet = new Proteins();
-        let dbSearchResult = await getDBSearch(
-            species['taxonID'], 
-            source.token
-        );
-        if (dbSearchResult.success && dbSearchResult.data) {
-            proteinsSet = dbSearchResult.data;
-        } else {
-            let species_snakecase = {
-                'scientific_name': species.scientificName,
-                'taxid': species.taxonID,
+        
+        // Check if we already have DBS data from a previous search
+        let pastDBS = await getDBSearches(species['taxonID']);
+        
+        const newDBS = {
+            'uniprot': null,
+            'ensembl': null, 
+            'refseq': null,
+            'genbank': null,
+        };
+
+        // Load from past searches if available
+        if (pastDBS.status === 'success' && pastDBS.data) {
+            if (pastDBS.data.uniprot?.status === 'success') {
+                newDBS.uniprot = new DBSUniprot(new Date().getTime(), pastDBS.data.uniprot.data);
+            }
+            if (pastDBS.data.ensembl?.status === 'success') {
+                newDBS.ensembl = new DBSEnsembl(new Date().getTime(), pastDBS.data.ensembl.data);
+            }
+            if (pastDBS.data.refseq?.status === 'success') {
+                newDBS.refseq = new DBSRefSeq(new Date().getTime(), pastDBS.data.refseq.data);
+            }
+            if (pastDBS.data.genbank?.status === 'success') {
+                newDBS.genbank = new DBSGenBank(new Date().getTime(), pastDBS.data.genbank.data);
+            }
+            
+            // Return if we found all data from database
+            if (newDBS.uniprot && newDBS.ensembl && newDBS.refseq && newDBS.genbank) {
+                return newDBS;
+            }
+        }
+        
+        // Build taxonomy params for searches
+        let params = {
+            user: user,
+            taxonomy: {
+                'scientificName': species.scientificName,
+                'taxonId': species.taxonID,
                 'lineage': species.lineage,
                 'is_bacteria': species.is_bacteria,
-                'taxo_image_url': species.imageUrl
-            }
-            let params = {
-                user: user,
-                createNewDBS: true,
-                dbsearch: species_snakecase,
-                run_id: run_id
-            }
-            let dbsTaxonomyResults = await executeDBSearchRoute('dbs_taxonomy', params, source.token);
-            if (dbsTaxonomyResults.success && dbsTaxonomyResults.data) {
-                params.dbsearch = dbsTaxonomyResults.data;
-            } else {
-                console.warn('Taxonomy search failed or returned no data.');
-            }
+                'taxo_image_url': species.imageUrl,
+                'statistics': species.statistics
+            },
+            options: { active: true }
+        };
 
-            // Uniprot Proteome
-            let dbsUniprotProteomeResults = await executeDBSearchRoute('dbs_uniprot_proteome', params, source.token);
-            if (dbsUniprotProteomeResults.success && dbsUniprotProteomeResults.data) {
-                params.dbsearch = dbsUniprotProteomeResults.data;
-            } else {
-                console.warn('Uniprot Proteome search failed or returned no data.');
+        // Uniprot (if not already loaded)
+        if (!newDBS.uniprot) {
+            let dbsUniprotResults = await executeDBSearchRoute('dbs_uniprot', params, source.token);
+            if (dbsUniprotResults.success && dbsUniprotResults.data && dbsUniprotResults.data.status === 'success') {
+                newDBS.uniprot = new DBSUniprot(new Date().getTime(), dbsUniprotResults.data.data);
             }
-
-            // Ensembl
-            let dbsEnsemblResults = await executeDBSearchRoute('dbs_ensembl', params, source.token);
-            if (dbsEnsemblResults.success && dbsEnsemblResults.data) {
-                params.dbsearch = dbsEnsemblResults.data;
-            } else {
-                console.warn('Ensembl search failed or returned no data.');
-            }
-
-            // RefSeq
-            let dbsRefSeqResults = await executeDBSearchRoute('dbs_refseq', params, source.token);
-            if (dbsRefSeqResults.success && dbsRefSeqResults.data) {
-                params.dbsearch = dbsRefSeqResults.data;
-            } else {
-                console.warn('RefSeq search failed or returned no data.');
-            }
-
-            // GenBank
-            let dbsGenBankResults = await executeDBSearchRoute('dbs_genbank', params, source.token);
-            if (dbsGenBankResults.success && dbsGenBankResults.data) {
-                params.dbsearch = dbsGenBankResults.data;
-            } else {
-                console.warn('GenBank search failed or returned no data.');
-            }
-
-            proteinsSet.setUniprotSwissprot(params.dbsearch.data.taxonomy);
-            proteinsSet.setUniprotTrembl(params.dbsearch.data.taxonomy);
-            proteinsSet.setUniprotProteomes(params.dbsearch.data.uniprot_proteomes);
-            proteinsSet.setEnsembl(params.dbsearch.data.ensembl_annotated_genomes);
-            proteinsSet.setRefseq(params.dbsearch.data.ncbi_refseq_annotated_genomes);
-            proteinsSet.setGenbank(params.dbsearch.data.ncbi_genbank_annotated_genomes);
         }
-        return proteinsSet;
+
+        // Ensembl (if not already loaded)
+        if (!newDBS.ensembl) {
+            let dbsEnsemblResults = await executeDBSearchRoute('dbs_ensembl', params, source.token);
+            if (dbsEnsemblResults.success && dbsEnsemblResults.data && dbsEnsemblResults.data.status === 'success') {
+                newDBS.ensembl = new DBSEnsembl(new Date().getTime(), dbsEnsemblResults.data.data);
+            }
+        }
+
+        // RefSeq (if not already loaded)
+        if (!newDBS.refseq) {
+            let dbsRefSeqResults = await executeDBSearchRoute('dbs_refseq', params, source.token);
+            if (dbsRefSeqResults.success && dbsRefSeqResults.data && dbsRefSeqResults.data.status === 'success') {
+                newDBS.refseq = new DBSRefSeq(new Date().getTime(), dbsRefSeqResults.data.data);
+            }
+        }
+
+        // GenBank (if not already loaded)
+        if (!newDBS.genbank) {
+            let dbsGenBankResults = await executeDBSearchRoute('dbs_genbank', params, source.token);
+            if (dbsGenBankResults.success && dbsGenBankResults.data && dbsGenBankResults.data.status === 'success') {
+                newDBS.genbank = new DBSGenBank(new Date().getTime(), dbsGenBankResults.data.data);
+            }
+        }
+        
+        return newDBS;
     }
 
-    const selectProteinSet = (proteins) => {
+    const selectProteinSet = (dbs) => {
         const proteinSet = [];
-
-        ['uniprot_swissprot', 'uniprot_trembl'].forEach(key => {
-            if (proteins[key] && Object.keys(proteins[key]).length > 0) {
-                proteinSet.push(proteins[key]);
+        const targetTaxID = String(parameters.species.taxonID);
+        // Add Uniprot SwissProt and TrEMBL
+        if (dbs.uniprot) {
+            if (dbs.uniprot.swissprot && dbs.uniprot.swissprot.count > 0) {
+                proteinSet.push(dbs.uniprot.swissprot);
             }
-        });
-
-        ['uniprot_proteomes', 'ensembl', 'refseq', 'genbank'].forEach(key => {
-            if (Array.isArray(proteins[key]) && proteins[key].length > 0) {
-                const filteredProteins = proteins[key].filter(protein => 
-                    protein.taxid === parameters.species.taxonID
+            if (dbs.uniprot.trembl && dbs.uniprot.trembl.count > 0) {
+                proteinSet.push(dbs.uniprot.trembl);
+            }
+            
+            // Add UniProt Proteomes (up to 5)
+            if (dbs.uniprot.proteins && Array.isArray(dbs.uniprot.proteins)) {
+                const filteredProteomes = dbs.uniprot.proteins.filter(proteome => 
+                    String(proteome.taxid) === targetTaxID
                 );
-                if (filteredProteins.length > 0) {
-                    proteinSet.push(...filteredProteins.slice(0, 5));
-                }
+                proteinSet.push(...filteredProteomes.slice(0, 5));
             }
-        });
+        }
+
+        // Add Ensembl proteins (up to 5)
+        if (dbs.ensembl?.proteins && Array.isArray(dbs.ensembl.proteins)) {
+            const filteredEnsembl = dbs.ensembl.proteins.filter(protein => 
+                String(protein.taxid) === targetTaxID
+            );
+            proteinSet.push(...filteredEnsembl.slice(0, 5));
+        }
+
+        // Add RefSeq proteins (up to 5)
+        if (dbs.refseq?.proteins && Array.isArray(dbs.refseq.proteins)) {
+            const filteredRefSeq = dbs.refseq.proteins.filter(protein => 
+                String(protein.taxid) === targetTaxID
+            );
+            proteinSet.push(...filteredRefSeq.slice(0, 5));
+        }
+
+        // Add GenBank proteins (up to 5)
+        if (dbs.genbank?.proteins && Array.isArray(dbs.genbank.proteins)) {
+            const filteredGenBank = dbs.genbank.proteins.filter(protein => 
+                String(protein.taxid) === targetTaxID
+            );
+            proteinSet.push(...filteredGenBank.slice(0, 5));
+        }
 
         return proteinSet;
     };
@@ -176,6 +249,10 @@ export default function Settings() {
         }
         if (parameters.startSection.sequencing && parameters.startSection.sequencingFiles && parameters.startSection.sequencingFileList.length === 0) {
             alert("Please load at least one sequencing file.");
+            return false;
+        }
+        if (parameters.startSection.sequencing && parameters.startSection.sequencingFiles && !parameters.startSection.platform) {
+            alert("Please select a sequencing platform.");
             return false;
         }
         if (parameters.startSection.sequencing && parameters.startSection.sequencingRuns && parameters.startSection.sequencingRunList.length === 0) {
@@ -200,8 +277,10 @@ export default function Settings() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const freeCpus = await fetchCPUs();
-        if (!checkParameters() || freeCpus === 0) {
-            alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
+        if (!checkParameters()) {
+            if (freeCpus === 0) {
+                alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
+            }
             return;
         }
         console.log('freeCpus:', freeCpus);
@@ -211,7 +290,13 @@ export default function Settings() {
         try {
             console.log('Run started with parameters:', parameters);
             let stepList = calculateStepLists();
-            const createRunResponse = await axios.post(`${CONFIG.API_BASE_URL}/create_run`, { run_id: runId, cpus: freeCpus, parameters: parameters, user: user, stepList: stepList });
+            const createRunResponse = await axios.post(`${CONFIG.API_BASE_URL}/create_run`, {
+                run_id: runId, 
+                cpus: freeCpus, 
+                parameters: parameters, 
+                user: user, 
+                stepList: stepList
+            });
             await addAnnotation(createRunResponse.data);
             navigate('/my-annotations', { state: { from: 'settings' } });
 
@@ -252,20 +337,11 @@ export default function Settings() {
                     await updateAnnotation(user, runId, 'progress', 'Uploading custom evidence files ...');
                     customEvidenceFileOnServer = await uploadFile(parameters.annotationSection.customEvidenceFileList, 'evidence', runId);
                 } else {
-                    let proteinsSet = null;
-                    let proteinsDBSearch;
-                    if (!dbsearch) {
-                        await updateAnnotation(user, runId, 'progress', 'Searching for evidences (proteins) in the databases ...');
-                        proteinsDBSearch = await proteinDBSearch(parameters.species, runId);
-                        await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, {
-                            run_id: runId, 
-                            user: user,
-                        });
-                    } else {
-                        proteinsDBSearch = dbsearch.proteins;
-                    }
+                    await updateAnnotation(user, runId, 'progress', 'Searching for evidences (proteins) in the databases ...');
+                    const dbsResult = await proteinDBSearch(parameters.species);
+                    
                     await updateAnnotation(user, runId, 'progress', 'Selecting and downloading evidences (proteins) from the database search ...');
-                    proteinsSet = selectProteinSet(proteinsDBSearch);
+                    const proteinsSet = selectProteinSet(dbsResult);
                     customEvidenceFileOnServer = await handleClickDownload(proteinsSet, 'proteins', false, runId);
                     await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, 
                     { run_id: runId, 
@@ -282,27 +358,36 @@ export default function Settings() {
         }
     };
 
-    const handleClickSpeciesSearch = async () => {
+    const handleClickSpeciesSearch = async (speciesNameOrEvent) => {
         if (cancelTokenSource) {
             cancelTokenSource.cancel();
         }
 
+        const speciesName = typeof speciesNameOrEvent === 'string' 
+            ? speciesNameOrEvent 
+            : inputSpecies;
+        if (!speciesName || speciesName.trim() === '') {
+            setSpeciesSearchError("Please enter a species name");
+            return;
+        }
         const source = axios.CancelToken.source();
         setCancelTokenSource(source);
         setIsLoading(true); 
-        const currentSpeciesFound = await speciesExists(inputSpecies);
+        const currentSpeciesFound = await speciesExists(speciesName);
         setIsLoading(false);
+
         if (currentSpeciesFound) {
             updateParameters({'species': {
-                'scientificName': currentSpeciesFound.scientificName,
-                'taxonID': currentSpeciesFound.taxonId,
-                'lineage': currentSpeciesFound.lineage,
-                'is_bacteria': currentSpeciesFound.is_bacteria,
-                'imageUrl': currentSpeciesFound.taxo_image_url
+                'scientificName': currentSpeciesFound.data.scientificName,
+                'taxonID': currentSpeciesFound.data.taxonId,
+                'lineage': currentSpeciesFound.data.lineage,
+                'is_bacteria': currentSpeciesFound.data.is_bacteria,
+                'imageUrl': currentSpeciesFound.taxo_image_url,
+                'statistics': currentSpeciesFound.data.statistics
             }})
             setSpeciesSearchError(null);
         } else {
-            setSpeciesSearchError(inputSpecies);
+            setSpeciesSearchError(speciesName);
             updateParameters({'species': null });
         }
         
@@ -328,9 +413,7 @@ export default function Settings() {
             if (parameters.annotationSection.customEvidence) {
                 stepList.push({ type: 'minor', name: 'Uploading custom evidence files ...', number: stepCount++ });
             } else {
-                if (!dbsearch) {
-                    stepList.push({ type: 'major', name: 'Searching for evidences (proteins) in the databases ...', number: stepCount++ });
-                }
+                stepList.push({ type: 'major', name: 'Searching for evidences (proteins) in the databases ...', number: stepCount++ });
                 stepList.push({ type: 'minor', name: 'Selecting and downloading evidences (proteins) from the database search ...', number: stepCount++ });
             }
         }   
@@ -338,13 +421,19 @@ export default function Settings() {
             if (parameters.startSection.sequencingRuns) {
                 stepList.push({ type: 'major', name: 'Downloading sequencing files from SRA ...', number: stepCount++ });
             }
-            if (!parameters.startSection.skipFastp) {
+            // Preprocessing steps (for both Megahit and CANU if requested)
+            if (parameters.assemblySection.runFastp) {
                 stepList.push({ type: 'major', name: 'Running fastp on sequencing files ...', number: stepCount++ });
             }
-            if (!parameters.startSection.skipPhix) {
+            if (parameters.assemblySection.runBowtie2) {
                 stepList.push({ type: 'major', name: 'Removing Phix from sequencing files ...', number: stepCount++ });
             }
-            stepList.push({ type: 'major', name: 'Running Megahit assembly ...' });
+            // Add assembler step based on selected assembler
+            if (parameters.assemblySection.canu) {
+                stepList.push({ type: 'major', name: 'Running CANU assembly ...', number: stepCount++ });
+            } else {
+                stepList.push({ type: 'major', name: 'Running Megahit assembly ...', number: stepCount++ });
+            }
         }
 
         if (parameters.buscoSection.assembly) {
@@ -380,7 +469,7 @@ export default function Settings() {
         <div className="page">
             <div className="navigation-buttons">
                 <button className="t2_bold left" onClick={() => navigate('/', { state: { from: 'settings' } })}>Back Home</button>   
-                <div></div>
+                <button className="t2_bold right" onClick={() => navigate('/functional-annotation', { state: { from: 'settings' } })}>Functional Annotation</button>
             </div>
             <div className="settings-container">
                 <h2 className="home-h2">Create Annotation</h2>
@@ -407,6 +496,12 @@ export default function Settings() {
                         <SectionStart updateParameters={updateParameters} parameters={parameters}/>
                     </div>
                 </div>
+                {parameters.startSection.sequencing && parameters.startSection.platform && (
+                    <>
+                        <h3>Assembly Method</h3>
+                        <SectionAssembly updateParameters={updateParameters} parameters={parameters}/>
+                    </>
+                )}
                 <h3>Proteins prediction</h3>
                 <SectionAnnotation updateParameters={updateParameters} parameters={parameters}/>
                 
@@ -418,16 +513,21 @@ export default function Settings() {
                 )}
                    
                 
-                <h3>Proteins name assignment</h3>
+                <h3>Functional Annotation</h3>
                 <SectionBrownaming updateParameters={updateParameters} parameters={parameters}/>
                 <h3>Busco completness evaluation</h3>
                 <SectionBusco updateParameters={updateParameters} parameters={parameters}/>
-                <button className="submit-button t3" onClick={handleSubmit}>Run Brownotate</button>
             </div>
-            {/* <div className="debugging-container">
+            <button 
+                className="run-annotation-btn btn-tab-style active t3" 
+                onClick={handleSubmit}
+            >
+                Run Brownotate
+            </button>
+            <div className="debugging-container">
                 <h3>Debugging Information</h3>
                 <pre>{JSON.stringify(parameters, null, 2)}</pre>
-            </div> */}
+            </div>
             {isLoading && (<Loading/>)}
         </div>
     )

@@ -1,7 +1,6 @@
 .my-annotations-container {
     width: 99%;
     margin: 20px auto;
-    border: solid 1px #288cbb;
     align-items: flex-start;
 }
 
@@ -11,7 +10,7 @@
 	width: 95%;
 	position: relative;
 	border: 2px solid #288cbb;
-	border-radius: 10px;;
+	border-radius: 10px;
 }
 
 .taxonomy-annotation-card {
@@ -32,6 +31,23 @@
     flex: 1 0 90%;
     text-align: left;
     min-height: 60px;
+}
+
+.annotation-card .refresh-btn {
+	position: absolute;
+	right: 50px;
+	top: 10px;
+    background-color: #288cbb;
+	transition: background-color 0.3s ease, transform 0.3s ease;
+	color: #cddfeb;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.annotation-card .refresh-btn:hover {
+    background-color: #357ABD;
+    transform: scale(1.05);
 }
 
 .annotation-card .delete-btn {
@@ -136,5 +152,27 @@ span {
 
 .annotation-details button {
 	flex: 1 1 50%;
+}
+
+.functional-badge {
+	background-color: #aa00ff;
+	color: white;
+	padding: 2px 8px;
+	border-radius: 5px;
+	font-weight: bold;
+	width: fit-content;
+	margin: 5px;
+}
+
+.functional-status {
+	margin: 20px 5px;
+}
+
+.functional-status.completed {
+	color: #007e11;
+}
+
+.functional-status.failed {
+	color: #ff0000;
 }
 

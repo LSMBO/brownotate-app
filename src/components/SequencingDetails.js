@@ -7,7 +7,12 @@ const SequencingDetails = ({runs, displaySpecies}) => {
     
     const handleRemoveRun = (accession) => {
         const newSequencingRunList = parameters.startSection.sequencingRunList.filter(run => run.accession !== accession);
-        updateParameters({startSection: {sequencingRunList: newSequencingRunList}})
+        
+        if (newSequencingRunList.length === 0) {
+            updateParameters({startSection: {sequencingRunList: newSequencingRunList, platform: ""}});
+        } else {
+            updateParameters({startSection: {sequencingRunList: newSequencingRunList}});
+        }
     };
     
     return (
@@ -39,7 +44,7 @@ const SequencingDetails = ({runs, displaySpecies}) => {
                     </div>
                     <div className="run-unit">
                         <label>Platform:&nbsp;</label>
-                        <p className={!run.optimalPlatform ? "non-opti" : "green"}>{run.platform} ({run.experimentInstrumentModel})</p>
+                        <p>{run.platform} ({run.experimentInstrumentModel})</p>
                     </div>
                     <div className="run-unit">
                         <label>Layout:&nbsp;</label>
@@ -47,11 +52,11 @@ const SequencingDetails = ({runs, displaySpecies}) => {
                     </div>
                     <div className="run-unit">
                         <label>Strategy:&nbsp;</label>
-                        <p className={!run.optimalStrategy ? "non-opti" : "green"}>{run.strategy}</p>
+                        <p>{run.strategy}</p>
                     </div>
                     <div className="run-unit">
                         <label>Selection:&nbsp;</label>
-                        <p className={!run.optimalSelection ? "non-opti" : "green"}>{run.selection}</p>
+                        <p>{run.selection}</p>
                     </div>
                     {displaySpecies && (
                         <div className="run-unit">
@@ -62,7 +67,7 @@ const SequencingDetails = ({runs, displaySpecies}) => {
                     {displaySpecies && parameters.species.scientificName && parameters.species.scientificName !== run.scientificName && (
                         <div className="run-unit">
                             <label></label>
-                            <p className='non-opti'><i>Warning: The sequenced organism differs from {parameters.species.scientificName}</i></p>
+                            <p><i>Warning: The sequenced organism differs from {parameters.species.scientificName}</i></p>
                         </div>
                     )}
                 </div>

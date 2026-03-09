@@ -1,15 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import HelpIcon from "../../assets/help.png";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons';
 import FormElementInputRadio from "./FormElementInputRadio";
 import FormElementInputFile from "./FormElementInputFile";
+import FormElementSelect from "./FormElementSelect";
 import SequencingRuns from "./SequencingRuns";
 import SequencingDetails from "../../components/SequencingDetails";
 
 export default function SectionStart({ updateParameters, parameters }) {
   const [activeTab, setActiveTab] = useState(parameters.startSection.assembly ? "Assembly" : "Sequencing");
-  const [expanded, setExpanded] = useState(false);
+
+  // Auto-update platform when sequencing runs change
+  useEffect(() => {
+    if (parameters.startSection.sequencingRuns && parameters.startSection.sequencingRunList.length > 0) {
+      const firstRun = parameters.startSection.sequencingRunList[0];
+      const platform = firstRun.platform || '';
+      updateParameters({startSection: {platform: platform}});
+    }
+  }, [parameters.startSection.sequencingRunList]);
+
+  const platformOptions = [
+    { value: "", label: "Select platform" },
+    { value: "ILLUMINA", label: "ILLUMINA" },
+    { value: "BGISEQ", label: "BGISEQ" },
+    { value: "ION TORRENT", label: "ION TORRENT" },
+    { value: "PACBIO_SMRT", label: "PACBIO SMRT" },
+    { value: "OXFORD_NANOPORE", label: "OXFORD NANOPORE" }
+  ];
 
   const toggleTab = (tab) => {
     if (tab === "Sequencing"){
@@ -45,7 +61,7 @@ export default function SectionStart({ updateParameters, parameters }) {
         updateParameters({startSection: {assemblyFile: files[0], assemblyAccession: files[0].name, sequencingFiles: false, sequencingRuns: false}});
       }
     }
-  };  
+  };
 
   const handleRadioChange = (name, isChecked) => {
     if (isChecked) {
@@ -53,18 +69,12 @@ export default function SectionStart({ updateParameters, parameters }) {
         updateParameters({startSection: {sequencing: true, assemblyFile: false, sequencingRuns: true, sequencingFiles: false, sequencingFileList: [] }});
       } else if (name === "Custom Sequencing file(s)") {
         updateParameters({startSection: {sequencing: true, assemblyFile: false, sequencingRuns: false, sequencingFiles: true }});
-      } else if (name === "Skip fastp") {
-        updateParameters({startSection: {skipFastp: true}});
-      } else if (name === "Skip phix removing") {
-        updateParameters({startSection: {skipPhix: true}});
-      }
-    } else {
-      if (name === "Skip fastp") {
-        updateParameters({startSection: {skipFastp: false}});
-      } else if (name === "Skip phix removing") {
-        updateParameters({startSection: {skipPhix: false}});
       }
     }
+  };
+
+  const handlePlatformChange = (value) => {
+    updateParameters({startSection: {platform: value}});
   };
 
   return (
@@ -109,30 +119,16 @@ export default function SectionStart({ updateParameters, parameters }) {
                 allowMultiple={true}
               />
             </div>
-            <div className="expanded-label">
-              <label>Advanced parameters</label>
-              <FontAwesomeIcon icon={expanded ? faAngleUp : faAngleDown} className="expand-icon" onClick={() => setExpanded(!expanded)}/>
+            <div className="form-element">
+              <FormElementSelect
+                label="Sequencing platform"
+                help="Select the sequencing platform used to generate the data. This will determine the assembly strategy (Canu for long reads, Megahit for short reads)."
+                options={platformOptions}
+                value={parameters.startSection.platform}
+                onChange={handlePlatformChange}
+                disabled={parameters.startSection.sequencingRuns}
+              />
             </div>
-            {expanded && (
-              <div>
-                <div className="form-element">
-                  <FormElementInputRadio 
-                    label="Skip fastp" 
-                    help="Fastp filters out low-quality reads in sequencing. If you have already refined your sequencing, you can skip this step." 
-                    checked={parameters.startSection.skipFastp} 
-                    onChange={handleRadioChange}
-                  />
-                </div>
-                <div className="form-element">
-                  <FormElementInputRadio 
-                    label="Skip phix removing" 
-                    help="Illumina sequencing is often carried out using phix virus to control quality. Eliminating reads that appear to be phix virus is good practice, but you can skip this step if you don't have Illumina sequencing." 
-                    checked={parameters.startSection.skipPhix} 
-                    onChange={handleRadioChange}
-                  />
-                </div>
-              </div>
-            )}
           </div>
           
           <div className={`tab-content ${activeTab === 'Assembly' ? 'active-content' : ''}`}>

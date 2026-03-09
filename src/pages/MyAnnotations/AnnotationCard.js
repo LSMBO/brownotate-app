@@ -24,6 +24,11 @@ const AnnotationCard = ({ user, annotation }) => {
         });
     };
 
+    const handleRefreshRun = async (e) => {
+      e.stopPropagation();
+      fetchUserAnnotations(user, true);
+    }
+
     const handleDeleteRun = async (e) => {
       e.stopPropagation();
       const confirmDelete = window.confirm("Are you sure you want to completely delete this annotation?");
@@ -46,15 +51,37 @@ const AnnotationCard = ({ user, annotation }) => {
       e.stopPropagation();
       fetchCPUs();
       await updateAnnotation(user, annotation.parameters.id, 'status', 'running');
-      handleAnnotationRun(annotation.parameters.id, user, updateAnnotation, true)
+      
+      const isFunctionalAnnotation = annotation.parameters.type === 'functional';
+      if (isFunctionalAnnotation) {
+        try {
+          console.log("Resuming Brownaming for run ID:", annotation.parameters.id);
+          const brownamingResult = await axios.post(`${CONFIG.API_BASE_URL}/run_brownaming`, { 'resume': true, 'run_id': annotation.parameters.id });
+          await updateAnnotation(user, annotation.parameters.id, 'resumeData', {
+              'brownamingResults': brownamingResult.data.output_files,
+              'brownaming_dir': brownamingResult.data.brownaming_dir
+          });    
+          await axios.post(`${CONFIG.API_BASE_URL}/set_annotation_completed`, { 'run_id': annotation.parameters.id })
+
+        } catch (error) {
+            await updateAnnotation(user, annotation.parameters.id, 'status', 'failed');
+            await updateAnnotation(user, annotation.parameters.id, 'error', error.response?.data || error.message);
+        }   
+
+      } else {
+        handleAnnotationRun(annotation.parameters.id, user, updateAnnotation, true);
+      }
     }
 
     const handleClick = (tab) => {
         navigate(`/my-annotations/${annotation.parameters.id}`, { state: { tab: tab } });
     };
 
+    const isFunctionalAnnotation = annotation.parameters.type === 'functional';
+
     return (
       <div className={`annotation-card t2_light ${annotation.status}`}>
+        <button className="refresh-btn" onClick={async (e) => { await handleRefreshRun(e); }}>REFRESH</button>
         <button className="delete-btn" onClick={async (e) => { await handleDeleteRun(e); }}>X</button>
 
         <div className="taxonomy-annotation-card">
@@ -66,10 +93,16 @@ const AnnotationCard = ({ user, annotation }) => {
             <label>{formatDate(annotation.parameters.id)}</label>
           </div>
         </div>
-        <AnnotationProgressBar annotation={annotation} waitingTime={waitingTime}/>
+        {isFunctionalAnnotation && <label className="functional-badge">Functional Annotation</label>}
+        {!isFunctionalAnnotation && (
+          <AnnotationProgressBar annotation={annotation} waitingTime={waitingTime}/>
+        )}
+        {isFunctionalAnnotation && (
+          <label className={`functional-status ${annotation.status}`}><b>Status:</b> {annotation.status}</label>
+        )}
         <div className="annotation-details">
-          <button onClick={ () => handleClick('parameters') }>Parameters</button>
-          <button disabled={annotation.status !== "completed"} onClick={ () => handleClick('results') }>Results</button>
+          <button className='t2_bold btn-tab-style' onClick={ () => handleClick('parameters') }>Parameters</button>
+          <button className='t2_bold btn-tab-style' disabled={annotation.status !== "completed"} onClick={ () => handleClick('results') }>Results</button>
         </div>
         {annotation.status === "failed" && (
           <h4>Pipeline failed</h4>

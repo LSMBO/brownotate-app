@@ -18,7 +18,7 @@ export default function SpeciesInput({inputSpecies, setInputSpecies, searchError
                     placeholder="Enter your species ..."
                     onChange={handleChange}
                 />
-                <button className="t2_bold dbsearch-btn" onClick={onClick} disabled={!inputSpecies}>{buttonLabel}</button>   
+                <button className="t2_bold btn-tab-style" onClick={onClick} disabled={!inputSpecies}>{buttonLabel}</button>   
             </div>
             {searchError && 
                 <p className="error-message">The taxonomy {searchError} has not been found in UniProt. Please retry with the taxonID or another name.</p>

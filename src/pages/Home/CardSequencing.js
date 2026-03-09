@@ -1,14 +1,18 @@
-import React from 'react';
 import SequencingBatch from './SequencingBatch';
 import SequencingDetails from '../../components/SequencingDetails';
+import DBSLoading from './DBSLoading';
 import { useNavigate } from "react-router-dom";
 
 const CardSequencing = ({ dnaseq, selectedSequencingBatch, updateSelectedSequencingBatch, dbSearchInProgress }) => {
 
     const navigate = useNavigate();
 
+    if (!dnaseq || !dnaseq.batches || dnaseq.batches.length === 0) {
+        return <DBSLoading />;
+    }
+
     return (
-        <div className="sequencing-container">                    
+        <div className="sequencing-container">                
             <div className='batch-container'>
                 <div className='batch-headers'>
                     <h4>Sequencing Datasets</h4>
@@ -57,7 +61,7 @@ const CardSequencing = ({ dnaseq, selectedSequencingBatch, updateSelectedSequenc
                 </div>
             </div>
             <button 
-                className="t2_bold" 
+                className="t2_bold btn-tab-style" 
                 disabled={!selectedSequencingBatch || Object.keys(selectedSequencingBatch).length === 0} 
                 onClick={() => {
                     if (dbSearchInProgress) {

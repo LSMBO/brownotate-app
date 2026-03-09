@@ -1,0 +1,185 @@
+.dbsearch-options-container {
+    margin: 20px auto;
+    width: 90%;
+    flex-direction: row;
+    border: 1px solid #288cbb;
+    border-radius: 8px;
+    background-color: white;
+    padding: 15px;
+}
+
+.dbsearch-options-container ul {
+    width: 50%;
+}
+
+.dbsearch-options-container li {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.dbsearch-options-container li:hover:not(.disabled) {
+    background-color: rgba(40, 140, 187, 0.1);
+    transform: translateX(5px);
+}
+
+.dbsearch-options-container li.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dbsearch-options-container li input[type="checkbox"] {
+    width: auto;
+    margin-right: 10px;
+    cursor: pointer;
+    pointer-events: none; /* Handled by li onClick */
+}
+
+.dbsearch-options-container li label {
+    color: var(--option-color);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    pointer-events: none; /* Handled by li onClick */
+}
+
+.dbsearch-options-container li[data-color="uniprot"] {
+    --option-color: #9b59b6;
+}
+
+.dbsearch-options-container li[data-color="ensembl"] {
+    --option-color: #e74c3c;
+}
+
+.dbsearch-options-container li[data-color="refseq"] {
+    --option-color: #3498db;
+}
+
+.dbsearch-options-container li[data-color="genbank"] {
+    --option-color: #f39c12;
+}
+
+.dbsearch-options-container li[data-color="dnaseq"] {
+    --option-color: #27ae60;
+}
+
+.dbsearch-options-container li[data-color="phylogeny"] {
+    --option-color: #e67e22;
+}
+
+/* DNA Sequencing Options */
+.dnaseq-options-section {
+    margin-top: 15px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.dnaseq-options-section > label {
+    display: block;
+    font-weight: bold;
+    color: #27ae60;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+.dnaseq-options-block {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.dnaseq-options-group {
+    margin-bottom: 15px;
+}
+
+.dnaseq-options-group:last-child {
+    margin-bottom: 0;
+}
+
+.dnaseq-group-label {
+    display: block;
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.dnaseq-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #000;
+}
+
+.dnaseq-checkbox-label input[type="checkbox"] {
+    width: auto;
+}
+
+.platform-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.platform-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #000;
+    cursor: pointer;
+}
+
+.platform-checkboxes input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #000;
+    cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+    width: auto;
+    cursor: pointer;
+}
+
+/* Coverage Inputs */
+.coverage-inputs {
+    flex-direction: row;
+    align-items: center;
+}
+
+.coverage-inputs input[type="number"] {
+    width: 60px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.coverage-inputs span {
+    color: #666;
+    font-size: 0.9rem;
+}

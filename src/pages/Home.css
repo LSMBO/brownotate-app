@@ -1,20 +1,3 @@
-.card-container-header {
-    flex-direction: row;
-    display: flex;
-    width: 100%;
-}
-
-.card-container-header h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.card-container-header label {
-    color: #555;  
-    text-align: center;
-}
-
 .database-search-description {
     width: 80%;
     margin: 10px;
@@ -24,17 +7,22 @@
 .database-search-description .step {
     flex-direction: row;
     align-items: center;
-} 
-
-.step svg {
     cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
 }
+
+.database-search-description .step:hover {
+    background-color: #f0f0f0;
+} 
 
 .database-search-description label{
     color: black;
     font-weight: bold;
     text-align: left;
     margin: 10px;
+    cursor: pointer;
 }
 
 .database-search-description p {
@@ -87,8 +75,9 @@
     display: block;
 }
 
-.batch-container .batch-infos{
-    width: 40%;
+.batch-infos > ul {
+    padding: 0;
+    margin: 10px
 }
 
 table {
@@ -135,16 +124,13 @@ th, td {
     border: 1px solid #288cbb;
     border-radius: 10px;;
     width: auto;
+    font-size: 14px;
 }
 
 .run-unit {
     display: flex;
     width: 100%;
     flex-direction: row;
-}
-
-.run-unit .non-opti {
-    color: red;
 }
 
 .run-unit label {
@@ -176,7 +162,7 @@ th, td {
     margin: auto;
 }
 
-.dbsearch-status span {
+.dbsearch-status-text {
     animation: loadingAnimation 1.5s infinite;
 }
 
@@ -211,3 +197,16 @@ th, td {
     font-weight: bold;
 }
 
+/* Search mode selector */
+.search-mode-selector {
+    display: flex;
+    margin: 30px 0;
+    justify-content: space-evenly;
+    flex-direction: row;
+}
+
+/* Results layout */
+.results-layout {
+    flex-direction: row;
+    margin-top: 20px;
+}

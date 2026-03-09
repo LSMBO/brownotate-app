@@ -1,0 +1,295 @@
+.load-previous-btn {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin: 10px 0;
+}
+
+.load-previous-btn:hover:not(:disabled) {
+    background-color: #1d4ed8;
+}
+
+.load-previous-btn:disabled {
+    background-color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+.modal-loading, .modal-empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 16px;
+}
+
+.taxonomy-selector {
+    padding: 20px 0;
+}
+
+.taxonomy-selector label {
+    margin: 10px;
+    font-weight: 600;
+}
+
+.taxonomy-search-container {
+    position: relative;
+    width: 100%;
+    margin: 10px;
+}
+
+.taxonomy-search-input {
+    width: calc(100% - 20px);
+    padding: 10px 12px;
+    border: 2px solid #288cbb;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.taxonomy-search-input:focus {
+    outline: none;
+    border-color: #357ABD;
+    box-shadow: 0 0 0 3px rgba(40, 140, 187, 0.1);
+}
+
+.taxonomy-suggestions {
+    border: 2px solid #288cbb;
+    border-top: none;
+    border-right: none;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    flex-direction: row;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f8ff;
+}
+
+.suggestion-item.no-results {
+    cursor: default;
+    color: #6b7280;
+    font-style: italic;
+    justify-content: center;
+}
+
+.suggestion-item.no-results:hover {
+    background-color: transparent;
+}
+
+.suggestion-taxid {
+    color: #6b7280;
+    font-size: 12px;
+    margin-left: 10px;
+    white-space: nowrap;
+}
+
+.collections-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.collection-section {
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    transition: border-color 0.2s;
+}
+
+.collection-section.uniprot { border-left-width: 4px; border-left-color: #9b59b6; }
+.collection-section.ensembl { border-left-width: 4px; border-left-color: #e74c3c; }
+.collection-section.refseq { border-left-width: 4px; border-left-color: #3498db; }
+.collection-section.genbank { border-left-width: 4px; border-left-color: #f39c12; }
+.collection-section.dnaseq { border-left-width: 4px; border-left-color: #27ae60; }
+.collection-section.phylogeny { border-left-width: 4px; border-left-color: #e67e22; }
+
+.collection-header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between
+}
+
+.collection-header.clickable {
+    cursor: pointer;
+}
+
+.collection-header.clickable:hover {
+    background-color: #f3f4f6;
+}
+
+.collection-header label {
+    font-weight: 600;
+    color: #1f2937;
+    width: auto;
+    margin: 0;
+    justify-content: space-between;
+}
+
+.count-badge {
+    background-color: #288cbb;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.no-data {
+    color: #9ca3af;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.expand-icon {
+    color: #6b7280;
+    font-size: 14px;
+    transition: transform 0.2s;
+}
+
+.collection-items {
+    border-top: 1px solid #e5e7eb;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.collection-item {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.collection-item:last-child {
+    border-bottom: none;
+}
+
+.collection-item:hover {
+    background-color: #fafafa;
+    cursor: pointer;
+}
+
+.collection-item.selected {
+    background-color: #e0f2fe;
+}
+
+.collection-item.selected:hover {
+    background-color: #bae6fd;
+}
+
+.item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.item-date {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.item-options {
+    font-size: 12px;
+    color: #6b7280;
+    font-family: monospace;
+}
+
+.btn-phylogeny {
+    background-color: #8b5cf6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-phylogeny:hover:not(:disabled) {
+    background-color: #7c3aed;
+}
+
+.btn-phylogeny:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.6;
+}

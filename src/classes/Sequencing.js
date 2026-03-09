@@ -13,8 +13,6 @@ export default class Sequencing {
                 totalSize: batch['total_size_gb'] || 0,
                 scientificName: batch['scientific_name'] || "",
                 taxid: batch['taxid'] || "",
-                isOptimal: batch['optimal_sequencing_set'] || false,
-                optimalSize: batch['optimal_size'] || 0,
                 identifier: batch_identifier++,
                 accessionList: runs.map(run => run.accession),
                 assemblyExpectedSize: batch['assembly_expected_size'] || 0,

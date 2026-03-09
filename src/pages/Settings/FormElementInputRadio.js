@@ -1,12 +1,12 @@
 
 import HelpIcon from "../../assets/help.png";
 
-export default function FormElementInputRadio({ disabled, label, help, checked, onChange }) {
+export default function FormElementInputRadio({ disabled, label, help, checked, onChange, name }) {
 
 
     const handleClick = () => {
         new Promise((resolve) => {
-            onChange(label, !checked);
+            onChange(name || label, !checked);
           resolve();
         })
       };

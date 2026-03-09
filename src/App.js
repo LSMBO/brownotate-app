@@ -7,10 +7,12 @@ import Home from './pages/Home';
 import Settings from './pages/Settings';
 import AnnotationResults from './pages/AnnotationResults';
 import MyAnnotations from './pages/MyAnnotations';
+import FunctionalAnnotation from './pages/FunctionalAnnotation';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import { UserProvider } from './contexts/UserContext';
 import { ParametersProvider } from './contexts/ParametersContext';
+import { FAParametersProvider } from './contexts/FAParametersContext';
 import { DBSearchProvider } from './contexts/DBSearchContext'
 import { AnnotationsProvider } from './contexts/AnnotationsContext'
 
@@ -22,19 +24,22 @@ export default function App() {
         <AnnotationsProvider>
           <DBSearchProvider>
             <ParametersProvider>
-              <Header />
-              <Router>
-                <Routes>
-                  <Route path="/" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
-                  <Route path="/about" element={isLoggedIn ? <About /> : <Navigate to="/login" />} />
-                  <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
-                  <Route path="/my-annotations" element={isLoggedIn ? <MyAnnotations /> : <Navigate to="/login" />} />
-                  <Route path="/my-annotations/:id" element={isLoggedIn ? <AnnotationResults /> : <Navigate to="/login" />} />
-                  <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </Router>
-              <Footer />
+              <FAParametersProvider>
+                <Header />
+                <Router>
+                  <Routes>
+                    <Route path="/" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
+                    <Route path="/about" element={isLoggedIn ? <About /> : <Navigate to="/login" />} />
+                    <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
+                    <Route path="/my-annotations" element={isLoggedIn ? <MyAnnotations /> : <Navigate to="/login" />} />
+                    <Route path="/my-annotations/:id" element={isLoggedIn ? <AnnotationResults /> : <Navigate to="/login" />} />
+                    <Route path="/functional-annotation" element={isLoggedIn ? <FunctionalAnnotation /> : <Navigate to="/login" />} />
+                    <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </Router>
+                <Footer />
+              </FAParametersProvider>
             </ParametersProvider>
           </DBSearchProvider>
         </AnnotationsProvider>

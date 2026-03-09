@@ -197,109 +197,111 @@ This command will prompt you to specify the domain for which to create the certi
 ## Using the Interface
 
 #### Login
-Once the interface has been successfully configured, you can access the interface. Start by entering your email and password. These credentials must be added by an administrator in the mongodb database on the Brownotate server (see instructions in [Brownotate GitHub](https://github.com/LSMBO/Brownotate)).
+Once the interface has been successfully configured, you can access the interface. Start by entering your email and password. These credentials must be added by an administrator in the mongodb database on the Brownotate server (see instructions in [Brownotate GitHub](https://github.com/LSMBO/Brownotate)). 
+If authentication is successful, you will be redirected to the **Home** page.
 
-If authentication is successful, you will be redirected to the **Home** page, where you can search for species by entering the Latin name or Taxonomic ID. You have two options:
+#### Home (Database Search)
 
-1. **Database Search**  
-   
-   This triggers a request to the Brownotate server to find available biological data for the species. If a Database search has already been carried out for your species, the interface will display the results with the date of the corresponding search. The option **Retry the search with today's data** appears to execute a new Database search.
+This page provides access to publicly available biological data for any species. A Latin name or Taxonomic ID can be entered, followed by a click on Search. The interface then queries the Brownotate server to retrieve available datasets.
+A table at the bottom of the page lists proteins, assemblies, and sequencing datasets from NCBI (RefSeq, GenBank, SRA), ENSEMBL, and UniProtKB. Each entry includes a link to the corresponding database page.
+Protein datasets can be downloaded, and assemblies or sequencing datasets can be selected to configure an annotation run via the Configure the run with the selected sequencing/assembly button.
+Database searches can be customized by disabling specific sources, which is useful when certain data types (e.g., sequencing datasets) are not required.
+Previously completed searches can be reloaded using the Load previous searches button.
+Once loaded, the results table appears.
+A phylogeny map showing the taxonomic distance between retrieved species can be generated using the purple button below the table.
+The 'How does it work' button provides additional information about the search process.
+Navigation from the Home page is possible toward the My Annotations or Settings pages.
 
-   The Database search can take up to fifteen minutes, depending on the organism.
-   
-   The interface displays proteins, assemblies, and sequencing datasets from NCBI, ENSEMBL, and UniprotKB Databases. Each available resource can be evaluated by navigating to its page in the database (clickable link). You can then select and download a protein dataset. You can also select an assembly or sequencing dataset and click **Configure the run with the sequencing/assembly selected** to go to the Settings page.
+#### Settings
 
-2. **Settings**  
+This page is used to configure and launch the Brownotate annotation pipeline.
+The settings are organized into several sections.
 
-   You can directly navigate to the **Settings** page.
+*Start Section*
 
-#### Settings Page
+This section defines the genomic input data to annotate:
 
-On this page, you can configure your Brownotate run. Start by specifying whether you are working with a sequencing dataset or an assembly.  
+Sequencing data
+-	FASTQ files can be uploaded directly, or
+-	An SRA accession number (typically starting with SRR or ERR) can be provided
+-	When uploading custom FASTQ files, the sequencing platform must be specified
 
-- If you choose sequencing, you can either upload a FASTQ file from your computer or provide an accession number to download the dataset automatically. Accession numbers are the identifier in the SRA database that often start with **SRR** or **ERR**.  
+Assembly data
+-	A FASTA file can be uploaded
 
-- If you choose assembly, you have to upload a FASTA file from your computer. 
+If data were selected from the Database Search page, the corresponding fields are automatically pre-filled.
 
-If you had selected data from the Database Search, the datasets will already be filled in for you.
+*Assembly Section*
 
-Next, you can skip certain steps in the Brownotate pipeline or modify parameters. 
+The assembly workflow depends on the sequencing technology:
 
-- Sequencing advanced parameters: You can choose to skip fastp, which filters out low-quality reads, and/or bypass the removal of reads associated with the phix virus genome. This virus is used in some Illumina sequencing processes for quality control.
+-	Short reads (Illumina or similar): The assembler Megahit is used. 
+Optional preprocessing steps include:
+-	fastp: removal of low-quality reads
+-	Bowtie2 (PhiX removal): removal of PhiX spike-in reads
 
-*Annotation section*
+-	Long reads (PacBio or Nanopore): The assembler CANU is used.
+CANU performs trimming and quality control internally, so fastp and Bowtie2 are not shown.
 
-Protein evidences: This refers to a collection of proteins used to identify specific genes in the genome assembly. These genes help train a gene prediction model, which is operated by the tool Augustus to predict the locations of all genes in the genome.
 
-If **Auto** is selected, a protein dataset from related organisms is automatically searched in various databases, similar to the Database Search process.
-If **Evidence file** is selected, you can upload a FASTA file containing your own set of protein sequences.
+*Protein Prediction Section*
 
-Note: This step is skipped for prokaryotes, as their simpler gene structure is handled by a different tool, Prokka, instead of Augustus.
+This section allows configuration of a minimum sequence length threshold and optional removal of duplicated sequences.
 
-- Minimal sequence length: Set a cutoff to exclude proteins shorter than the specified length (in amino acids).
+*Augustus Parameters Section*
 
-- Remove duplicated sequences: Choose to either remove identical sequences of the same length, or eliminate shorter sequences that are fully contained within longer ones. If no option is selected, duplicates will be kept.
+This section is disabled for prokaryotes, as Prokka is used instead of Augustus.
+Augustus relies on species models trained on known data. In Brownotate, protein FASTA files serve as protein evidence. By default, Brownotate automatically selects proteins from a closely related organism, but a custom FASTA file can also be provided.
+Protein evidences help Augustus identify gene structures in the assembly and improve gene prediction accuracy.
 
-*Brownaming section*
+*Functional Annotation Section*
 
-Brownaming is an in-house tool that assigns protein names by searching for the most similar known proteins in UniprotKB from closely related species. If no close match is found, the search expands to broader taxonomic levels.
+Predicted proteins are unnamed at this stage.
+If enabled, the functional annotation module assigns names by searching for similar proteins in UniProtKB. First among closely related species, then progressively across broader taxonomic levels.
 
-- Skip Brownaming: Choose this option to bypass the Brownaming step.
+Additional options include:
+-	excluding specific species from the search
+-	limiting the maximum taxonomic expansion
+-	ignoring UniProt trEMBL entries to restrict the search to curated SwissProt proteins
 
-- Excluded Species: Exclude specific species from the search by entering the species name or taxonomic ID and clicking the Add button to add them to the exclusion list.
+*BUSCO Section*
 
-- Highest Taxa Rank: Set the taxonomic level where the search should stop. Choosing a rank that is too broad can significantly increase the processing time. The default "Suborder" rank offers a good balance between accuracy and processing time.
+BUSCO evaluates the completeness of genome assemblies and annotations by detecting conserved orthologs.
+Available options:
+-	Evaluate Assembly Completeness
+-	Evaluate Annotation Completeness
 
-*Busco section*
 
-Busco is a tool used to assess the completeness of genome assemblies and annotations by searching for conserved orthologs, which are genes that exist in the genomes of a group of related species.
 
-- Evaluate Assembly Completeness: Check this option to assess the completeness of the genome assembly.
+If not already specified, the species to annotate must be indicated at the top of the Settings page.
+The Run Brownotate button launches the pipeline and redirects to the My Annotations page.
+Navigation from the Settings page is possible toward the Home or Functional Annotation pages.
 
-- Evaluate Annotation Completeness: Check this option to evaluate the completeness of the gene annotation.
 
-*Computational ressource management section*
+*Functional Annotation*
 
-All server CPUs are shown as grey circles, with red circles indicating those currently in use. 
-- Select how many CPUs you want for your run. You can use all available CPUs minus one (keeping at least one free). 
-Using multiple CPUs is recommended, as running on a single CPU can take much longer.
+The Functional Annotation module can be executed independently, without running the full pipeline.
+To perform functional annotation:
+-   Enter the Latin name or Taxonomic ID of the species
+-   Upload a protein FASTA file
+-   Optionnaly, apply additional options (same options that in th eFunctional Annotation Section of the Settings page)
+-   Click on the Run button
 
-Once the run has been launched with the ***Run*** button, it will appear as a card at the bottom of the main page. If you are starting from a sequencing dataset, calculation times can take up to two weeks if your species has a large genome.
+The interface then redirects to the My Annotations page. The Back button at the top returns to the Settings page.
 
-#### Run Cards
 
-On the Home page, you can view and manage all of your runs. Each run is displayed as a card, showing its current status. There are several possible statuses:
+*My Annotations*
 
-- **Upload**: The initial stage where the input data is being transferred to the Brownotate server.
-- **Running**: Brownotate is actively processing the run.
-- **Completed**: The run finished successfully.
-- **Failed**: An error occurred during the run. A **Resume** button will appear on the run card, allowing you to attempt to restart the run from where it stopped.
-- **Incomplete**: The run finished but did not generate a full protein sequence database. You can still view the assembly results, but you may need to retry the run with different input data.
+This page lists all annotation runs as cards. 
+Functional annotation runs are highlighted in purple.
+Each card displays the run status and a progress bar.
+Possible statuses include:
+-	Upload – input data is being transferred
+-	Running – the pipeline is currently processing
+-	Completed – the run finished successfully
+-	Failed – an error occurred; a Resume button allows restarting the run
+-	Incomplete – the run finished but did not produce a complete protein dataset
 
-Each run card also has a delete option. You can remove a run by clicking the **X** button in the card.
-
-Clicking on a run card will take you to the **Run** page, where you can view more detailed information about that specific run.
-
-Below the run cards, the 'Update runs' button allows you to manually refresh the status of the runs. This forces a query to the database to update the run statuses.
-
-#### Run Page
-
-The **Run** page has two sections: **Results** and **Parameters**.
-
-1. **Parameters**  
-
-   This section shows the settings and input files used for the run.
-
-2. **Results**  
-
-   This section is visible for all runs except those with the status **Upload** or **Running**.
-
-   - **Download**: You can download the assembly and annotation FASTA files individually. Additionally, you can download the entire Brownotate working directory, which includes these files along with detailed information about the run. After the protein prediction stage, **Brownaming** is used to assign names to the predicted proteins via BLAST comparison. You can download the Brownaming working directory as a ZIP file, which provides further insights into how protein names were assigned.
-   
-   - **Busco Results**: Displays the evaluation of assembly and annotation completeness.
-   
-   - **Log**: Lists all Brownotate execution steps, along with timestamps.  
-   
-   - **stdout** and **stderr**: Standard console outputs, useful for debugging failed runs.
-
-For **Incomplete** runs, downloading annotation and Brownaming results is disabled as the annotation was unsuccessful.
+Each run can be refreshed, deleted, or explored.
+The Parameters and Results buttons provide access to the configuration used and to downloadable output files.
+Functional annotation results and BUSCO statistics are also displayed.
