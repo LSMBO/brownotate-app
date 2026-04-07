@@ -17,7 +17,19 @@ async function executeRequest(promise, user, runId, updateAnnotation, completed_
     let response;
     try {
         response = await promise;
+        console.log('Response from server:', response);
     } catch (error) {
+        console.error('Request failed with error:', error.message);
+        console.error('Error code:', error.code);
+        if (error.code === 'ECONNABORTED') {
+            console.error('Request timeout - the operation took too long');
+        }
+        if (error.response) {
+            console.error('Server responded with error:', error.response.status, error.response.data);
+        } else if (error.request) {
+            console.error('No response received from server - possible timeout or network issue');
+            console.error('This might be a timeout after a long-running operation');
+        }
         await updateAnnotation(user, runId, 'status', 'failed');
         await updateAnnotation(user, runId, 'error', error.response?.data || error.message);
         return { data: null, error: true };
@@ -178,19 +190,88 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
         } else {
             // Run assembler based on selected assembler in parameters
             if (parameters.assemblySection.canu) {
-                await updateAnnotation(user, runId, 'progress', 'Running CANU assembly ...');
-                const canuResult = await executeRequest(
-                    axios.post(`${CONFIG.API_BASE_URL}/run_canu`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileListProcessed }),
-                    user, runId, updateAnnotation
-                );
-                if (canuResult.error) {
-                    console.error('Error running CANU:', canuResult.error);
-                    return;
-                } 
-                console.log('CANU completed in', canuResult.data.timer);
-                await updateAnnotation(user, runId, 'timers', {'Running CANU assembly ...': canuResult.data.timer})
-                assemblyFile = canuResult.data.data;
-                await updateAnnotation(user, runId, 'resumeData', {'assemblyFile': assemblyFile});
+                // Check if CANU already completed (resume scenario)
+                if (resume && runData.resumeData && runData.resumeData.canu_status === 'completed') {
+                    console.log('[CANU] CANU already completed, using existing assembly file');
+                    assemblyFile = runData.resumeData.assemblyFile;
+                    console.log('[CANU] Assembly file:', assemblyFile);
+                } else {
+                    // CANU not completed yet - start or continue polling
+                    let shouldStartCanu = true;
+                    
+                    // If resuming and CANU status is 'running', skip the start call and go straight to polling
+                    if (resume && runData.resumeData && runData.resumeData.canu_status === 'running') {
+                        console.log('[CANU] CANU already running, resuming polling...');
+                        shouldStartCanu = false;
+                    }
+                    
+                    if (shouldStartCanu) {
+                        await updateAnnotation(user, runId, 'progress', 'Running CANU assembly ...');
+                        console.log('[CANU] Starting CANU assembly request...');
+                        console.log('[CANU] CANU will run in background. Polling every 30 seconds...');
+                        
+                        const startCanuResult = await executeRequest(
+                            axios.post(`${CONFIG.API_BASE_URL}/run_canu`, { 
+                                'parameters': parameters, 
+                                'sequencing_file_list': sequencingFileListProcessed 
+                            }),
+                            user, runId, updateAnnotation
+                        );
+                        
+                        if (startCanuResult.error || startCanuResult.data.status !== 'started') {
+                            console.error('[CANU] Failed to start:', startCanuResult);
+                            return;
+                        }
+                        
+                        console.log('[CANU] Started successfully, now polling for completion...');
+                    }
+                    
+                    // Polling loop (works for both new runs and resumed runs)
+                    const pollCanuStatus = async () => {
+                        while (true) {
+                            await new Promise(resolve => setTimeout(resolve, 30000));
+                            
+                            try {
+                                const statusResponse = await axios.get(
+                                    `${CONFIG.API_BASE_URL}/check_canu_status/${runId}`
+                                );
+                                
+                                console.log('[CANU] Status check:', statusResponse.data.status);
+                                
+                                if (statusResponse.data.status === 'completed') {
+                                    console.log('[CANU] Assembly completed successfully!');
+                                    console.log('[CANU] Assembly file:', statusResponse.data.assemblyFile);
+                                    console.log('[CANU] Timer:', statusResponse.data.timer);
+                                    if (statusResponse.data.stdout_file) {
+                                        console.log('[CANU] Stdout log:', statusResponse.data.stdout_file);
+                                    }
+                                    if (statusResponse.data.stderr_file) {
+                                        console.log('[CANU] Stderr log:', statusResponse.data.stderr_file);
+                                    }
+                                    assemblyFile = statusResponse.data.assemblyFile;
+                                    return;
+                                } else if (statusResponse.data.status === 'error') {
+                                    console.error('[CANU] Error detected:', statusResponse.data.error);
+                                    await updateAnnotation(user, runId, 'status', 'failed');
+                                    await updateAnnotation(user, runId, 'error', 
+                                        `CANU failed: ${statusResponse.data.error}`);
+                                    throw new Error(statusResponse.data.error);
+                                }
+                            } catch (error) {
+                                console.error('[CANU] Polling error:', error);
+                                if (error.response?.data?.status === 'error') {
+                                    throw error;
+                                }
+                                // Don't throw on network errors - continue polling
+                                console.log('[CANU] Network error during polling, will retry...');
+                            }
+                        }
+                    };
+                    
+                    await pollCanuStatus();
+                    console.log('[CANU] Continuing workflow with assembly:', assemblyFile);
+                }
+                
             } else {
                 await updateAnnotation(user, runId, 'progress', 'Running Megahit assembly ...');
                 const megahitResult = await executeRequest(

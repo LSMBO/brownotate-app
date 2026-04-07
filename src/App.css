@@ -88,24 +88,44 @@ button:not(:disabled):hover{
 .login-form {
     display: flex;
     flex-direction: column;
-    width: 90%;
+    width: 95%;
     margin: auto;
 }
 
 .login-form label{
-    margin-top: 30px;
+    margin-top: 15px;
 }
 
-.login-h2 {
-    font-family: 'Oxygen', sans-serif;
-    font-weight: normal;
-    font-size: 2rem;
-    text-align: center;
-}
-
-.login-form button{
-    width: 30%;
+.login-container {
+    flex-direction: row;
+    gap: 40px;
+    width: 90%;
     margin: 20px auto;
+}
+
+
+.login-right {
+    width: 50%;
+    padding: 20px;
+    border-left: 2px solid #288cbb;
+}
+
+.login-right p {
+    display: block;
+    margin: 10px 0;
+}
+
+@media screen and (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+    }
+    .login-left, .login-right {
+        width: 100%;
+    }
+    .login-right {
+        border-left: none;
+        border-top: 2px solid #288cbb;
+    }
 }
 
 input {
@@ -139,8 +159,8 @@ p {
 .submit-button {
     background: #288cbb;
     border: none;
-    clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%);
-    margin: 10px auto;
+    /* clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%); */
+    margin: 10px;
     padding: 10px 60px;
     color: #cddfeb;
 }

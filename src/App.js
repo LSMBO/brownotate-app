@@ -25,8 +25,8 @@ export default function App() {
           <DBSearchProvider>
             <ParametersProvider>
               <FAParametersProvider>
-                <Header />
                 <Router>
+                  <Header setIsLoggedIn={setIsLoggedIn} />
                   <Routes>
                     <Route path="/" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
                     <Route path="/about" element={isLoggedIn ? <About /> : <Navigate to="/login" />} />
@@ -37,8 +37,8 @@ export default function App() {
                     <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
                     <Route path="*" element={<Navigate to="/" />} />
                   </Routes>
+                  <Footer />
                 </Router>
-                <Footer />
               </FAParametersProvider>
             </ParametersProvider>
           </DBSearchProvider>

@@ -17,7 +17,7 @@ import Image from "../components/Image";
 
 export default function FunctionalAnnotation() {
     const navigate = useNavigate();
-    const { user } = useUser();
+    const { user, isGuest } = useUser();
     const { addAnnotation, fetchCPUs, updateAnnotation } = useAnnotations();
     const { faParameters, updateFAParameters, resetFAParameters } = useFAParameters();
     const [cancelTokenSource, setCancelTokenSource] = useState(null);
@@ -97,6 +97,7 @@ export default function FunctionalAnnotation() {
 
         formData.append('type', type);
         formData.append('run_id', run_id);
+
         try {
             const response = await axios.post(`${CONFIG.API_BASE_URL}/upload_file`, formData, {
                 headers: {
@@ -123,6 +124,12 @@ export default function FunctionalAnnotation() {
     };
 
     const handleRunFunctionalAnnotation = async () => {
+        // Block guest users from running annotations
+        if (isGuest) {
+            alert("Guest mode allows database searches only.\n\nTo run annotations, please contact browna@unistra.fr to create an account.");
+            return;
+        }
+        
         const freeCpus = await fetchCPUs();
         if (!checkParameters()) {
             if (freeCpus === 0) {

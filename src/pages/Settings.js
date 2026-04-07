@@ -16,7 +16,7 @@ import { useAnnotations } from '../contexts/AnnotationsContext';
 import { useDBSearch } from '../contexts/DBSearchContext';
 
 import { downloadEnsemblFTP, downloadNCBI, handleClickDownload } from '../utils/Download';
-import { speciesExists, getDBSearches, executeDBSearchRoute } from '../utils/DatabaseSearch';
+import { speciesExists, executeDBSearchRoute } from '../utils/DatabaseSearch';
 import { handleAnnotationRun } from '../utils/AnnotationRun';
 
 import SpeciesInput from "../components/SpeciesInput";
@@ -30,15 +30,17 @@ import Image from "../components/Image";
 import Loading from '../components/Loading';
 
 export default function Settings() {
+    const MIN_DIRECT_UNIPROT_EVIDENCE = 800;
+
     const navigate = useNavigate();
-    const { user } = useUser();
+    const { user, isGuest } = useUser();
     const [cancelTokenSource, setCancelTokenSource] = useState(null);
     const [inputSpecies, setInputSpecies] = useState("");
     const [speciesSearchError, setSpeciesSearchError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [showDebug, setShowDebug] = useState(false);
     const { fetchCPUs, addAnnotation, updateAnnotation} = useAnnotations();
     const { parameters, updateParameters } = useParameters();
-    const { dbs } = useDBSearch();
 
 
     useEffect(() => {
@@ -108,37 +110,18 @@ export default function Settings() {
 
     const proteinDBSearch = async (species) => {
         const source = axios.CancelToken.source();
-        
-        // Check if we already have DBS data from a previous search
-        let pastDBS = await getDBSearches(species['taxonID']);
-        
         const newDBS = {
             'uniprot': null,
             'ensembl': null, 
             'refseq': null,
             'genbank': null,
         };
-
-        // Load from past searches if available
-        if (pastDBS.status === 'success' && pastDBS.data) {
-            if (pastDBS.data.uniprot?.status === 'success') {
-                newDBS.uniprot = new DBSUniprot(new Date().getTime(), pastDBS.data.uniprot.data);
-            }
-            if (pastDBS.data.ensembl?.status === 'success') {
-                newDBS.ensembl = new DBSEnsembl(new Date().getTime(), pastDBS.data.ensembl.data);
-            }
-            if (pastDBS.data.refseq?.status === 'success') {
-                newDBS.refseq = new DBSRefSeq(new Date().getTime(), pastDBS.data.refseq.data);
-            }
-            if (pastDBS.data.genbank?.status === 'success') {
-                newDBS.genbank = new DBSGenBank(new Date().getTime(), pastDBS.data.genbank.data);
-            }
-            
-            // Return if we found all data from database
-            if (newDBS.uniprot && newDBS.ensembl && newDBS.refseq && newDBS.genbank) {
-                return newDBS;
-            }
-        }
+        const availableSources = {
+            uniprot: false,
+            ensembl: false,
+            refseq: false,
+            genbank: false
+        };
         
         // Build taxonomy params for searches
         let params = {
@@ -154,87 +137,129 @@ export default function Settings() {
             options: { active: true }
         };
 
-        // Uniprot (if not already loaded)
-        if (!newDBS.uniprot) {
-            let dbsUniprotResults = await executeDBSearchRoute('dbs_uniprot', params, source.token);
-            if (dbsUniprotResults.success && dbsUniprotResults.data && dbsUniprotResults.data.status === 'success') {
-                newDBS.uniprot = new DBSUniprot(new Date().getTime(), dbsUniprotResults.data.data);
-            }
+        let dbsUniprotResults = await executeDBSearchRoute('dbs_uniprot', params, source.token);
+        if (dbsUniprotResults.success && dbsUniprotResults.data && dbsUniprotResults.data.status === 'success') {
+            newDBS.uniprot = new DBSUniprot(new Date().getTime(), dbsUniprotResults.data.data);
+            availableSources.uniprot = true;
         }
 
-        // Ensembl (if not already loaded)
-        if (!newDBS.ensembl) {
-            let dbsEnsemblResults = await executeDBSearchRoute('dbs_ensembl', params, source.token);
-            if (dbsEnsemblResults.success && dbsEnsemblResults.data && dbsEnsemblResults.data.status === 'success') {
-                newDBS.ensembl = new DBSEnsembl(new Date().getTime(), dbsEnsemblResults.data.data);
-            }
+        let dbsEnsemblResults = await executeDBSearchRoute('dbs_ensembl', params, source.token);
+        if (dbsEnsemblResults.success && dbsEnsemblResults.data && dbsEnsemblResults.data.status === 'success') {
+            newDBS.ensembl = new DBSEnsembl(new Date().getTime(), dbsEnsemblResults.data.data);
+            availableSources.ensembl = true;
         }
 
-        // RefSeq (if not already loaded)
-        if (!newDBS.refseq) {
-            let dbsRefSeqResults = await executeDBSearchRoute('dbs_refseq', params, source.token);
-            if (dbsRefSeqResults.success && dbsRefSeqResults.data && dbsRefSeqResults.data.status === 'success') {
-                newDBS.refseq = new DBSRefSeq(new Date().getTime(), dbsRefSeqResults.data.data);
-            }
+        let dbsRefSeqResults = await executeDBSearchRoute('dbs_refseq', params, source.token);
+        if (dbsRefSeqResults.success && dbsRefSeqResults.data && dbsRefSeqResults.data.status === 'success') {
+            newDBS.refseq = new DBSRefSeq(new Date().getTime(), dbsRefSeqResults.data.data);
+            availableSources.refseq = true;
         }
 
-        // GenBank (if not already loaded)
-        if (!newDBS.genbank) {
-            let dbsGenBankResults = await executeDBSearchRoute('dbs_genbank', params, source.token);
-            if (dbsGenBankResults.success && dbsGenBankResults.data && dbsGenBankResults.data.status === 'success') {
-                newDBS.genbank = new DBSGenBank(new Date().getTime(), dbsGenBankResults.data.data);
-            }
+        let dbsGenBankResults = await executeDBSearchRoute('dbs_genbank', params, source.token);
+        if (dbsGenBankResults.success && dbsGenBankResults.data && dbsGenBankResults.data.status === 'success') {
+            newDBS.genbank = new DBSGenBank(new Date().getTime(), dbsGenBankResults.data.data);
+            availableSources.genbank = true;
         }
         
-        return newDBS;
+        return {
+            dbs: newDBS,
+            availableSources: availableSources
+        };
     }
 
-    const selectProteinSet = (dbs) => {
+    const deduplicateProteinEntries = (proteinSet) => {
+        const seen = new Set();
+        return proteinSet.filter((protein) => {
+            const key = `${protein.database || ''}|${protein.accession || ''}|${protein.download_url || ''}|${protein.taxid || ''}`;
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
+    };
+
+    const getProteinsByTaxId = (dbs, targetTaxID, availableSources) => {
+        const selected = [];
+
+        if (availableSources.uniprot && dbs.uniprot?.proteins && Array.isArray(dbs.uniprot.proteins)) {
+            selected.push(...dbs.uniprot.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+        }
+        if (availableSources.ensembl && dbs.ensembl?.proteins && Array.isArray(dbs.ensembl.proteins)) {
+            selected.push(...dbs.ensembl.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+        }
+        if (availableSources.refseq && dbs.refseq?.proteins && Array.isArray(dbs.refseq.proteins)) {
+            selected.push(...dbs.refseq.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+        }
+        if (availableSources.genbank && dbs.genbank?.proteins && Array.isArray(dbs.genbank.proteins)) {
+            selected.push(...dbs.genbank.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+        }
+
+        return selected;
+    };
+
+    const getAllProteins = (dbs, availableSources) => {
+        const allProteins = [];
+        if (availableSources.uniprot && dbs.uniprot?.swissprot?.count > 0) {
+            allProteins.push(dbs.uniprot.swissprot);
+        }
+        if (availableSources.uniprot && dbs.uniprot?.trembl?.count > 0) {
+            allProteins.push(dbs.uniprot.trembl);
+        }
+        if (availableSources.uniprot && dbs.uniprot?.proteins && Array.isArray(dbs.uniprot.proteins)) {
+            allProteins.push(...dbs.uniprot.proteins);
+        }
+        if (availableSources.ensembl && dbs.ensembl?.proteins && Array.isArray(dbs.ensembl.proteins)) {
+            allProteins.push(...dbs.ensembl.proteins);
+        }
+        if (availableSources.refseq && dbs.refseq?.proteins && Array.isArray(dbs.refseq.proteins)) {
+            allProteins.push(...dbs.refseq.proteins);
+        }
+        if (availableSources.genbank && dbs.genbank?.proteins && Array.isArray(dbs.genbank.proteins)) {
+            allProteins.push(...dbs.genbank.proteins);
+        }
+        return allProteins;
+    };
+
+    const hasSpeciesProteinFromSource = (proteinList, targetTaxID) => {
+        if (!proteinList || !Array.isArray(proteinList)) {
+            return false;
+        }
+        return proteinList.some((protein) => String(protein.taxid) === targetTaxID);
+    };
+
+    const selectProteinSet = (dbs, availableSources) => {
         const proteinSet = [];
         const targetTaxID = String(parameters.species.taxonID);
-        // Add Uniprot SwissProt and TrEMBL
-        if (dbs.uniprot) {
-            if (dbs.uniprot.swissprot && dbs.uniprot.swissprot.count > 0) {
-                proteinSet.push(dbs.uniprot.swissprot);
-            }
-            if (dbs.uniprot.trembl && dbs.uniprot.trembl.count > 0) {
-                proteinSet.push(dbs.uniprot.trembl);
-            }
-            
-            // Add UniProt Proteomes (up to 5)
-            if (dbs.uniprot.proteins && Array.isArray(dbs.uniprot.proteins)) {
-                const filteredProteomes = dbs.uniprot.proteins.filter(proteome => 
-                    String(proteome.taxid) === targetTaxID
-                );
-                proteinSet.push(...filteredProteomes.slice(0, 5));
-            }
+
+        if (availableSources.uniprot && dbs.uniprot?.swissprot?.count > 0) {
+            proteinSet.push(dbs.uniprot.swissprot);
+        }
+        if (availableSources.uniprot && dbs.uniprot?.trembl?.count > 0) {
+            proteinSet.push(dbs.uniprot.trembl);
         }
 
-        // Add Ensembl proteins (up to 5)
-        if (dbs.ensembl?.proteins && Array.isArray(dbs.ensembl.proteins)) {
-            const filteredEnsembl = dbs.ensembl.proteins.filter(protein => 
-                String(protein.taxid) === targetTaxID
+        const directTaxProteinSet = getProteinsByTaxId(dbs, targetTaxID, availableSources);
+        proteinSet.push(...directTaxProteinSet);
+
+        const directUniprotCount = (dbs.uniprot?.swissprot?.count || 0) + (dbs.uniprot?.trembl?.count || 0);
+        const hasSpeciesEnsembl = availableSources.ensembl && hasSpeciesProteinFromSource(dbs.ensembl?.proteins, targetTaxID);
+        const hasSpeciesRefSeq = availableSources.refseq && hasSpeciesProteinFromSource(dbs.refseq?.proteins, targetTaxID);
+        const hasSpeciesGenBank = availableSources.genbank && hasSpeciesProteinFromSource(dbs.genbank?.proteins, targetTaxID);
+        const hasSpeciesUniprot = availableSources.uniprot && ((dbs.uniprot?.swissprot?.count || 0) > 0 || (dbs.uniprot?.trembl?.count || 0) > 0 || hasSpeciesProteinFromSource(dbs.uniprot?.proteins, targetTaxID));
+
+        const hasOnlyUniprotForSpecies = hasSpeciesUniprot && !hasSpeciesEnsembl && !hasSpeciesRefSeq && !hasSpeciesGenBank;
+
+        if (hasOnlyUniprotForSpecies && directUniprotCount < MIN_DIRECT_UNIPROT_EVIDENCE) {
+            const fallbackProteins = getAllProteins(dbs, availableSources);
+            proteinSet.push(...fallbackProteins);
+            console.log(
+                `Only UniProt evidence found for species and low UniProt count (${directUniprotCount}). ` +
+                `Using all available proteins from all database search results (${fallbackProteins.length} entries).`
             );
-            proteinSet.push(...filteredEnsembl.slice(0, 5));
         }
 
-        // Add RefSeq proteins (up to 5)
-        if (dbs.refseq?.proteins && Array.isArray(dbs.refseq.proteins)) {
-            const filteredRefSeq = dbs.refseq.proteins.filter(protein => 
-                String(protein.taxid) === targetTaxID
-            );
-            proteinSet.push(...filteredRefSeq.slice(0, 5));
-        }
-
-        // Add GenBank proteins (up to 5)
-        if (dbs.genbank?.proteins && Array.isArray(dbs.genbank.proteins)) {
-            const filteredGenBank = dbs.genbank.proteins.filter(protein => 
-                String(protein.taxid) === targetTaxID
-            );
-            proteinSet.push(...filteredGenBank.slice(0, 5));
-        }
-
-        return proteinSet;
+        return deduplicateProteinEntries(proteinSet);
     };
 
 
@@ -276,6 +301,13 @@ export default function Settings() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Block guest users from running annotations
+        if (isGuest) {
+            alert("Guest mode allows database searches only.\n\nTo run annotations, please contact browna@unistra.fr to create an account.");
+            return;
+        }
+        
         const freeCpus = await fetchCPUs();
         if (!checkParameters()) {
             if (freeCpus === 0) {
@@ -338,11 +370,18 @@ export default function Settings() {
                     customEvidenceFileOnServer = await uploadFile(parameters.annotationSection.customEvidenceFileList, 'evidence', runId);
                 } else {
                     await updateAnnotation(user, runId, 'progress', 'Searching for evidences (proteins) in the databases ...');
-                    const dbsResult = await proteinDBSearch(parameters.species);
-                    
+                    const dbsSearchResult = await proteinDBSearch(parameters.species);
+                    const dbsResult = dbsSearchResult.dbs;
+                    const availableSources = dbsSearchResult.availableSources;
+                    console.log('Searching for evidences (proteins) in the databases, found:', dbsSearchResult);
                     await updateAnnotation(user, runId, 'progress', 'Selecting and downloading evidences (proteins) from the database search ...');
-                    const proteinsSet = selectProteinSet(dbsResult);
+                    const proteinsSet = selectProteinSet(dbsResult, availableSources);
+                    if (!proteinsSet || proteinsSet.length === 0) {
+                        throw new Error('No protein evidence found in available database sources for this species.');
+                    }
+                    console.log('Protein set selected for evidence:', proteinsSet);
                     customEvidenceFileOnServer = await handleClickDownload(proteinsSet, 'proteins', false, runId);
+                    console.log('Downloaded evidence files from database search:', customEvidenceFileOnServer);
                     await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, 
                     { run_id: runId, 
                         user: user, 
@@ -525,8 +564,13 @@ export default function Settings() {
                 Run Brownotate
             </button>
             <div className="debugging-container">
-                <h3>Debugging Information</h3>
-                <pre>{JSON.stringify(parameters, null, 2)}</pre>
+                <h3 
+                    onClick={() => setShowDebug(!showDebug)} 
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                >
+                    {showDebug ? '▼' : '▶'} Debugging Information
+                </h3>
+                {showDebug && <pre>{JSON.stringify(parameters, null, 2)}</pre>}
             </div>
             {isLoading && (<Loading/>)}
         </div>
