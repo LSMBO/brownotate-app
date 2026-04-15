@@ -1,6 +1,7 @@
 
 import axios from 'axios';
 import CONFIG from '../config';
+import { runAsyncPolledStep } from './pipelinePolling';
 
 
 async function executeRequest(promise, user, runId, updateAnnotation, completed_annotation=false) {
@@ -41,6 +42,35 @@ async function executeRequest(promise, user, runId, updateAnnotation, completed_
         return { data: null, error: true, message: response.data?.message };
     } 
     return { data: response.data, error: null };
+}
+
+async function runLongRouteStep({
+    startPath,
+    statusPath,
+    payload,
+    statusQuery,
+    stepLabel,
+    user,
+    runId,
+    updateAnnotation
+}) {
+    try {
+        return await runAsyncPolledStep({
+            apiBaseUrl: CONFIG.API_BASE_URL,
+            startPath,
+            statusPath,
+            payload,
+            statusQuery,
+            stepLabel,
+            user,
+            runId,
+            updateAnnotation,
+            pollMs: 30000
+        });
+    } catch (error) {
+        console.error(`${stepLabel} failed:`, error);
+        return null;
+    }
 }
 
 function organizeSequencingFiles(sequencingFileList) {
@@ -136,18 +166,23 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
                 sequencingFileListAfterFastp = runData.resumeData.sequencingFileListAfterFastp;
             } else {
                 await updateAnnotation(user, runId, 'progress', 'Running fastp on sequencing files ...');
-                const fastpResult = await executeRequest(
-                    axios.post(`${CONFIG.API_BASE_URL}/run_fastp`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileList }),
-                    user, runId, updateAnnotation
-                );
-                if (fastpResult.error) {
-                    console.error('Error running fastp:', fastpResult.error);
+                const fastpResult = await runLongRouteStep({
+                    startPath: '/run_fastp_async',
+                    statusPath: `/check_fastp_status/${runId}`,
+                    payload: { 'parameters': parameters, 'sequencing_file_list': sequencingFileList },
+                    stepLabel: 'Running fastp on sequencing files ...',
+                    user,
+                    runId,
+                    updateAnnotation
+                });
+                if (!fastpResult) {
+                    console.error('Error running fastp');
                     return;
                 }
                 console.log('fastpResult:', fastpResult);
-                console.log('Fastp completed in', fastpResult.data.timer);
-                await updateAnnotation(user, runId, 'timers', {'Running fastp on sequencing files ...': fastpResult.data.timer})
-                sequencingFileListAfterFastp = fastpResult.data.data;
+                console.log('Fastp completed in', fastpResult.timer);
+                await updateAnnotation(user, runId, 'timers', {'Running fastp on sequencing files ...': fastpResult.timer})
+                sequencingFileListAfterFastp = fastpResult.data;
             }
         } else {
             sequencingFileListAfterFastp = sequencingFileList;
@@ -162,18 +197,23 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
                 sequencingFileListAfterRemovePhix = runData.resumeData.sequencingFileListAfterRemovePhix;
             } else {
                 await updateAnnotation(user, runId, 'progress', 'Removing Phix from sequencing files ...');
-                const removePhixResult = await executeRequest(
-                    axios.post(`${CONFIG.API_BASE_URL}/run_remove_phix`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileListAfterFastp }),
-                    user, runId, updateAnnotation
-                );
-                if (removePhixResult.error) {
-                    console.error('Error removing Phix:', removePhixResult.error);
+                const removePhixResult = await runLongRouteStep({
+                    startPath: '/run_remove_phix_async',
+                    statusPath: `/check_remove_phix_status/${runId}`,
+                    payload: { 'parameters': parameters, 'sequencing_file_list': sequencingFileListAfterFastp },
+                    stepLabel: 'Removing Phix from sequencing files ...',
+                    user,
+                    runId,
+                    updateAnnotation
+                });
+                if (!removePhixResult) {
+                    console.error('Error removing Phix');
                     return;
                 }
                 console.log('removePhixResult:', removePhixResult);
-                console.log('Remove Phix completed in', removePhixResult.data.timer);
-                await updateAnnotation(user, runId, 'timers', {'Removing Phix from sequencing files ...': removePhixResult.data.timer})
-                sequencingFileListAfterRemovePhix = removePhixResult.data.data;
+                console.log('Remove Phix completed in', removePhixResult.timer);
+                await updateAnnotation(user, runId, 'timers', {'Removing Phix from sequencing files ...': removePhixResult.timer})
+                sequencingFileListAfterRemovePhix = removePhixResult.data;
             }
         } else {
             sequencingFileListAfterRemovePhix = sequencingFileListAfterFastp;
@@ -196,95 +236,46 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
                     assemblyFile = runData.resumeData.assemblyFile;
                     console.log('[CANU] Assembly file:', assemblyFile);
                 } else {
-                    // CANU not completed yet - start or continue polling
-                    let shouldStartCanu = true;
-                    
-                    // If resuming and CANU status is 'running', skip the start call and go straight to polling
-                    if (resume && runData.resumeData && runData.resumeData.canu_status === 'running') {
-                        console.log('[CANU] CANU already running, resuming polling...');
-                        shouldStartCanu = false;
+                    await updateAnnotation(user, runId, 'progress', 'Running CANU assembly ...');
+                    const canuResult = await runLongRouteStep({
+                        startPath: '/run_canu',
+                        statusPath: `/check_canu_status/${runId}`,
+                        payload: {
+                            'parameters': parameters,
+                            'sequencing_file_list': sequencingFileListProcessed
+                        },
+                        stepLabel: 'Running CANU assembly ...',
+                        user,
+                        runId,
+                        updateAnnotation
+                    });
+
+                    if (!canuResult) {
+                        console.error('[CANU] Failed');
+                        return;
                     }
-                    
-                    if (shouldStartCanu) {
-                        await updateAnnotation(user, runId, 'progress', 'Running CANU assembly ...');
-                        console.log('[CANU] Starting CANU assembly request...');
-                        console.log('[CANU] CANU will run in background. Polling every 30 seconds...');
-                        
-                        const startCanuResult = await executeRequest(
-                            axios.post(`${CONFIG.API_BASE_URL}/run_canu`, { 
-                                'parameters': parameters, 
-                                'sequencing_file_list': sequencingFileListProcessed 
-                            }),
-                            user, runId, updateAnnotation
-                        );
-                        
-                        if (startCanuResult.error || startCanuResult.data.status !== 'started') {
-                            console.error('[CANU] Failed to start:', startCanuResult);
-                            return;
-                        }
-                        
-                        console.log('[CANU] Started successfully, now polling for completion...');
-                    }
-                    
-                    // Polling loop (works for both new runs and resumed runs)
-                    const pollCanuStatus = async () => {
-                        while (true) {
-                            await new Promise(resolve => setTimeout(resolve, 30000));
-                            
-                            try {
-                                const statusResponse = await axios.get(
-                                    `${CONFIG.API_BASE_URL}/check_canu_status/${runId}`
-                                );
-                                
-                                console.log('[CANU] Status check:', statusResponse.data.status);
-                                
-                                if (statusResponse.data.status === 'completed') {
-                                    console.log('[CANU] Assembly completed successfully!');
-                                    console.log('[CANU] Assembly file:', statusResponse.data.assemblyFile);
-                                    console.log('[CANU] Timer:', statusResponse.data.timer);
-                                    if (statusResponse.data.stdout_file) {
-                                        console.log('[CANU] Stdout log:', statusResponse.data.stdout_file);
-                                    }
-                                    if (statusResponse.data.stderr_file) {
-                                        console.log('[CANU] Stderr log:', statusResponse.data.stderr_file);
-                                    }
-                                    assemblyFile = statusResponse.data.assemblyFile;
-                                    return;
-                                } else if (statusResponse.data.status === 'error') {
-                                    console.error('[CANU] Error detected:', statusResponse.data.error);
-                                    await updateAnnotation(user, runId, 'status', 'failed');
-                                    await updateAnnotation(user, runId, 'error', 
-                                        `CANU failed: ${statusResponse.data.error}`);
-                                    throw new Error(statusResponse.data.error);
-                                }
-                            } catch (error) {
-                                console.error('[CANU] Polling error:', error);
-                                if (error.response?.data?.status === 'error') {
-                                    throw error;
-                                }
-                                // Don't throw on network errors - continue polling
-                                console.log('[CANU] Network error during polling, will retry...');
-                            }
-                        }
-                    };
-                    
-                    await pollCanuStatus();
+                    assemblyFile = canuResult.data;
                     console.log('[CANU] Continuing workflow with assembly:', assemblyFile);
                 }
                 
             } else {
                 await updateAnnotation(user, runId, 'progress', 'Running Megahit assembly ...');
-                const megahitResult = await executeRequest(
-                    axios.post(`${CONFIG.API_BASE_URL}/run_megahit`, { 'parameters': parameters, 'sequencing_file_list': sequencingFileListProcessed }),
-                    user, runId, updateAnnotation
-                );
-                if (megahitResult.error) {
-                    console.error('Error running Megahit:', megahitResult.error);
+                const megahitResult = await runLongRouteStep({
+                    startPath: '/run_megahit_async',
+                    statusPath: `/check_megahit_status/${runId}`,
+                    payload: { 'parameters': parameters, 'sequencing_file_list': sequencingFileListProcessed },
+                    stepLabel: 'Running Megahit assembly ...',
+                    user,
+                    runId,
+                    updateAnnotation
+                });
+                if (!megahitResult) {
+                    console.error('Error running Megahit');
                     return;
                 } 
-                console.log('Megahit completed in', megahitResult.data.timer);
-                await updateAnnotation(user, runId, 'timers', {'Running Megahit assembly ...': megahitResult.data.timer})
-                assemblyFile = megahitResult.data.data;
+                console.log('Megahit completed in', megahitResult.timer);
+                await updateAnnotation(user, runId, 'timers', {'Running Megahit assembly ...': megahitResult.timer})
+                assemblyFile = megahitResult.data;
                 await updateAnnotation(user, runId, 'resumeData', {'assemblyFile': assemblyFile});
             }
         }    
@@ -296,17 +287,23 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
 
     if (parameters.buscoSection.assembly && !(resume && runData.resumeData && runData.resumeData.buscoAssembly)) {
         await updateAnnotation(user, runId, 'progress', 'Running BUSCO on assembly ...');
-        const buscoAssemblyResult = await executeRequest(
-            axios.post(`${CONFIG.API_BASE_URL}/run_busco`, { 'parameters': parameters, 'input_file': assemblyFile, 'mode': 'genome' }),
-            user, runId, updateAnnotation
-        );
-        if (buscoAssemblyResult.error) {
-            console.error('Error running BUSCO on assembly:', buscoAssemblyResult.error);
+        const buscoAssemblyResult = await runLongRouteStep({
+            startPath: '/run_busco_async',
+            statusPath: `/check_busco_status/${runId}`,
+            statusQuery: { mode: 'genome' },
+            payload: { 'parameters': parameters, 'input_file': assemblyFile, 'mode': 'genome' },
+            stepLabel: 'Running BUSCO on assembly ...',
+            user,
+            runId,
+            updateAnnotation
+        });
+        if (!buscoAssemblyResult) {
+            console.error('Error running BUSCO on assembly');
             return;
         }
-        console.log('BUSCO on assembly completed in', buscoAssemblyResult.data.timer);
-        await updateAnnotation(user, runId, 'timers', {'Running BUSCO on assembly ...': buscoAssemblyResult.data.timer})
-        let buscoAssemblyResultData = buscoAssemblyResult.data.data;
+        console.log('BUSCO on assembly completed in', buscoAssemblyResult.timer);
+        await updateAnnotation(user, runId, 'timers', {'Running BUSCO on assembly ...': buscoAssemblyResult.timer})
+        let buscoAssemblyResultData = buscoAssemblyResult.data;
         console.log('BUSCO assembly result:', buscoAssemblyResultData);
         await updateAnnotation(user, runId, 'resumeData', {'buscoAssembly': true});
     }
@@ -316,17 +313,22 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             annotationFile = runData.resumeData.annotationFile;
         } else {
             await updateAnnotation(user, runId, 'progress', 'Running Prokka annotation ...');
-            const prokkaResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_prokka`, { 'parameters': parameters, 'assembly_file': assemblyFile }),
-                user, runId, updateAnnotation
-            );
-            if (prokkaResult.error) {
-                console.error('Error running Prokka:', prokkaResult.error);
+            const prokkaResult = await runLongRouteStep({
+                startPath: '/run_prokka_async',
+                statusPath: `/check_prokka_status/${runId}`,
+                payload: { 'parameters': parameters, 'assembly_file': assemblyFile },
+                stepLabel: 'Running Prokka annotation ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!prokkaResult) {
+                console.error('Error running Prokka');
                 return;
             }
-            console.log('Prokka completed in', prokkaResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running Prokka annotation ...': prokkaResult.data.timer})
-            annotationFile = prokkaResult.data.data;
+            console.log('Prokka completed in', prokkaResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running Prokka annotation ...': prokkaResult.timer})
+            annotationFile = prokkaResult.data;
             console.log('Prokka annotation file:', annotationFile);
             await updateAnnotation(user, runId, 'resumeData', {'annotationFile': annotationFile});
         }
@@ -361,17 +363,23 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             genesRaw = runData.resumeData.genesRaw;
         } else {
             await updateAnnotation(user, runId, 'progress', 'Running Scipio ...');
-            const scipioResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_scipio`, { 'parameters': parameters, 'split_assembly_files': splitAssemblyFiles, 'evidence_file': evidenceFile, 'flex': false }),
-                user, runId, updateAnnotation
-            );
-            if (scipioResult.error) {
-                console.error('Error running Scipio:', scipioResult.error);
+            const scipioResult = await runLongRouteStep({
+                startPath: '/run_scipio_async',
+                statusPath: `/check_scipio_status/${runId}`,
+                statusQuery: { flex: 'false' },
+                payload: { 'parameters': parameters, 'split_assembly_files': splitAssemblyFiles, 'evidence_file': evidenceFile, 'flex': false },
+                stepLabel: 'Running Scipio ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!scipioResult) {
+                console.error('Error running Scipio');
                 return;
             }
-            console.log('Scipio completed in', scipioResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running Scipio ...': scipioResult.data.timer})
-            genesRaw = scipioResult.data.data;
+            console.log('Scipio completed in', scipioResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running Scipio ...': scipioResult.timer})
+            genesRaw = scipioResult.data;
             console.log('genesRaw:', genesRaw);
             await updateAnnotation(user, runId, 'resumeData', {'genesRaw': genesRaw, 'scipioFlex':false});
         }
@@ -380,51 +388,67 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             numGenes = runData.resumeData.numGenes;
         } else {
             await updateAnnotation(user, runId, 'progress', 'Running gene prediction model ...');
-            const modelResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_model`, { 'parameters': parameters, 'genesraw': genesRaw }),
-                user, runId, updateAnnotation
-            );
-            if (modelResult.error) {
-                console.error('Error running gene prediction model:', modelResult.error);
+            const modelResult = await runLongRouteStep({
+                startPath: '/run_model_async',
+                statusPath: `/check_model_status/${runId}`,
+                payload: { 'parameters': parameters, 'genesraw': genesRaw },
+                stepLabel: 'Running gene prediction model ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!modelResult) {
+                console.error('Error running gene prediction model');
                 return;
             }
-            console.log('Gene prediction model completed in', modelResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running gene prediction model ...': modelResult.data.timer})
-            numGenes = modelResult.data.data;
+            console.log('Gene prediction model completed in', modelResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running gene prediction model ...': modelResult.timer})
+            numGenes = modelResult.data;
             console.log('Number of genes predicted:', numGenes);
             await updateAnnotation(user, runId, 'resumeData', {'numGenes': numGenes, 'scipioFlex':false});
         }
 
         if (numGenes < 200 && !(resume && runData.resumeData && runData.resumeData.scipioFlex) ) {
             await updateAnnotation(user, runId, 'progress', `Less than 200 genes predicted (${numGenes}), retrying with more flexible Scipio ...`);
-            const scipioFlexResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_scipio`, { 'parameters': parameters, 'split_assembly_files': splitAssemblyFiles, 'evidence_file': evidenceFile, 'flex': true }),
-                user, runId, updateAnnotation
-            );
-            if (scipioFlexResult.error) {
-                console.error('Error running flexible Scipio:', scipioFlexResult.error);
+            const scipioFlexResult = await runLongRouteStep({
+                startPath: '/run_scipio_async',
+                statusPath: `/check_scipio_status/${runId}`,
+                statusQuery: { flex: 'true' },
+                payload: { 'parameters': parameters, 'split_assembly_files': splitAssemblyFiles, 'evidence_file': evidenceFile, 'flex': true },
+                stepLabel: 'Running flexible Scipio ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!scipioFlexResult) {
+                console.error('Error running flexible Scipio');
                 return;
             }
-            console.log('Flexible Scipio completed in', scipioFlexResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running flexible Scipio ...': scipioFlexResult.data.timer})
-            genesRaw = scipioFlexResult.data.data;
+            console.log('Flexible Scipio completed in', scipioFlexResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running flexible Scipio ...': scipioFlexResult.timer})
+            genesRaw = scipioFlexResult.data;
             console.log('genesRaw:', genesRaw);
             await updateAnnotation(user, runId, 'resumeData', {'genesRaw': genesRaw, 'scipioFlex':true});
         }
 
         if (numGenes < 200) {
             await updateAnnotation(user, runId, 'progress', 'Running gene prediction model after flexible Scipio ...');
-            const modelFlexResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_model`, { 'parameters': parameters, 'genesraw': genesRaw }),
-                user, runId, updateAnnotation
-            );
-            if (modelFlexResult.error) {
-                console.error('Error running gene prediction model again:', modelFlexResult.error);
+            const modelFlexResult = await runLongRouteStep({
+                startPath: '/run_model_async',
+                statusPath: `/check_model_status/${runId}`,
+                payload: { 'parameters': parameters, 'genesraw': genesRaw },
+                stepLabel: 'Running gene prediction model after flexible Scipio ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!modelFlexResult) {
+                console.error('Error running gene prediction model again');
                 return;
             }
-            console.log('Gene prediction model after flexible Scipio completed in', modelFlexResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running gene prediction model after flexible Scipio ...': modelFlexResult.data.timer})
-            numGenes = modelFlexResult.data.data;
+            console.log('Gene prediction model after flexible Scipio completed in', modelFlexResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running gene prediction model after flexible Scipio ...': modelFlexResult.timer})
+            numGenes = modelFlexResult.data;
             console.log('Number of genes predicted after flexible Scipio:', numGenes);
 
 
@@ -437,16 +461,21 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
 
         if (!(resume && runData.resumeData && runData.resumeData.modelOptimized)) {
             await updateAnnotation(user, runId, 'progress', 'Optimizing gene prediction model ...');
-            const optimizeModelResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_optimize_model`, { 'parameters': parameters, 'num_genes': numGenes }),
-                user, runId, updateAnnotation
-            );
-            if (optimizeModelResult.error) {
-                console.error('Error optimizing gene prediction model:', optimizeModelResult.error);
+            const optimizeModelResult = await runLongRouteStep({
+                startPath: '/run_optimize_model_async',
+                statusPath: `/check_optimize_model_status/${runId}`,
+                payload: { 'parameters': parameters, 'num_genes': numGenes },
+                stepLabel: 'Optimizing gene prediction model ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!optimizeModelResult) {
+                console.error('Error optimizing gene prediction model');
                 return;
             }
-            console.log('Gene prediction model optimization completed in', optimizeModelResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Optimizing gene prediction model ...': optimizeModelResult.data.timer})
+            console.log('Gene prediction model optimization completed in', optimizeModelResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Optimizing gene prediction model ...': optimizeModelResult.timer})
             await updateAnnotation(user, runId, 'resumeData', {'modelOptimized': true});
         }
         
@@ -454,17 +483,22 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             annotationFile = runData.resumeData.annotationFile;
         } else {    
             await updateAnnotation(user, runId, 'progress', 'Running Augustus annotation ...');
-            const augustusResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_augustus`, { 'parameters': parameters, 'split_assembly_files': splitAssemblyFiles }),
-                user, runId, updateAnnotation
-            );
-            if (augustusResult.error) {
-                console.error('Error running Augustus:', augustusResult.error);
+            const augustusResult = await runLongRouteStep({
+                startPath: '/run_augustus_async',
+                statusPath: `/check_augustus_status/${runId}`,
+                payload: { 'parameters': parameters, 'split_assembly_files': splitAssemblyFiles },
+                stepLabel: 'Running Augustus annotation ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!augustusResult) {
+                console.error('Error running Augustus');
                 return;
             }
-            console.log('Augustus annotation completed in', augustusResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running Augustus annotation ...': augustusResult.data.timer})
-            annotationFile = augustusResult.data.data;
+            console.log('Augustus annotation completed in', augustusResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running Augustus annotation ...': augustusResult.timer})
+            annotationFile = augustusResult.data;
             console.log('Augustus annotation file:', annotationFile);
             await updateAnnotation(user, runId, 'resumeData', {'annotationFile': annotationFile});
         }
@@ -520,22 +554,27 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
             annotationFile = runData.resumeData.annotationFile;
         } else {
             await updateAnnotation(user, runId, 'progress', 'Running Brownaming ...');
-            const brownamingResult = await executeRequest(
-                axios.post(`${CONFIG.API_BASE_URL}/run_brownaming`, { 
-                    'parameters': parameters, 
+            const brownamingResult = await runLongRouteStep({
+                startPath: '/run_brownaming_async',
+                statusPath: `/check_brownaming_status/${runId}`,
+                payload: {
+                    'parameters': parameters,
                     'annotation_file': annotationFile,
                     'run_id': runId,
                     'cpus': parameters.cpus,
                     'resume': resume
-                }),
-                user, runId, updateAnnotation
-            );
-            if (brownamingResult.error) {
-                console.error('Error running Brownaming:', brownamingResult.error);
+                },
+                stepLabel: 'Running Brownaming ...',
+                user,
+                runId,
+                updateAnnotation
+            });
+            if (!brownamingResult) {
+                console.error('Error running Brownaming');
                 return;
             }
-            console.log('Brownaming completed in', brownamingResult.data.timer);
-            await updateAnnotation(user, runId, 'timers', {'Running Brownaming ...': brownamingResult.data.timer})
+            console.log('Brownaming completed in', brownamingResult.timer);
+            await updateAnnotation(user, runId, 'timers', {'Running Brownaming ...': brownamingResult.timer})
             annotationFile = `runs/${runId}/${brownamingResult.data.output_files.fasta}`;
             console.log('Brownaming annotation file:', annotationFile);
             await updateAnnotation(user, runId, 'resumeData', {
@@ -550,17 +589,23 @@ export async function handleAnnotationRun(runId, user, updateAnnotation, resume=
     if (parameters.buscoSection.annotation && !(resume && runData.resumeData && runData.resumeData.buscoAnnotation)) {
         await updateAnnotation(user, runId, 'progress', 'Running BUSCO on annotation ...');
         console.log('Running BUSCO on annotation with file:', annotationFile);
-        const buscoAnnotationResult = await executeRequest(
-            axios.post(`${CONFIG.API_BASE_URL}/run_busco`, { 'parameters': parameters, 'input_file': annotationFile, 'mode': 'proteins' }),
-            user, runId, updateAnnotation
-        );
-        if (buscoAnnotationResult.error) {
-            console.error('Error running BUSCO on annotation:', buscoAnnotationResult.error);
+        const buscoAnnotationResult = await runLongRouteStep({
+            startPath: '/run_busco_async',
+            statusPath: `/check_busco_status/${runId}`,
+            statusQuery: { mode: 'proteins' },
+            payload: { 'parameters': parameters, 'input_file': annotationFile, 'mode': 'proteins' },
+            stepLabel: 'Running BUSCO on annotation ...',
+            user,
+            runId,
+            updateAnnotation
+        });
+        if (!buscoAnnotationResult) {
+            console.error('Error running BUSCO on annotation');
             return;
         }
-        console.log('BUSCO on annotation completed in', buscoAnnotationResult.data.timer);
-        await updateAnnotation(user, runId, 'timers', {'Running BUSCO on annotation ...': buscoAnnotationResult.data.timer})
-        let buscoAnnotationResultData = buscoAnnotationResult.data.data;
+        console.log('BUSCO on annotation completed in', buscoAnnotationResult.timer);
+        await updateAnnotation(user, runId, 'timers', {'Running BUSCO on annotation ...': buscoAnnotationResult.timer})
+        let buscoAnnotationResultData = buscoAnnotationResult.data;
         console.log('BUSCO annotation result:', buscoAnnotationResultData);
         await updateAnnotation(user, runId, 'resumeData', {'buscoAnnotation': true});
     }

@@ -309,10 +309,11 @@ export default function Settings() {
         }
         
         const freeCpus = await fetchCPUs();
+        if (freeCpus === 0) {
+            alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
+            return;
+        }
         if (!checkParameters()) {
-            if (freeCpus === 0) {
-                alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
-            }
             return;
         }
         console.log('freeCpus:', freeCpus);
