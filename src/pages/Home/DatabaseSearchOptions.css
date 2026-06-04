@@ -69,13 +69,22 @@
     --option-color: #27ae60;
 }
 
-.dbsearch-options-container li[data-color="phylogeny"] {
-    --option-color: #e67e22;
+.dbsearch-options-container li[data-color="rnaseq"] {
+    --option-color: #16a085;
 }
 
-/* DNA Sequencing Options */
+/* Sequencing Options Tabs */
+.seq-options-tabs-container {
+    margin-top: 10px;
+}
+
+.seq-options-tabs-container .dnaseq-options-section {
+    border-radius: 0 8px 8px 8px;
+    border-color: #288cbb;
+}
+
+
 .dnaseq-options-section {
-    margin-top: 15px;
     padding: 15px;
     border: 1px solid #ccc;
     border-radius: 4px;

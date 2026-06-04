@@ -29,11 +29,12 @@ export default function App() {
                   <Header setIsLoggedIn={setIsLoggedIn} />
                   <Routes>
                     <Route path="/" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
-                    <Route path="/about" element={isLoggedIn ? <About /> : <Navigate to="/login" />} />
+                    <Route path="/about" element={<About />} />
                     <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
                     <Route path="/my-annotations" element={isLoggedIn ? <MyAnnotations /> : <Navigate to="/login" />} />
                     <Route path="/my-annotations/:id" element={isLoggedIn ? <AnnotationResults /> : <Navigate to="/login" />} />
-                    <Route path="/functional-annotation" element={isLoggedIn ? <FunctionalAnnotation /> : <Navigate to="/login" />} />
+                    <Route path="/brownaming" element={isLoggedIn ? <FunctionalAnnotation /> : <Navigate to="/login" />} />
+                    <Route path="/functional-annotation" element={<Navigate to="/brownaming" />} />
                     <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
                     <Route path="*" element={<Navigate to="/" />} />
                   </Routes>

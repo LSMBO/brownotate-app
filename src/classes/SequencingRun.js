@@ -35,5 +35,6 @@ export default class SequencingRun {
         this.optimalPlatform = run["optimal_platform"] || false;
         this.optimalStrategy = run["optimal_strategy"] || false;
         this.optimalSelection = run["optimal_selection"] || false;
+        this.tissue = run["tissue"] || null;
     }
 }

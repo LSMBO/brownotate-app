@@ -15,8 +15,7 @@ const AnnotationResults = () => {
 	const [annotationTitle, setAnnotationTitle] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState("Parameters");
-    const [annotation, setAnnotation] = useState(null);
-	const [isFunctionalAnnotation, setIsFunctionalAnnotation] = useState(false);
+    const [annotation, setAnnotation] = useState(null);	const [isFetching, setIsFetching] = useState(true);	const [isFunctionalAnnotation, setIsFunctionalAnnotation] = useState(false);
     const [fileContents, setFileContents] = useState({
         buscoAssemblyFile: null,
         buscoAnnotationFile: null,
@@ -45,6 +44,8 @@ const AnnotationResults = () => {
 				}
 			} catch (error) {
 				console.error(error);
+			} finally {
+				setIsFetching(false);
 			}
 		};
 		fetchRun();
@@ -66,8 +67,14 @@ const AnnotationResults = () => {
 			setIsFunctionalAnnotation(isFunctional);
 			
 			const handleDisplayFile = async (filePath, fileType) => {
+				if (!filePath) {
+					return;
+				}
 				try {
 					const fileContent = await displayFile(filePath);
+					if (!fileContent) {
+						return;
+					}
 					setFileContents(prevState => ({
 						...prevState,
 						[fileType]: fileContent
@@ -76,34 +83,63 @@ const AnnotationResults = () => {
 					console.error(`Error fetching ${fileType} file:`, error);
 				}
 			};
+
+			const hasResultsPath = Boolean(annotation.results_path);
+			const hasBuscoAssemblyData = Boolean(
+				annotation.resumeData?.busco_assembly_result?.raw_summary ||
+				annotation.resumeData?.busco_assembly_result?.scores ||
+				annotation.resumeData?.buscoAssembly ||
+				annotation.resumeData?.busco_assembly_step_state === 'success'
+			);
+			const hasBuscoAnnotationData = Boolean(
+				annotation.resumeData?.busco_annotation_result?.raw_summary ||
+				annotation.resumeData?.busco_annotation_result?.results ||
+				annotation.resumeData?.buscoAnnotation ||
+				annotation.resumeData?.busco_annotation_step_state === 'success'
+			);
 	
 			// Only load Busco files for non-functional annotations
 			if (!isFunctional) {
-				if (annotation.status === "completed" || annotation.status === "incomplete") {
-					if (annotation.parameters.buscoSection && annotation.parameters.buscoSection.assembly) {
-						await handleDisplayFile(`${annotation.results_path}/Busco_genome.json`, 'buscoAssemblyFile');
-					}
+				if (annotation.resumeData?.busco_assembly_result?.raw_summary) {
+					setFileContents(prevState => ({
+						...prevState,
+						buscoAssemblyFile: annotation.resumeData.busco_assembly_result.raw_summary
+					}));
+				} else if (annotation.parameters.buscoSection && annotation.parameters.buscoSection.assembly && hasBuscoAssemblyData && hasResultsPath) {
+					await handleDisplayFile(`${annotation.results_path}/Busco_genome.json`, 'buscoAssemblyFile');
 				}
-				
-				if (annotation.status === "completed") {
-					if (annotation.parameters.buscoSection && annotation.parameters.buscoSection.annotation) {
-						await handleDisplayFile(`${annotation.results_path}/Busco_annotation.json`, 'buscoAnnotationFile');
-					}
+
+				if (annotation.resumeData?.busco_annotation_result?.raw_summary) {
+					setFileContents(prevState => ({
+						...prevState,
+						buscoAnnotationFile: annotation.resumeData.busco_annotation_result.raw_summary
+					}));
+				} else if (annotation.parameters.buscoSection && annotation.parameters.buscoSection.annotation && hasBuscoAnnotationData && hasResultsPath) {
+					await handleDisplayFile(`${annotation.results_path}/Busco_annotation.json`, 'buscoAnnotationFile');
 				}
 			}
 			
-			if (annotation.status === "completed" && !annotation.parameters.brownamingSection.skip) {
-				if (annotation.resumeData?.brownamingResults) {
-					const brownamingResults = annotation.resumeData.brownamingResults;
+			if (!annotation.parameters.brownamingSection.skip) {
+				const brownamingResults = annotation.resumeData?.brownamingResults || annotation.resumeData?.brownaming_result?.output_files;
+				if (brownamingResults) {
+					const brownamingDir = annotation.resumeData?.brownaming_dir || annotation.resumeData?.brownaming_result?.brownaming_dir;
+					const statsFileName = brownamingResults.stats ? brownamingResults.stats.split('/').pop() : null;
+					const logFileName = brownamingResults.log ? brownamingResults.log.split('/').pop() : null;
+					const statsPath = annotation.results_path && brownamingResults.stats
+						? `${annotation.results_path}/${brownamingResults.stats}`
+						: (brownamingDir && statsFileName ? `${brownamingDir}/${statsFileName}` : null);
+					const logPath = annotation.results_path && brownamingResults.log
+						? `${annotation.results_path}/${brownamingResults.log}`
+						: (brownamingDir && logFileName ? `${brownamingDir}/${logFileName}` : null);
 
 					setFileContents(prevState => ({
 						...prevState,
-						brownamingStatsFile: `${annotation.results_path}/${brownamingResults.stats}`,
+						brownamingStatsFile: statsPath,
 					}));
 					
 					// Load log file content
-					if (brownamingResults.log) {
-						await handleDisplayFile(`${annotation.results_path}/${brownamingResults.log}`, 'brownamingLogFile');
+					if (logPath) {
+						await handleDisplayFile(logPath, 'brownamingLogFile');
 					}
 				}
 			}
@@ -122,7 +158,7 @@ const AnnotationResults = () => {
 				<h2 className="home-h2" dangerouslySetInnerHTML={{__html: annotationTitle}} />
 				
 				<div className='tabs-container'>
-					{annotation && annotation.status === "completed" && (
+					{annotation && (
 						<div className='tabs-header'>
 							<div className={`tab ${activeTab === 'Results' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Results')}>Results</div>
 							<div className={`tab ${activeTab === 'Parameters' ? 'active-tab' : ''}`} onClick={() => setActiveTab('Parameters')}>Parameters</div>
@@ -143,6 +179,9 @@ const AnnotationResults = () => {
 			</div>
 
 			{isLoading && (
+				<Loading />
+			)}
+			{isFetching && !isLoading && (
 				<Loading />
 			)}
 		</div>

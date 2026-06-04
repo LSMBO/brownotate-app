@@ -1,0 +1,202 @@
+.login-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    width: 90%;
+    margin: 20px auto;
+}
+
+.login-left-panel {
+    width: 50%;
+}
+
+.signin-section {
+    border-bottom: 1px solid #ddd;
+    margin: 40px 0;
+    padding-bottom: 30px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    margin: auto;
+}
+
+.login-form label {
+    margin-top: 15px;
+}
+
+.login-actions-row {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin: 20px auto 0;
+    flex-wrap: nowrap;
+}
+
+.login-actions-row .btn-tab-style {
+    width: 170px;
+    margin: 0;
+}
+
+.guest-section {
+    text-align: left;
+}
+
+.guest-description {
+    width: 100%;
+    margin: 0;
+}
+
+.guest-mode-button {
+    width: 200px;
+    margin: 20px 0;
+}
+
+.guest-mode-note {
+    font-size: 0.9rem;
+    color: #666;
+    width: 100%;
+    margin: 0;
+}
+
+.login-right {
+    width: 50%;
+    padding: 20px;
+    border-left: 2px solid #288cbb;
+}
+
+.login-right p {
+    display: block;
+    margin: 10px 0;
+}
+
+.account-request-card {
+    background: linear-gradient(180deg, #f7fbfd 0%, #eef6fa 100%);
+    border: 1px solid #c7dce7;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 14px 30px rgba(40, 140, 187, 0.08);
+}
+
+.account-request-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.account-request-header h3 {
+    margin: 0 0 8px;
+}
+
+.account-request-form {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.account-request-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.validate-code-button {
+    width: 180px;
+    margin: 18px auto 0;
+}
+
+.forgot-update-button {
+    width: 100%;
+    margin: 0;
+}
+
+.modal-form .account-request-actions .btn-tab-style {
+    width: 200px;
+    margin: 0;
+}
+
+.success-message {
+    color: #18794e;
+    font-weight: 600;
+}
+
+.account-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 39, 56, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+}
+
+.account-modal-card {
+    width: min(560px, 96vw);
+    background: #ffffff;
+    border: 1px solid #c7dce7;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 20px 45px rgba(10, 35, 56, 0.22);
+}
+
+.account-modal-card h3 {
+    margin: 0 0 8px;
+}
+
+.account-modal-card p {
+    margin: 0;
+    width: 100%;
+}
+
+.account-modal-card .account-request-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.account-modal-card .account-request-actions .btn-tab-style {
+    width: 100%;
+    margin: 0;
+}
+
+.modal-form {
+    margin-top: 10px;
+}
+
+.cite-title {
+    margin-top: 40px;
+}
+
+.cite-block {
+    text-align: justify;
+    line-height: 1.6;
+}
+
+@media screen and (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+    }
+
+    .login-left-panel,
+    .login-right {
+        width: 100%;
+    }
+
+    .login-right {
+        border-left: none;
+        border-top: 2px solid #288cbb;
+    }
+
+    .login-actions-row {
+        gap: 8px;
+    }
+
+    .login-actions-row .btn-tab-style {
+        width: calc(50% - 4px);
+    }
+}

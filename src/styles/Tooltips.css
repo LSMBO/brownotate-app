@@ -1,0 +1,59 @@
+.tooltip-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+}
+
+.tooltip-container .helpIcon {
+    display: none;
+}
+
+.tooltip-container::before,
+.access-code-tooltip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #288cbb;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: help;
+}
+
+.tooltip-container::before {
+    content: '?';
+}
+
+.tooltip-container .help-span {
+    color: #23566f;
+    font-size: 0.85rem;
+    font-weight: 400;
+    position: absolute;
+    left: 26px;
+    top: -8px;
+    min-width: 260px;
+    max-width: 380px;
+    background-color: #e8f3fa;
+    border: 1px solid #b7d7ea;
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(22, 87, 121, 0.18);
+    display: none;
+    z-index: 20;
+    line-height: 1.35;
+}
+
+.tooltip-container:hover .help-span {
+    display: block;
+}
+
+.access-code-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}

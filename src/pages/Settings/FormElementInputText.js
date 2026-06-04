@@ -21,6 +21,11 @@ export default function FormElementInputText({ label, disabled, onChange, text, 
 
     };
 
+    const handleNumericWheel = (e) => {
+        e.preventDefault();
+        e.currentTarget.blur();
+    };
+
     return (
         <>
             { type === 'input-number' ? (
@@ -30,6 +35,7 @@ export default function FormElementInputText({ label, disabled, onChange, text, 
                         disabled={disabled}
                         name={label.toLowerCase()}
                         onChange={handleNumericChange}
+                        onWheel={handleNumericWheel}
                         value={newText}
                         min='0'
                         {...(max !== -1 && { max: max })}

@@ -3,3 +3,147 @@
     margin: 20px auto;
     align-items: flex-start;
 }
+
+.about-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    width: 100%;
+    align-items: flex-start;
+}
+
+.about-nav {
+    width: 280px;
+    position: sticky;
+    top: 20px;
+    border: 1px solid #d9e6ef;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f8fcff 0%, #eef7fb 100%);
+    padding: 14px;
+}
+
+.about-nav h3 {
+    margin: 0 0 10px 0;
+    color: #1f4b6d;
+}
+
+.about-nav-item {
+    width: 100%;
+    margin: 4px 0;
+    border: 1px solid #d0dbe3;
+    border-left: 4px solid #b7c6d2;
+    background: white;
+    color: #1b2f3c;
+    text-align: left;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+
+.about-nav-item.active {
+    border-left-color: #288cbb;
+    background: #edf8ff;
+    font-weight: 600;
+}
+
+.about-doc {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #d9e6ef;
+    border-radius: 12px;
+    background: white;
+    padding: 24px;
+}
+
+.about-doc h2 {
+    margin-top: 0;
+    color: #1f4b6d;
+}
+
+.about-doc h3 {
+    margin-top: 28px;
+    color: #2e617d;
+}
+
+.about-doc p,
+.about-doc li,
+.doc-shot-copy {
+    line-height: 1.6;
+}
+
+.about-doc p,
+.doc-shot-copy,
+.doc-citation {
+    display: block;
+    width: auto;
+}
+
+.doc-shot-copy strong,
+.doc-shot-copy em,
+.doc-shot-copy a,
+.doc-shot-copy code,
+.about-doc p strong,
+.about-doc p em,
+.about-doc p a,
+.about-doc p code {
+    display: inline;
+    width: auto;
+}
+
+.doc-lead {
+    font-size: 1.02rem;
+}
+
+.doc-citation {
+    margin: 18px 0 26px;
+    padding: 16px 18px;
+    border-left: 4px solid #288cbb;
+    background: #f4fbff;
+    border-radius: 8px;
+}
+
+.doc-citation a,
+.about-doc a {
+    color: #1d6f97;
+}
+
+.doc-shot {
+    margin: 16px 0 26px;
+    border: 1px solid #d7e3ec;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fbfdff;
+}
+
+.doc-shot-image {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #d6e1e9;
+    display: block;
+}
+
+.doc-shot-caption {
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+    gap: 8px;
+}
+
+.doc-shot-copy {
+    color: #314b5d;
+}
+
+@media (max-width: 980px) {
+    .about-layout {
+        flex-direction: column;
+    }
+
+    .about-nav {
+        width: 100%;
+        position: static;
+    }
+
+    .about-doc {
+        padding: 18px;
+    }
+}

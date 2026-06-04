@@ -85,49 +85,6 @@ button:not(:disabled):hover{
     height: 100%;
 }
 
-.login-form {
-    display: flex;
-    flex-direction: column;
-    width: 95%;
-    margin: auto;
-}
-
-.login-form label{
-    margin-top: 15px;
-}
-
-.login-container {
-    flex-direction: row;
-    gap: 40px;
-    width: 90%;
-    margin: 20px auto;
-}
-
-
-.login-right {
-    width: 50%;
-    padding: 20px;
-    border-left: 2px solid #288cbb;
-}
-
-.login-right p {
-    display: block;
-    margin: 10px 0;
-}
-
-@media screen and (max-width: 768px) {
-    .login-container {
-        flex-direction: column;
-    }
-    .login-left, .login-right {
-        width: 100%;
-    }
-    .login-right {
-        border-left: none;
-        border-top: 2px solid #288cbb;
-    }
-}
-
 input {
     display: flex;
     width: 90%;

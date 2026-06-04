@@ -1,8 +1,11 @@
+import { useEffect, useRef } from 'react';
 import ExcludedTaxo from "./ExcludedTaxo";
 import FormElementInputRadio from "./FormElementInputRadio";
 import HelpIcon from "../../assets/help.png";
 
 export default function SectionBrownaming({ disabled, updateParameters, parameters, showSkipOption = true }) {
+    const autoInitializedLineageRef = useRef(null);
+
     const handleRadioChange = (name, isChecked) => {
         updateParameters({brownamingSection: {[name]: isChecked}});
     };
@@ -25,6 +28,29 @@ export default function SectionBrownaming({ disabled, updateParameters, paramete
     };
 
     const lineage = parameters.species?.lineage || [];    
+    const lineageSignature = lineage.map((taxon) => `${taxon.taxonId}:${taxon.rank}`).join('|');
+
+    useEffect(() => {
+        if (!lineage.length) {
+            autoInitializedLineageRef.current = null;
+            return;
+        }
+
+        if (autoInitializedLineageRef.current === lineageSignature) {
+            return;
+        }
+
+        autoInitializedLineageRef.current = lineageSignature;
+
+        if (parameters.brownamingSection.lastTaxid) {
+            return;
+        }
+
+        const familyTaxon = lineage.find((taxon) => String(taxon.rank || '').toLowerCase() === 'family');
+        if (familyTaxon?.taxonId) {
+            updateParameters({ brownamingSection: { lastTaxid: familyTaxon.taxonId } });
+        }
+    }, [lineage, lineageSignature, parameters.brownamingSection.lastTaxid, updateParameters]);
     
     return (
         <div className="parameters-section">

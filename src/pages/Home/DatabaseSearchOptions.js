@@ -1,8 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './DatabaseSearchOptions.css';
 
 export default function DatabaseSearchOptions({ options, setOptions, disabled }) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [seqTab, setSeqTab] = useState('dna'); // 'dna' or 'rna'
+
+    useEffect(() => {
+        const dnaActive = Boolean(options?.dnaseq?.active);
+        const rnaActive = Boolean(options?.rnaseq?.active);
+
+        if (!dnaActive && !rnaActive) {
+            return;
+        }
+
+        if (seqTab === 'dna' && !dnaActive && rnaActive) {
+            setSeqTab('rna');
+            return;
+        }
+
+        if (seqTab === 'rna' && !rnaActive && dnaActive) {
+            setSeqTab('dna');
+            return;
+        }
+
+        if (seqTab !== 'dna' && seqTab !== 'rna') {
+            setSeqTab(dnaActive ? 'dna' : 'rna');
+        }
+    }, [options?.dnaseq?.active, options?.rnaseq?.active, seqTab]);
 
     const handleCheckboxChange = (key) => {
         setOptions(prev => ({
@@ -21,6 +45,16 @@ export default function DatabaseSearchOptions({ options, setOptions, disabled })
         }));
     };
 
+    const handleRnaseqOptionChange = (field, value) => {
+        setOptions(prev => ({
+            ...prev,
+            rnaseq: {
+                ...prev.rnaseq,
+                [field]: value
+            }
+        }));
+    };
+
     const handlePlatformToggle = (platform) => {
         const currentPlatforms = options.dnaseq.platforms || [];
         const newPlatforms = currentPlatforms.includes(platform)
@@ -34,6 +68,20 @@ export default function DatabaseSearchOptions({ options, setOptions, disabled })
         handleDnaseqOptionChange('platforms', newPlatforms);
     };
 
+    const handleRnaPlatformToggle = (platform) => {
+        const currentPlatforms = options.rnaseq.platforms || [];
+        const newPlatforms = currentPlatforms.includes(platform)
+            ? currentPlatforms.filter(p => p !== platform)
+            : [...currentPlatforms, platform];
+        
+        if (newPlatforms.length === 0) {
+            return; // Don't allow deselecting all platforms
+        }
+        
+        handleRnaseqOptionChange('platforms', newPlatforms);
+    };
+
+    const showSeqOptions = options.dnaseq.active || options.rnaseq.active;
 
     return (
                 <div className='dbsearch-options-container'>
@@ -108,10 +156,45 @@ export default function DatabaseSearchOptions({ options, setOptions, disabled })
                             />
                             <label>DNA Sequencing (NCBI SRA)</label>
                         </li>
+                        <li 
+                            data-color="rnaseq"
+                            onClick={() => !disabled && handleCheckboxChange('rnaseq')}
+                            className={disabled ? 'disabled' : ''}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={options.rnaseq.active}
+                                onChange={() => {}} // Handled by li onClick
+                                disabled={disabled}
+                                readOnly
+                            />
+                            <label>RNA Sequencing (NCBI SRA)</label>
+                        </li>
                     </ul>        
-                {options.dnaseq.active && (
+                {showSeqOptions && (
+                    <div className="seq-options-tabs-container">
+                        <div className="tabs-header">
+                            {options.dnaseq.active && (
+                                <div
+                                    className={`tab${seqTab === 'dna' ? ' active-tab' : ''}`}
+                                    onClick={() => setSeqTab('dna')}
+                                >
+                                    DNA Sequencing Options
+                                </div>
+                            )}
+                            {options.rnaseq.active && (
+                                <div
+                                    className={`tab${seqTab === 'rna' ? ' active-tab' : ''}`}
+                                    onClick={() => setSeqTab('rna')}
+                                >
+                                    RNA Sequencing Options
+                                </div>
+                            )}
+                        </div>
+
+                        {/* DNA Sequencing Options panel */}
+                        {options.dnaseq.active && seqTab === 'dna' && (
                     <div className="dnaseq-options-section">
-                        <label>DNA Sequencing Options</label>
                         <div>
                             <div className="dnaseq-options-block">
                                 <div className="dnaseq-options-group">
@@ -257,6 +340,119 @@ export default function DatabaseSearchOptions({ options, setOptions, disabled })
                                 </div> 
                             </div>
                         </div>
+                    </div>
+                )}
+
+                        {/* RNA Sequencing Options panel */}
+                        {options.rnaseq.active && seqTab === 'rna' && (
+                            <div className="dnaseq-options-section">
+                                <div>
+                                    <div className="dnaseq-options-block">
+                                        <div className="dnaseq-options-group">
+                                            <label className="dnaseq-group-label">Platforms</label>
+                                            <div className="platform-checkboxes">
+                                                {['ILLUMINA', 'BGISEQ', 'ION_TORRENT', 'PACBIO_SMRT', 'OXFORD_NANOPORE'].map(platform => (
+                                                    <label key={platform}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={options.rnaseq.platforms?.includes(platform)}
+                                                            onChange={() => handleRnaPlatformToggle(platform)}
+                                                            disabled={disabled}
+                                                        />
+                                                        {platform.replace('_', ' ')}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="dnaseq-options-group">
+                                            <label className="dnaseq-group-label">Layout</label>
+                                            <div className="radio-group">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="rna-layout"
+                                                        checked={options.rnaseq.layout === 'any'}
+                                                        onChange={() => handleRnaseqOptionChange('layout', 'any')}
+                                                        disabled={disabled}
+                                                    />
+                                                    Any
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="rna-layout"
+                                                        checked={options.rnaseq.layout === 'PAIRED'}
+                                                        onChange={() => handleRnaseqOptionChange('layout', 'PAIRED')}
+                                                        disabled={disabled}
+                                                    />
+                                                    Paired
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="rna-layout"
+                                                        checked={options.rnaseq.layout === 'SINGLE'}
+                                                        onChange={() => handleRnaseqOptionChange('layout', 'SINGLE')}
+                                                        disabled={disabled}
+                                                    />
+                                                    Single
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="dnaseq-options-block">
+                                        <div className="dnaseq-options-group">
+                                            <label className="dnaseq-group-label">Estimated FASTQ Size (GB) per run</label>
+                                            <div className="coverage-inputs">
+                                                <input
+                                                    type="number"
+                                                    value={options.rnaseq.runSizeGbMin}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        handleRnaseqOptionChange('runSizeGbMin', value === '' ? '' : (parseFloat(value) || 0));
+                                                    }}
+                                                    disabled={disabled}
+                                                    min="0"
+                                                    step="0.1"
+                                                    placeholder="Min"
+                                                />
+                                                <span>to</span>
+                                                <input
+                                                    type="number"
+                                                    value={options.rnaseq.runSizeGbMax}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        handleRnaseqOptionChange('runSizeGbMax', value === '' ? '' : (parseFloat(value) || 0));
+                                                    }}
+                                                    disabled={disabled}
+                                                    min="0"
+                                                    step="0.1"
+                                                    placeholder="Max"
+                                                />
+                                                <span>GB</span>
+                                            </div>
+                                            <div className="helper-text" style={{ marginTop: '6px', fontSize: '0.9em' }}>
+                                                Leave Min and/or Max empty to disable that bound. Values are estimated from total bases, layout, and platform.
+                                            </div>
+                                        </div>
+
+                                        <div className="dnaseq-options-group">
+                                            <label className="dnaseq-checkbox-label">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={options.rnaseq.inputTaxonomyOnly}
+                                                    onChange={(e) => handleRnaseqOptionChange('inputTaxonomyOnly', e.target.checked)}
+                                                    disabled={disabled}
+                                                />
+                                                Search input taxonomy only (don't look to parents)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 </div>

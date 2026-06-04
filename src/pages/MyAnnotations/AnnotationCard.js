@@ -1,16 +1,59 @@
 import "./AnnotationCard.css"
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
 import { useAnnotations } from '../../contexts/AnnotationsContext';
 import axios from 'axios';
 import CONFIG from '../../config';
 import resumeArrowIcon from "../../assets/resume_arrow.png"
 import Image from "../../components/Image";
 import AnnotationProgressBar from "./AnnotationProgressBar";
-import { handleAnnotationRun } from '../../utils/AnnotationRun';
+import { handleAnnotationRunNewArchitecture } from '../../utils/AnnotationRun';
 
 const AnnotationCard = ({ user, annotation }) => {
     const navigate = useNavigate();
     const { waitingTime, fetchUserAnnotations, fetchCPUs, updateAnnotation, setIsLoading } = useAnnotations();
+    const [resolvedError, setResolvedError] = useState(annotation.error || null);
+
+    useEffect(() => {
+      setResolvedError(annotation.error || null);
+    }, [annotation.error]);
+
+    useEffect(() => {
+      const fetchErrorMessage = async () => {
+        if (annotation.status !== "failed") {
+          return;
+        }
+
+        try {
+          const response = await axios.post(`${CONFIG.API_BASE_URL}/get_error_message`, { run_id: annotation.parameters.id });
+          if (response.status === 200 && response.data?.status === 'success' && response.data?.data?.message) {
+            setResolvedError((prev) => {
+              const remoteError = response.data.data;
+              const previousMessage = typeof prev === 'string' ? prev : prev?.message;
+              const shouldKeepPreviousMessage = previousMessage && previousMessage.trim() && previousMessage !== 'Pipeline failed';
+              if (previousMessage && previousMessage.trim() && previousMessage !== 'Pipeline failed') {
+                return {
+                  ...(typeof prev === 'object' && prev ? prev : { message: previousMessage }),
+                  step: remoteError.step,
+                  source: remoteError.source,
+                  run_id: remoteError.run_id,
+                  message: previousMessage,
+                };
+              }
+              return {
+                ...(typeof prev === 'object' && prev ? prev : {}),
+                ...remoteError,
+                message: shouldKeepPreviousMessage ? previousMessage : remoteError.message
+              };
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching failed run message:', error);
+        }
+      };
+
+      fetchErrorMessage();
+    }, [annotation.status, annotation.parameters.id]);
 
     const formatDate = (dateTimeString) => {
       const date = new Date(dateTimeString);
@@ -49,7 +92,11 @@ const AnnotationCard = ({ user, annotation }) => {
 
     const handleResumeRun = async (e) => {
       e.stopPropagation();
-      fetchCPUs();
+      const freeCpus = await fetchCPUs();
+      if (freeCpus === 0) {
+        alert("An annotation is already running on the server. Please try again later.");
+        return;
+      }
       await updateAnnotation(user, annotation.parameters.id, 'status', 'running');
       
       const isFunctionalAnnotation = annotation.parameters.type === 'functional';
@@ -69,7 +116,7 @@ const AnnotationCard = ({ user, annotation }) => {
         }   
 
       } else {
-        handleAnnotationRun(annotation.parameters.id, user, updateAnnotation, true);
+        await handleAnnotationRunNewArchitecture(annotation.parameters.id, user, fetchUserAnnotations);
       }
     }
 
@@ -77,7 +124,36 @@ const AnnotationCard = ({ user, annotation }) => {
         navigate(`/my-annotations/${annotation.parameters.id}`, { state: { tab: tab } });
     };
 
+    const parseBuscoScore = (summary) => {
+      if (typeof summary !== 'string') {
+        return null;
+      }
+      const match = summary.match(/C:\s*([0-9]+(?:\.[0-9]+)?)%/i);
+      return match ? `${match[1]}%` : null;
+    };
+
+    const getBuscoScore = (scope) => {
+      const resultKey = scope === 'assembly' ? 'busco_assembly_result' : 'busco_annotation_result';
+      const result = annotation.resumeData?.[resultKey];
+
+      const scoreFromScores = result?.scores?.C;
+      if (typeof scoreFromScores === 'number') {
+        return `${scoreFromScores}%`;
+      }
+
+      const scoreFromResults = result?.results?.['Complete percentage'];
+      if (typeof scoreFromResults === 'number') {
+        return `${scoreFromResults}%`;
+      }
+
+      return parseBuscoScore(result?.results?.one_line_summary || result?.raw_summary);
+    };
+
     const isFunctionalAnnotation = annotation.parameters.type === 'functional';
+    const assemblyBuscoScore = getBuscoScore('assembly');
+    const annotationBuscoScore = getBuscoScore('annotation');
+    const errorObj = typeof resolvedError === 'object' && resolvedError !== null ? resolvedError : null;
+    const errorMessage = typeof resolvedError === 'string' ? resolvedError : errorObj?.message;
 
     return (
       <div className={`annotation-card t2_light ${annotation.status}`}>
@@ -93,7 +169,7 @@ const AnnotationCard = ({ user, annotation }) => {
             <label>{formatDate(annotation.parameters.id)}</label>
           </div>
         </div>
-        {isFunctionalAnnotation && <label className="functional-badge">Functional Annotation</label>}
+        {isFunctionalAnnotation && <label className="functional-badge">Brownaming</label>}
         {!isFunctionalAnnotation && (
           <AnnotationProgressBar annotation={annotation} waitingTime={waitingTime}/>
         )}
@@ -102,29 +178,37 @@ const AnnotationCard = ({ user, annotation }) => {
         )}
         <div className="annotation-details">
           <button className='t2_bold btn-tab-style' onClick={ () => handleClick('parameters') }>Parameters</button>
-          <button className='t2_bold btn-tab-style' disabled={annotation.status !== "completed"} onClick={ () => handleClick('results') }>Results</button>
+          <button className='t2_bold btn-tab-style' onClick={ () => handleClick('results') }>Results</button>
         </div>
-        {annotation.status === "failed" && (
-          <h4>Pipeline failed</h4>
+        {(assemblyBuscoScore || annotationBuscoScore) && (
+          <div className="annotation-busco-summary">
+            {assemblyBuscoScore && <label>Busco on assembly: {assemblyBuscoScore}</label>}
+            {annotationBuscoScore && <label>Busco on annotation: {annotationBuscoScore}</label>}
+          </div>
         )}
-        {annotation.status === "failed" && annotation.error && (
+        {annotation.status === "failed" && (
+          <>
+            <h4>Pipeline failed</h4>
+            <div className="failed-run-id"><b>Run ID:</b> {annotation.parameters.id}</div>
+          </>
+        )}
+        {annotation.status === "failed" && resolvedError && (
           <>
             <div className="annotation-error-box">
-              {annotation.error.message && (
-                <div><b>Message:</b> {annotation.error.message}</div>
+              {errorMessage && (
+                <div><b>Message:</b> {errorMessage}</div>
               )}
-              {annotation.error.command && (
-                <div><b>Command:</b> <code>{annotation.error.command}</code></div>
+              {errorObj?.command && (
+                <div><b>Command:</b> <code>{errorObj.command}</code></div>
               )}
-              {annotation.error.stderr && annotation.error.stderr.trim() && (
-                <div className="error-block"><b>stderr:</b><pre>{annotation.error.stderr}</pre></div>
+              {errorObj?.stderr && errorObj.stderr.trim() && (
+                <div className="error-block"><b>stderr:</b><pre>{errorObj.stderr}</pre></div>
               )}
-              {annotation.error.stdout && annotation.error.stdout.trim() && (
-                <div className="error-block"><b>stdout:</b><pre>{annotation.error.stdout}</pre></div>
+              {errorObj?.stdout && errorObj.stdout.trim() && (
+                <div className="error-block"><b>stdout:</b><pre>{errorObj.stdout}</pre></div>
               )}
-              <div><b>Run ID:</b> {annotation.parameters.id}</div>
-              {annotation.error.timer && (
-                <div><b>Time before failure:</b> {annotation.error.timer}</div>
+              {errorObj?.timer && (
+                <div><b>Time before failure:</b> {errorObj.timer}</div>
               )}
             </div>
           </>

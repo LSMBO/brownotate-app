@@ -44,7 +44,9 @@
 .header-user-section {
     position: absolute;
     display: flex;
+    flex-direction: column;
     align-items: flex-end;
+    gap: 8px;
     margin-right: 20px;
 }
 
@@ -75,6 +77,20 @@
     background: #288cbb;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(48, 177, 237, 0.3);
+}
+
+.about-btn {
+    background: #e8f4fb;
+    color: #1f4b6d;
+    border: 1px solid #b9d9ea;
+    padding: 6px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.about-btn:hover {
+    background: #d6ecf8;
 }
 
 @media screen and (max-width: 1000px) {

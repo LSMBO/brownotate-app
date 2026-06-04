@@ -20,7 +20,7 @@ export const AnnotationsProvider = ({ children }) => {
         try {
             const response = await axios.get(`${CONFIG.API_BASE_URL}/get_cpus`);
             const data = response.data;
-            return data.total_cpus - data.total_cpus_used;
+            return data.can_start ? data.cpus : 0;
         } catch (error) {
             console.error("Error fetching CPUs:", error);
             return 0;

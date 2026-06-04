@@ -17,11 +17,12 @@ import { useDBSearch } from '../contexts/DBSearchContext';
 
 import { downloadEnsemblFTP, downloadNCBI, handleClickDownload } from '../utils/Download';
 import { speciesExists, executeDBSearchRoute } from '../utils/DatabaseSearch';
-import { handleAnnotationRun } from '../utils/AnnotationRun';
+import { handleAnnotationRunNewArchitecture } from '../utils/AnnotationRun';
 
 import SpeciesInput from "../components/SpeciesInput";
 import SectionStart from "./Settings/SectionStart";
 import SectionAssembly from "./Settings/SectionAssembly";
+import SectionRnaAssembly from "./Settings/SectionRnaAssembly";
 import SectionAnnotation from "./Settings/SectionAnnotation";
 import Augustus from "./Settings/Augustus";
 import SectionBrownaming from "./Settings/SectionBrownaming";
@@ -39,8 +40,20 @@ export default function Settings() {
     const [speciesSearchError, setSpeciesSearchError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [showDebug, setShowDebug] = useState(false);
-    const { fetchCPUs, addAnnotation, updateAnnotation} = useAnnotations();
+    const { fetchCPUs, addAnnotation, updateAnnotation, fetchUserAnnotations } = useAnnotations();
     const { parameters, updateParameters } = useParameters();
+
+    const formatTimer = (startMs) => {
+        const elapsed = Math.max(0, Date.now() - startMs);
+        const ms = elapsed % 1000;
+        const totalSeconds = Math.floor(elapsed / 1000);
+        const seconds = totalSeconds % 60;
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const minutes = totalMinutes % 60;
+        const hours = Math.floor(totalMinutes / 60);
+        const pad = (value, size = 2) => String(value).padStart(size, '0');
+        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}:${pad(ms, 3)}`;
+    };
 
 
     useEffect(() => {
@@ -51,6 +64,14 @@ export default function Settings() {
             }
             else if (parameters.startSection.sequencing) {
                 await handleClickSpeciesSearch(parameters.startSection.sequencing.scientificName);
+            }
+            else if (parameters.startSection.rnaSequencing) {
+                const speciesName =
+                    parameters.startSection.rnaSequencing.scientificName ||
+                    parameters.startSection.rnaSequencing.scientific_name;
+                if (speciesName) {
+                    await handleClickSpeciesSearch(speciesName);
+                }
             }
         };
         initializeSpecies();
@@ -179,23 +200,45 @@ export default function Settings() {
         });
     };
 
-    const getProteinsByTaxId = (dbs, targetTaxID, availableSources) => {
-        const selected = [];
+    const getProteinCandidatesByTaxonomicDistance = (dbs, targetTaxID, availableSources) => {
+        const exactMatches = [];
+        const nearbyMatches = [];
 
-        if (availableSources.uniprot && dbs.uniprot?.proteins && Array.isArray(dbs.uniprot.proteins)) {
-            selected.push(...dbs.uniprot.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+        const collectProteins = (proteinList) => {
+            if (!proteinList || !Array.isArray(proteinList)) {
+                return;
+            }
+
+            proteinList.forEach((protein) => {
+                if (!protein) {
+                    return;
+                }
+                if (String(protein.taxid) === targetTaxID) {
+                    exactMatches.push(protein);
+                } else {
+                    nearbyMatches.push(protein);
+                }
+            });
+        };
+
+        // Les routes de DB search renvoient déjà les résultats en remontant la lignée taxonomique
+        if (availableSources.uniprot && dbs.uniprot?.proteome && Array.isArray(dbs.uniprot.proteome)) {
+            collectProteins(dbs.uniprot.proteome);
         }
         if (availableSources.ensembl && dbs.ensembl?.proteins && Array.isArray(dbs.ensembl.proteins)) {
-            selected.push(...dbs.ensembl.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+            collectProteins(dbs.ensembl.proteins);
         }
         if (availableSources.refseq && dbs.refseq?.proteins && Array.isArray(dbs.refseq.proteins)) {
-            selected.push(...dbs.refseq.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+            collectProteins(dbs.refseq.proteins);
         }
         if (availableSources.genbank && dbs.genbank?.proteins && Array.isArray(dbs.genbank.proteins)) {
-            selected.push(...dbs.genbank.proteins.filter((protein) => String(protein.taxid) === targetTaxID).slice(0, 5));
+            collectProteins(dbs.genbank.proteins);
         }
 
-        return selected;
+        return {
+            exactMatches: deduplicateProteinEntries(exactMatches),
+            nearbyMatches: deduplicateProteinEntries(nearbyMatches)
+        };
     };
 
     const getAllProteins = (dbs, availableSources) => {
@@ -206,8 +249,8 @@ export default function Settings() {
         if (availableSources.uniprot && dbs.uniprot?.trembl?.count > 0) {
             allProteins.push(dbs.uniprot.trembl);
         }
-        if (availableSources.uniprot && dbs.uniprot?.proteins && Array.isArray(dbs.uniprot.proteins)) {
-            allProteins.push(...dbs.uniprot.proteins);
+        if (availableSources.uniprot && dbs.uniprot?.proteome && Array.isArray(dbs.uniprot.proteome)) {
+            allProteins.push(...dbs.uniprot.proteome);
         }
         if (availableSources.ensembl && dbs.ensembl?.proteins && Array.isArray(dbs.ensembl.proteins)) {
             allProteins.push(...dbs.ensembl.proteins);
@@ -228,10 +271,38 @@ export default function Settings() {
         return proteinList.some((protein) => String(protein.taxid) === targetTaxID);
     };
 
+    const MAX_ANNOTATION_FILES = 4;
+
+    const getEvidencePriority = (protein) => {
+        const database = (protein?.database || '').toUpperCase();
+        if (database === 'UNIPROTKB') return 0;
+        if (database === 'ENSEMBL') return 1;
+        if (database === 'NCBI') {
+            const accession = (protein?.accession || '').toUpperCase();
+            if (accession.includes('REFSEQ')) return 2;
+            return 3;
+        }
+        return 4;
+    };
+
+    const limitEvidenceFiles = (proteinSet) => {
+        const deduplicated = deduplicateProteinEntries(proteinSet);
+        const prioritized = [...deduplicated].sort((a, b) => {
+            const byPriority = getEvidencePriority(a) - getEvidencePriority(b);
+            if (byPriority !== 0) return byPriority;
+
+            const countA = Number(a?.count || 0);
+            const countB = Number(b?.count || 0);
+            return countB - countA;
+        });
+        return prioritized.slice(0, MAX_ANNOTATION_FILES);
+    };
+
     const selectProteinSet = (dbs, availableSources) => {
         const proteinSet = [];
         const targetTaxID = String(parameters.species.taxonID);
 
+        // Toujours inclure les protéines de l'espèce cible
         if (availableSources.uniprot && dbs.uniprot?.swissprot?.count > 0) {
             proteinSet.push(dbs.uniprot.swissprot);
         }
@@ -239,37 +310,56 @@ export default function Settings() {
             proteinSet.push(dbs.uniprot.trembl);
         }
 
-        const directTaxProteinSet = getProteinsByTaxId(dbs, targetTaxID, availableSources);
-        proteinSet.push(...directTaxProteinSet);
+        const { exactMatches, nearbyMatches } = getProteinCandidatesByTaxonomicDistance(dbs, targetTaxID, availableSources);
 
-        const directUniprotCount = (dbs.uniprot?.swissprot?.count || 0) + (dbs.uniprot?.trembl?.count || 0);
-        const hasSpeciesEnsembl = availableSources.ensembl && hasSpeciesProteinFromSource(dbs.ensembl?.proteins, targetTaxID);
-        const hasSpeciesRefSeq = availableSources.refseq && hasSpeciesProteinFromSource(dbs.refseq?.proteins, targetTaxID);
-        const hasSpeciesGenBank = availableSources.genbank && hasSpeciesProteinFromSource(dbs.genbank?.proteins, targetTaxID);
-        const hasSpeciesUniprot = availableSources.uniprot && ((dbs.uniprot?.swissprot?.count || 0) > 0 || (dbs.uniprot?.trembl?.count || 0) > 0 || hasSpeciesProteinFromSource(dbs.uniprot?.proteins, targetTaxID));
-
-        const hasOnlyUniprotForSpecies = hasSpeciesUniprot && !hasSpeciesEnsembl && !hasSpeciesRefSeq && !hasSpeciesGenBank;
-
-        if (hasOnlyUniprotForSpecies && directUniprotCount < MIN_DIRECT_UNIPROT_EVIDENCE) {
-            const fallbackProteins = getAllProteins(dbs, availableSources);
-            proteinSet.push(...fallbackProteins);
-            console.log(
-                `Only UniProt evidence found for species and low UniProt count (${directUniprotCount}). ` +
-                `Using all available proteins from all database search results (${fallbackProteins.length} entries).`
-            );
+        // Si on a des annotations directes, on n'utilise qu'elles
+        if (exactMatches.length > 0) {
+            proteinSet.push(...exactMatches);
+        } else {
+            // Sinon, on prend au maximum 4 annotations d'un niveau phylogénétique supérieur
+            proteinSet.push(...nearbyMatches.slice(0, MAX_ANNOTATION_FILES));
         }
 
-        return deduplicateProteinEntries(proteinSet);
+        const directUniprotCount = (dbs.uniprot?.swissprot?.count || 0) + (dbs.uniprot?.trembl?.count || 0);
+        const finalSet = limitEvidenceFiles(proteinSet);
+
+        console.log(
+            `Evidence strategy: ${exactMatches.length > 0 ? 'direct target-species annotations' : 'up to 4 higher-level neighboring annotations'}; ` +
+            `direct UniProt count=${directUniprotCount}; selected files=${finalSet.length}`
+        );
+        console.log('Selected evidence taxa:', finalSet.map((protein) => `${protein.scientific_name || 'Unknown'} (${protein.taxid || 'NA'}) - ${protein.database || 'Unknown'}`));
+
+        return finalSet;
     };
 
+    const hasValidServerFile = (filePath) => {
+        if (Array.isArray(filePath)) {
+            return filePath.length > 0 && filePath.every((item) => (
+                typeof item === 'string' && item.trim() !== '' && item.trim().toLowerCase() !== 'none'
+            ));
+        }
+        return typeof filePath === 'string' && filePath.trim() !== '' && filePath.trim().toLowerCase() !== 'none';
+    };
 
     const checkParameters = () => {
         if (!parameters.species.taxonID) {
             alert("Please select a valid species.");
             return false;
         }
-        if (!parameters.startSection.sequencing && !parameters.startSection.assembly) {
-            alert("Please select either sequencing mode or assembly mode.");
+        if (!parameters.startSection.sequencing && !parameters.startSection.assembly && !parameters.startSection.rnaSequencing) {
+            alert("Please select either sequencing mode, assembly mode, or RNA sequencing mode.");
+            return false;
+        }
+        if (parameters.startSection.rnaSequencing && parameters.startSection.rnaSequencingFiles && parameters.startSection.rnaSequencingFileList.length === 0) {
+            alert("Please load at least one RNA sequencing file.");
+            return false;
+        }
+        if (parameters.startSection.rnaSequencing && parameters.startSection.rnaSequencingRuns && parameters.startSection.rnaSequencingRunList.length === 0) {
+            alert("Please provide at least one SRA accession for RNA sequencing.");
+            return false;
+        }
+        if (parameters.startSection.rnaSequencing && (!parameters.startSection.rnaSequencingFiles && !parameters.startSection.rnaSequencingRuns)) {
+            alert("Please provide either RNA sequencing files or SRA accessions.");
             return false;
         }
         if (parameters.startSection.sequencing && parameters.startSection.sequencingFiles && parameters.startSection.sequencingFileList.length === 0) {
@@ -292,7 +382,7 @@ export default function Settings() {
             alert("Please provide an assembly file.");
             return false;
         }
-        if (!parameters.species.is_bacteria && parameters.annotationSection.customEvidence && parameters.annotationSection.customEvidenceFileList.length === 0) {
+        if (!parameters.species.is_bacteria && !parameters.startSection.rnaSequencing && parameters.annotationSection.customEvidence && parameters.annotationSection.customEvidenceFileList.length === 0) {
             alert("Please provide at least one protein file as evidence for Augustus.");
             return false;
         }
@@ -304,19 +394,19 @@ export default function Settings() {
         
         // Block guest users from running annotations
         if (isGuest) {
-            alert("Guest mode allows database searches only.\n\nTo run annotations, please contact browna@unistra.fr to create an account.");
+            alert("Guest mode allows database searches only.\n\nTo run annotations, please contact fbertile@unistra.fr to create an account.");
             return;
         }
         
         const freeCpus = await fetchCPUs();
         if (freeCpus === 0) {
-            alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
+            alert("An annotation is already running on the server. Please try again later.");
             return;
         }
         if (!checkParameters()) {
             return;
         }
-        console.log('freeCpus:', freeCpus);
+
         const runId = new Date().getTime();
         updateParameters({id: runId, cpus: freeCpus});
 
@@ -363,38 +453,112 @@ export default function Settings() {
                 updateParameters({startSection: {sequencingFileListOnServer: uploadedSequencingFiles }});
             }
 
+            // Upload and update RNA sequencing files
+            if (parameters.startSection.rnaSequencingFiles) {
+                await updateAnnotation(user, runId, 'progress', 'Uploading RNA sequencing files ...');
+                let uploadedRnaSequencingFiles = await uploadFile(parameters.startSection.rnaSequencingFileList, 'rna_sequencing', runId);
+                updateParameters({startSection: {rnaSequencingFileListOnServer: uploadedRnaSequencingFiles }});
+                await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, {
+                    run_id: runId,
+                    user: user,
+                    data_type: 'rna_sequencing',
+                    file_list: uploadedRnaSequencingFiles
+                });
+            }
+
             // Upload and update evidence files
-            if (!parameters.species.is_bacteria) {
+            if (!parameters.species.is_bacteria && !parameters.startSection.rnaSequencing) {
                 let customEvidenceFileOnServer = [];
+                let evidenceMetadata = {
+                    mode: 'unknown',
+                    source_files: [],
+                    selected_entries: []
+                };
                 if (parameters.annotationSection.customEvidence) {
                     await updateAnnotation(user, runId, 'progress', 'Uploading custom evidence files ...');
                     customEvidenceFileOnServer = await uploadFile(parameters.annotationSection.customEvidenceFileList, 'evidence', runId);
+                    evidenceMetadata = {
+                        mode: 'custom',
+                        source_files: Array.isArray(customEvidenceFileOnServer) ? customEvidenceFileOnServer : [customEvidenceFileOnServer],
+                        selected_entries: []
+                    };
                 } else {
+                    const searchStart = Date.now();
                     await updateAnnotation(user, runId, 'progress', 'Searching for evidences (proteins) in the databases ...');
                     const dbsSearchResult = await proteinDBSearch(parameters.species);
+                    await updateAnnotation(user, runId, 'timers', {
+                        'Searching for evidences (proteins) in the databases ': formatTimer(searchStart)
+                    });
+
                     const dbsResult = dbsSearchResult.dbs;
                     const availableSources = dbsSearchResult.availableSources;
                     console.log('Searching for evidences (proteins) in the databases, found:', dbsSearchResult);
+
+                    const downloadStart = Date.now();
                     await updateAnnotation(user, runId, 'progress', 'Selecting and downloading evidences (proteins) from the database search ...');
                     const proteinsSet = selectProteinSet(dbsResult, availableSources);
                     if (!proteinsSet || proteinsSet.length === 0) {
                         throw new Error('No protein evidence found in available database sources for this species.');
                     }
                     console.log('Protein set selected for evidence:', proteinsSet);
-                    customEvidenceFileOnServer = await handleClickDownload(proteinsSet, 'proteins', false, runId);
-                    console.log('Downloaded evidence files from database search:', customEvidenceFileOnServer);
-                    await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, 
-                    { run_id: runId, 
-                        user: user, 
-                        data_type: 'evidence', 
-                        file_list: customEvidenceFileOnServer 
+                    const evidenceDownload = await handleClickDownload(proteinsSet, 'proteins', false, runId, true, { mergeScope: 'run' });
+                    customEvidenceFileOnServer = evidenceDownload?.finalFilePath || evidenceDownload;
+                    evidenceMetadata = {
+                        mode: 'automatic',
+                        source_files: evidenceDownload?.sourceFiles || [],
+                        selected_entries: proteinsSet.map((protein) => ({
+                            scientific_name: protein.scientific_name || null,
+                            taxid: protein.taxid || null,
+                            database: protein.database || null,
+                            accession: protein.accession || null
+                        }))
+                    };
+                    await updateAnnotation(user, runId, 'timers', {
+                        'Selecting and downloading evidences (proteins) from the database search ': formatTimer(downloadStart)
                     });
+                    console.log('Downloaded evidence files from database search:', customEvidenceFileOnServer);
                 }
-                updateParameters({annotationSection: {customEvidenceFileOnServer: customEvidenceFileOnServer }});
+
+                if (!hasValidServerFile(customEvidenceFileOnServer)) {
+                    await updateAnnotation(user, runId, 'error', 'No valid protein evidence file was produced after selection/download.');
+                    throw new Error('No valid protein evidence file was produced after selection/download.');
+                }
+
+                await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, 
+                { run_id: runId, 
+                    user: user, 
+                    data_type: 'evidence', 
+                    file_list: customEvidenceFileOnServer 
+                });
+
+                await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, {
+                    run_id: runId,
+                    user: user,
+                    data_type: 'evidence_metadata',
+                    metadata: evidenceMetadata
+                });
+
+                updateParameters({annotationSection: {
+                    customEvidenceFileOnServer: customEvidenceFileOnServer,
+                    evidenceFileOnServer: customEvidenceFileOnServer,
+                    evidenceSelectionMode: evidenceMetadata.mode,
+                    evidenceSourceFiles: evidenceMetadata.source_files,
+                    selectedEvidenceEntries: evidenceMetadata.selected_entries
+                }});
             }
-            await handleAnnotationRun(runId, user, updateAnnotation, false);
+            await handleAnnotationRunNewArchitecture(runId, user, fetchUserAnnotations);
         } catch (error) {
             console.error('Error:', error);
+            try {
+                await updateAnnotation(user, runId, 'status', 'failed');
+                await updateAnnotation(user, runId, 'error', {
+                    message: error?.response?.data?.message || error.message || 'Unknown annotation error',
+                    step: 'pipeline',
+                    source: 'client'
+                });
+            } catch (updateErr) {
+                console.error('Error while updating failed status:', updateErr);
+            }
         }
     };
 
@@ -436,10 +600,14 @@ export default function Settings() {
     const calculateStepLists = () => {
         let stepList = [];
         let stepCount = 0;
+        const isRnaSeq = Boolean(parameters.startSection.rnaSequencing);
 
         if (parameters.startSection.sequencing && parameters.startSection.sequencingFiles) {
             stepList.push({ type: 'major', name: 'Uploading sequencing files ...', number: stepCount++ });
-        } 
+        }
+        if (isRnaSeq && parameters.startSection.rnaSequencingFiles) {
+            stepList.push({ type: 'major', name: 'Uploading RNA sequencing files ...', number: stepCount++ });
+        }
         if (parameters.startSection.assembly) {
             if (parameters.startSection.assembly.database === 'ENSEMBL') {
                 stepList.push({ type: 'minor', name: 'Downloading assembly file from Ensembl FTP ...', number: stepCount++ });
@@ -449,14 +617,17 @@ export default function Settings() {
                 stepList.push({ type: 'minor', name: 'Uploading assembly file ...', number: stepCount++ });
             }
         }
-        if (!parameters.species.is_bacteria) {
+        if (!parameters.species.is_bacteria && !isRnaSeq) {
             if (parameters.annotationSection.customEvidence) {
                 stepList.push({ type: 'minor', name: 'Uploading custom evidence files ...', number: stepCount++ });
             } else {
-                stepList.push({ type: 'major', name: 'Searching for evidences (proteins) in the databases ...', number: stepCount++ });
-                stepList.push({ type: 'minor', name: 'Selecting and downloading evidences (proteins) from the database search ...', number: stepCount++ });
+                stepList.push({ type: 'minor', name: 'Searching for evidences (proteins) in the databases ...', number: stepCount++ });
+                stepList.push({ type: 'major', name: 'Selecting and downloading evidences (proteins) from the database search ...', number: stepCount++ });
             }
-        }   
+        }
+        if (isRnaSeq && parameters.startSection.rnaSequencingRuns) {
+            stepList.push({ type: 'major', name: 'Downloading RNA sequencing files from SRA ...', number: stepCount++ });
+        }
         if (parameters.startSection.sequencing) {
             if (parameters.startSection.sequencingRuns) {
                 stepList.push({ type: 'major', name: 'Downloading sequencing files from SRA ...', number: stepCount++ });
@@ -476,13 +647,22 @@ export default function Settings() {
             }
         }
 
-        if (parameters.buscoSection.assembly) {
+        if (isRnaSeq) {
+            if ((parameters.rnaAssemblySection?.assembler || 'trinity') === 'trinity') {
+                stepList.push({ type: 'major', name: 'Running Trinity transcriptome assembly ...', number: stepCount++ });
+            } else {
+                stepList.push({ type: 'major', name: 'Running RNA-Bloom transcriptome assembly ...', number: stepCount++ });
+            }
+            stepList.push({ type: 'major', name: 'Running TransDecoder protein prediction ...', number: stepCount++ });
+        }
+
+        if (parameters.buscoSection.assembly && !isRnaSeq) {
             stepList.push({ type: 'major', name: 'Running BUSCO on assembly ...', number: stepCount++ });
         }
 
-        if (parameters.species.is_bacteria) {
+        if (parameters.species.is_bacteria && !isRnaSeq) {
             stepList.push({ type: 'major', name: 'Running Prokka annotation ...', number: stepCount++ });
-        } else {
+        } else if (!isRnaSeq) {
             stepList.push({ type: 'minor', name: 'Splitting assembly for annotation ...', number: stepCount++ });
             stepList.push({ type: 'major', name: 'Running Scipio ...', number: stepCount++ });
             stepList.push({ type: 'major', name: 'Running gene prediction model ...', number: stepCount++ });
@@ -509,7 +689,7 @@ export default function Settings() {
         <div className="page">
             <div className="navigation-buttons">
                 <button className="t2_bold left" onClick={() => navigate('/', { state: { from: 'settings' } })}>Back Home</button>   
-                <button className="t2_bold right" onClick={() => navigate('/functional-annotation', { state: { from: 'settings' } })}>Functional Annotation</button>
+                <button className="t2_bold right" onClick={() => navigate('/brownaming', { state: { from: 'settings' } })}>Brownaming</button>
             </div>
             <div className="settings-container">
                 <h2 className="home-h2">Create Annotation</h2>
@@ -542,10 +722,16 @@ export default function Settings() {
                         <SectionAssembly updateParameters={updateParameters} parameters={parameters}/>
                     </>
                 )}
+                {parameters.startSection.rnaSequencing && (
+                    <>
+                        <h3>Transcript Assembly</h3>
+                        <SectionRnaAssembly updateParameters={updateParameters} parameters={parameters}/>
+                    </>
+                )}
                 <h3>Proteins prediction</h3>
                 <SectionAnnotation updateParameters={updateParameters} parameters={parameters}/>
                 
-                {parameters.species && parameters.species.is_bacteria === false && (
+                {parameters.species && parameters.species.is_bacteria === false && !parameters.startSection.rnaSequencing && (
                     <> 
                         <h3>Augustus parameters</h3>
                         <Augustus updateParameters={updateParameters} parameters={parameters}/>
@@ -553,7 +739,7 @@ export default function Settings() {
                 )}
                    
                 
-                <h3>Functional Annotation</h3>
+                <h3>Protein Name Assignment (Brownaming)</h3>
                 <SectionBrownaming updateParameters={updateParameters} parameters={parameters}/>
                 <h3>Busco completness evaluation</h3>
                 <SectionBusco updateParameters={updateParameters} parameters={parameters}/>

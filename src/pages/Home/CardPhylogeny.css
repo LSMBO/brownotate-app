@@ -1,0 +1,139 @@
+.phylogeny-filters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 12px;
+    padding: 10px 12px;
+}
+
+.phylogeny-filter-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.phylogeny-filter-item input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+
+
+.phylogeny-details-panel {
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #fafafa;
+    padding: 14px;
+    overflow: hidden;
+}
+
+.phylogeny-details-header {
+    font-size: 15px;
+    margin-bottom: 6px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #3498db;
+}
+
+.phylogeny-node-rank {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.phylogeny-details-count {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.phylogeny-details-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+    font-size: 13px;
+    text-align: center;
+}
+
+.phylogeny-species-list {
+    overflow-y: auto;
+    gap: 8px;
+}
+
+.phylogeny-species-item {
+    padding: 8px 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.phylogeny-species-name {
+    font-weight: 600;
+    color: #2c3e50;
+    flex-direction: row;
+    gap: 2px;
+}
+
+.phylogeny-species-rank {
+    font-weight: 400;
+    font-style: italic;
+    color: #7f8c8d;
+}
+
+
+.phylogeny-species-source {
+    flex-direction: row;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.phylogeny-source-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid currentColor;
+    width: auto;
+}
+
+.phylogeny-svg-wrapper {
+    position: relative;
+}
+
+.phylogeny-svg-wrapper svg {
+    height: auto;
+}
+
+.phylogeny-hover-label {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(44, 62, 80, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 10;
+    max-width: 300px;
+    white-space: nowrap;
+}
+
+.phylogeny-empty-msg {
+    color: #888;
+    font-size: 13px;
+    margin-top: 8px;
+}

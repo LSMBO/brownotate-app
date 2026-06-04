@@ -106,8 +106,9 @@ export default function FunctionalAnnotation() {
             });
             return response.data.file_paths;
         } catch (error) {
-            console.error('Error:', error);
-            return null;
+            const backendMessage = error?.response?.data?.message;
+            const fallback = error?.message || 'Unknown upload error';
+            throw new Error(backendMessage || fallback);
         }
     }
 
@@ -126,15 +127,16 @@ export default function FunctionalAnnotation() {
     const handleRunFunctionalAnnotation = async () => {
         // Block guest users from running annotations
         if (isGuest) {
-            alert("Guest mode allows database searches only.\n\nTo run annotations, please contact browna@unistra.fr to create an account.");
+            alert("Guest mode allows database searches only.\n\nTo run annotations, please contact fbertile@unistra.fr to create an account.");
             return;
         }
         
         const freeCpus = await fetchCPUs();
+        if (freeCpus === 0) {
+            alert("An annotation is already running on the server. Please try again later.");
+            return;
+        }
         if (!checkParameters()) {
-            if (freeCpus === 0) {
-                alert("Another annotation is already running on the server. Please try again later.\nIn the future, a queue system will be implemented to manage annotations automatically.");
-            }
             return;
         }
 
@@ -150,9 +152,16 @@ export default function FunctionalAnnotation() {
                 user: user 
             });
             await addAnnotation(createRunResponse.data);
-            navigate('/my-annotations', { state: { from: 'functional-annotation' } });
+            navigate('/my-annotations', { state: { from: 'brownaming' } });
 
             let proteinFileOnServer = await uploadFile(faParameters.proteinFile, 'protein_fa', runId);
+            const uploadedProteinPath = Array.isArray(proteinFileOnServer)
+                ? proteinFileOnServer[0]
+                : proteinFileOnServer;
+
+            if (!uploadedProteinPath || uploadedProteinPath === 'None') {
+                throw new Error('Protein upload failed: no valid server path returned.');
+            }
 
             updateFAParameters({proteinFileOnServer: proteinFileOnServer});
             await axios.post(`${CONFIG.API_BASE_URL}/update_run_parameters`, {
@@ -163,7 +172,7 @@ export default function FunctionalAnnotation() {
             });
             
             try {
-                const brownamingResult = await axios.post(`${CONFIG.API_BASE_URL}/run_brownaming`, { 'parameters': faParameters, 'annotation_file': proteinFileOnServer, 'run_id': runId, 'cpus': freeCpus });
+                const brownamingResult = await axios.post(`${CONFIG.API_BASE_URL}/run_brownaming`, { 'parameters': faParameters, 'annotation_file': uploadedProteinPath, 'run_id': runId, 'cpus': freeCpus });
                 console.log('Brownaming completed: ', brownamingResult.data);
                 await updateAnnotation(user, runId, 'timers', {'Running Brownaming ...': brownamingResult.data.timer})
                 await updateAnnotation(user, runId, 'resumeData', {
@@ -184,6 +193,8 @@ export default function FunctionalAnnotation() {
 
         } catch (error) {
             console.error('Error:', error);
+            await updateAnnotation(user, runId, 'status', 'failed');
+            await updateAnnotation(user, runId, 'error', error?.message || 'Unexpected error while preparing Brownaming run');
         }
     };
 
@@ -194,7 +205,7 @@ export default function FunctionalAnnotation() {
                 <div></div>
             </div>
             <div className='settings-container'>
-                <h2 className='home-h2'>Functional Annotation</h2>
+                <h2 className='home-h2'>Protein Name Assignment (Brownaming)</h2>
                 
                 <SpeciesInput 
                     inputSpecies={inputSpecies}
@@ -249,7 +260,7 @@ export default function FunctionalAnnotation() {
                 className="run-annotation-btn btn-tab-style active t3"
                 onClick={handleRunFunctionalAnnotation}
             >
-                {isLoading ? 'Running...' : 'Run Functional Annotation'}
+                {isLoading ? 'Running...' : 'Run Brownaming'}
             </button>    
             {isLoading && (<Loading/>)}        
         </div>

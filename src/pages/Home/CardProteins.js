@@ -5,6 +5,14 @@ import './DBSTabs.css';
 const CardProteins = ({ dbs, availableSources, selectedProteins, updateSelectedProteins, convertForDownload }) => {
     const [selectedDBs, setSelectedDBs] = useState(['']);
 
+    const getProteinSelectionKey = (protein) => [
+        protein?.database || '',
+        protein?.accession || '',
+        protein?.taxid || '',
+        protein?.download_url || '',
+        Array.isArray(protein?.download_command) ? protein.download_command.join(' ') : ''
+    ].join('|');
+
     const uniprotProteome = dbs?.uniprot?.proteome || [];
     const ensembl = dbs?.ensembl?.proteins || [];
     const refseq = dbs?.refseq?.proteins || [];
@@ -28,13 +36,25 @@ const CardProteins = ({ dbs, availableSources, selectedProteins, updateSelectedP
     const toggleDB = (e, dbName, isAvailable) => {
         e.preventDefault();
         if (!isAvailable) return;
-        
+
+        const target = e.currentTarget;
+        if (!target || typeof target.getBoundingClientRect !== 'function') {
+            return;
+        }
+        const beforeTop = target.getBoundingClientRect().top;
         setSelectedDBs(prev => {
             if (prev.includes(dbName)) {
                 return prev.filter(db => db !== dbName);
             } else {
                 return [...prev, dbName];
             }
+        });
+        requestAnimationFrame(() => {
+            if (!target.isConnected || typeof target.getBoundingClientRect !== 'function') {
+                return;
+            }
+            const afterTop = target.getBoundingClientRect().top;
+            window.scrollBy(0, afterTop - beforeTop);
         });
     };
 
@@ -117,7 +137,7 @@ const CardProteins = ({ dbs, availableSources, selectedProteins, updateSelectedP
                                     <ProteinsUnit 
                                         key={index}
                                         data={item.data}
-                                        isSelected={selectedProteins && selectedProteins.some(p => p.accession === item.data.accession)}
+                                        isSelected={selectedProteins && selectedProteins.some(p => getProteinSelectionKey(p) === getProteinSelectionKey(item.data))}
                                         handleCheckboxChange={updateSelectedProteins} 
                                         label={item.label}
                                     />

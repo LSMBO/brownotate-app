@@ -13,9 +13,29 @@ export default function MyAnnotations() {
 
   useEffect(() => {
       if (location.state?.from !== 'annotation-results') {
-        fetchUserAnnotations(user, true);
+        // Fast initial fetch for UI responsiveness, then lightweight live updates.
+        fetchUserAnnotations(user, false);
       }
-  }, [location.state]);
+  }, [location.state, user, fetchUserAnnotations]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+
+    // Keep progress and active step live without forcing a manual page refresh.
+    const fastRefresh = setInterval(() => {
+      fetchUserAnnotations(user, false);
+    }, 5000);
+
+    // Less frequent health check to detect orphaned processes.
+    const processHealthRefresh = setInterval(() => {
+      fetchUserAnnotations(user, true);
+    }, 60000);
+
+    return () => {
+      clearInterval(fastRefresh);
+      clearInterval(processHealthRefresh);
+    };
+  }, [user, fetchUserAnnotations]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

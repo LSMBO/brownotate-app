@@ -1,7 +1,7 @@
 import React from 'react'
 import { useParameters } from '../contexts/ParametersContext';
 
-const SequencingDetails = ({runs, displaySpecies}) => {
+const SequencingDetails = ({runs, displaySpecies, displayTissue = false}) => {
         
     const { parameters, updateParameters } = useParameters();
     
@@ -35,7 +35,7 @@ const SequencingDetails = ({runs, displaySpecies}) => {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            {run.accession} (≈{Math.round(run.size)} Gb)
+                            {run.accession} (≈{Math.round(run.size)} Gb FASTQ)
                         </a>
                     </div>
                     <div className='run-unit'>
@@ -58,6 +58,12 @@ const SequencingDetails = ({runs, displaySpecies}) => {
                         <label>Selection:&nbsp;</label>
                         <p>{run.selection}</p>
                     </div>
+                    {displayTissue && (
+                        <div className="run-unit">
+                            <label>Tissue:&nbsp;</label>
+                            <p>{run.tissue || <span style={{ color: '#aaa', fontStyle: 'italic' }}>Not specified</span>}</p>
+                        </div>
+                    )}
                     {displaySpecies && (
                         <div className="run-unit">
                             <label>Species:&nbsp;</label>

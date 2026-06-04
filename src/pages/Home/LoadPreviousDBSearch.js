@@ -4,20 +4,67 @@ import { getDBSearches, speciesExists } from '../../utils/DatabaseSearch';
 import Loading from '../../components/Loading';
 import './LoadPreviousDBSearch.css';
 
-export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylogeny, phylogenyLoading, dbs, disabled }) {
+export default function LoadPreviousDBSearch({ onLoad, onBatchLoad, onReset, onGeneratePhylogeny, phylogenyLoading, dbs, disabled }) {
     const [dbSearches, setDBSearches] = useState(null);
     const [taxonomies, setTaxonomies] = useState([]);
     const [selectedTaxonomy, setSelectedTaxonomy] = useState(null);
     const [loading, setLoading] = useState(false);
     const [selectedItems, setSelectedItems] = useState({});
+    const [expandedSections, setExpandedSections] = useState({});
     
     // States for search with suggestions
     const [searchQuery, setSearchQuery] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const collectionNames = ['uniprot', 'ensembl', 'refseq', 'genbank', 'dnaseq', 'rnaseq'];
+
+    const getItemKey = (item, index = 0) => {
+        if (item?._id) return item._id;
+        const optionsPart = item?.options ? JSON.stringify(item.options) : '{}';
+        const runPart = item?.run_id || item?.id || 'no-run';
+        return `${item?.date || 'no-date'}-${item?.taxid || 'no-taxid'}-${runPart}-${optionsPart}-${index}`;
+    };
+
+    const preserveClickPosition = (target, action) => {
+        if (!target || typeof action !== 'function') {
+            action?.();
+            return;
+        }
+        const beforeTop = target.getBoundingClientRect().top;
+        action();
+        requestAnimationFrame(() => {
+            const afterTop = target.getBoundingClientRect().top;
+            window.scrollBy(0, afterTop - beforeTop);
+        });
+    };
 
     useEffect(() => {
         loadData();
     }, []);
+
+    const parseSearchDate = (dateString) => {
+        if (!dateString) return 0;
+
+        // Expected format: DDMMYYYY-HHmmss (e.g. 13022026-134456)
+        const parts = String(dateString).split('-');
+        if (parts.length === 2 && parts[0].length === 8 && parts[1].length >= 6) {
+            const datePart = parts[0];
+            const timePart = parts[1];
+
+            const day = Number(datePart.substring(0, 2));
+            const month = Number(datePart.substring(2, 4)) - 1;
+            const year = Number(datePart.substring(4, 8));
+            const hour = Number(timePart.substring(0, 2));
+            const minute = Number(timePart.substring(2, 4));
+            const second = Number(timePart.substring(4, 6));
+
+            const timestamp = new Date(year, month, day, hour, minute, second).getTime();
+            return Number.isNaN(timestamp) ? 0 : timestamp;
+        }
+
+        // Fallback for ISO or other parseable formats
+        const fallback = new Date(dateString).getTime();
+        return Number.isNaN(fallback) ? 0 : fallback;
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -29,9 +76,7 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
                 const enrichedTaxonomies = await extractTaxonomies(result.data);
                 setTaxonomies(enrichedTaxonomies);
                 
-                if (enrichedTaxonomies.length > 0) {
-                    setSelectedTaxonomy(enrichedTaxonomies[0]);
-                }
+                // Don't auto-select on initial load - let user choose
             }
         } catch (error) {
             console.error('Error loading previous searches:', error);
@@ -43,7 +88,7 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
     const extractTaxonomies = async (data) => {
         // First, collect unique taxids from all collections
         const taxonomyMap = new Map();      
-        const collections = ['uniprot', 'ensembl', 'refseq', 'genbank', 'dnaseq'];
+        const collections = ['uniprot', 'ensembl', 'refseq', 'genbank', 'dnaseq', 'rnaseq'];
         
         collections.forEach(collectionName => {
             if (data[collectionName] && Array.isArray(data[collectionName])) {
@@ -95,44 +140,111 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
         
         return data
             .filter(item => item.taxid === selectedTaxonomy.taxonId)
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
+            .sort((a, b) => parseSearchDate(b.date) - parseSearchDate(a.date));
     };
 
-    const handleLoadCollection = (collectionName, item) => {
-        const isCurrentlySelected = selectedItems[collectionName] === item.date;
-        
-        if (isCurrentlySelected) {
-            // Deselect the item
-            setSelectedItems(prev => {
-                const newItems = { ...prev };
-                delete newItems[collectionName];
-                return newItems;
-            });
+    const autoSelectMostRecent = (taxonomy) => {
+        const newSelectedItems = {};
+        const newExpandedSections = {};
+        const itemsToLoad = [];
+
+        collectionNames.forEach(collectionName => {
+            if (!dbSearches || !dbSearches[collectionName]) return;
             
-            if (onLoad) {
-                onLoad(collectionName, item, selectedTaxonomy, true); // true = isDeselecting
-            }
-        } else {
-            // Select the item
-            setSelectedItems(prev => ({
-                ...prev,
-                [collectionName]: item.date
-            }));
+            const data = dbSearches[collectionName];
+            if (!Array.isArray(data)) return;
             
-            if (onLoad) {
-                onLoad(collectionName, item, selectedTaxonomy, false); // false = isSelecting
+            const filtered = data
+                .filter(item => item.taxid === taxonomy.taxonId)
+                .sort((a, b) => parseSearchDate(b.date) - parseSearchDate(a.date));
+            
+            if (filtered.length > 0) {
+                const mostRecent = filtered[0];
+                newSelectedItems[collectionName] = getItemKey(mostRecent, 0);
+                newExpandedSections[collectionName] = true; // Auto-expand sections with selections
+                itemsToLoad.push({ collectionName, item: mostRecent });
             }
+        });
+
+        setSelectedItems(newSelectedItems);
+        setExpandedSections(newExpandedSections);
+
+        // Load all items in a single batch call to avoid stale closure issues
+        if (typeof onBatchLoad === 'function' && itemsToLoad.length > 0) {
+            onBatchLoad(taxonomy, itemsToLoad);
         }
+    };
+
+    const rebuildFromSelectedItems = (nextSelectedItems) => {
+        if (!selectedTaxonomy || typeof onBatchLoad !== 'function') {
+            return;
+        }
+
+        const itemsToLoad = [];
+        collectionNames.forEach((collectionName) => {
+            const selectedKey = nextSelectedItems[collectionName];
+            if (!selectedKey) {
+                return;
+            }
+
+            const data = getCollectionData(collectionName);
+            const match = data.find((entry, index) => getItemKey(entry, index) === selectedKey);
+            if (match) {
+                itemsToLoad.push({ collectionName, item: match });
+            }
+        });
+
+        onBatchLoad(selectedTaxonomy, itemsToLoad);
+    };
+
+    const handleLoadCollection = (collectionName, item, clickTarget = null) => {
+        const collectionData = getCollectionData(collectionName);
+        const itemIndex = collectionData.findIndex((entry) => (entry?._id && item?._id ? entry._id === item._id : entry === item));
+        const itemKey = getItemKey(item, itemIndex >= 0 ? itemIndex : 0);
+        const isCurrentlySelected = selectedItems[collectionName] === itemKey;
+        preserveClickPosition(clickTarget, () => {
+            if (isCurrentlySelected) {
+                // Deselect the item
+                setSelectedItems(prev => {
+                    const newItems = { ...prev };
+                    delete newItems[collectionName];
+                    rebuildFromSelectedItems(newItems);
+                    return newItems;
+                });
+            } else {
+                // Select the item
+                setSelectedItems(prev => {
+                    const newItems = {
+                        ...prev,
+                        [collectionName]: itemKey
+                    };
+                    rebuildFromSelectedItems(newItems);
+                    return newItems;
+                });
+
+                // Auto-expand when selecting
+                setExpandedSections(prev => ({
+                    ...prev,
+                    [collectionName]: true
+                }));
+            }
+        });
     };
 
     const handleTaxonomySelect = (taxonomy) => {
         setSelectedTaxonomy(taxonomy);
         setSearchQuery(taxonomy.scientificName);
         setShowSuggestions(false);
-        setSelectedItems({});
-        if (onReset) {
+        
+        if (typeof onReset === 'function') {
             onReset();
         }
+        
+        // Auto-select most recent items for the new taxonomy
+        // Use setTimeout to ensure state is cleared first
+        setTimeout(() => {
+            autoSelectMostRecent(taxonomy);
+        }, 50);
     };
 
     const handleSearchInput = (e) => {
@@ -229,7 +341,11 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
                                 onLoad={handleLoadCollection}
                                 formatDate={formatDate}
                                 color="uniprot"
-                                selectedItemDate={selectedItems['uniprot']}
+                                selectedItemKey={selectedItems['uniprot']}
+                                getItemKey={getItemKey}
+                                isExpanded={expandedSections['uniprot']}
+                                setIsExpanded={(val) => setExpandedSections(prev => ({ ...prev, uniprot: val }))}
+                                preserveClickPosition={preserveClickPosition}
                             />
                             <CollectionSection 
                                 title="Ensembl"
@@ -238,7 +354,11 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
                                 onLoad={handleLoadCollection}
                                 formatDate={formatDate}
                                 color="ensembl"
-                                selectedItemDate={selectedItems['ensembl']}
+                                selectedItemKey={selectedItems['ensembl']}
+                                getItemKey={getItemKey}
+                                isExpanded={expandedSections['ensembl']}
+                                setIsExpanded={(val) => setExpandedSections(prev => ({ ...prev, ensembl: val }))}
+                                preserveClickPosition={preserveClickPosition}
                             />
                             <CollectionSection 
                                 title="NCBI RefSeq"
@@ -247,7 +367,11 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
                                 onLoad={handleLoadCollection}
                                 formatDate={formatDate}
                                 color="refseq"
-                                selectedItemDate={selectedItems['refseq']}
+                                selectedItemKey={selectedItems['refseq']}
+                                getItemKey={getItemKey}
+                                isExpanded={expandedSections['refseq']}
+                                setIsExpanded={(val) => setExpandedSections(prev => ({ ...prev, refseq: val }))}
+                                preserveClickPosition={preserveClickPosition}
                             />
                             <CollectionSection 
                                 title="NCBI GenBank"
@@ -256,7 +380,11 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
                                 onLoad={handleLoadCollection}
                                 formatDate={formatDate}
                                 color="genbank"
-                                selectedItemDate={selectedItems['genbank']}
+                                selectedItemKey={selectedItems['genbank']}
+                                getItemKey={getItemKey}
+                                isExpanded={expandedSections['genbank']}
+                                setIsExpanded={(val) => setExpandedSections(prev => ({ ...prev, genbank: val }))}
+                                preserveClickPosition={preserveClickPosition}
                             />
                              <CollectionSection 
                                 title="DNA Sequencing (NCBI SRA)"
@@ -265,7 +393,24 @@ export default function LoadPreviousDBSearch({ onLoad, onReset, onGeneratePhylog
                                 onLoad={handleLoadCollection}
                                 formatDate={formatDate}
                                 color="dnaseq"
-                                selectedItemDate={selectedItems['dnaseq']}
+                                          selectedItemKey={selectedItems['dnaseq']}
+                                          getItemKey={getItemKey}
+                                isExpanded={expandedSections['dnaseq']}
+                                setIsExpanded={(val) => setExpandedSections(prev => ({ ...prev, dnaseq: val }))}
+                                preserveClickPosition={preserveClickPosition}
+                            />
+                             <CollectionSection 
+                                title="RNA Sequencing (NCBI SRA)"
+                                collectionName="rnaseq"
+                                data={getCollectionData('rnaseq')}
+                                onLoad={handleLoadCollection}
+                                formatDate={formatDate}
+                                color="rnaseq"
+                                          selectedItemKey={selectedItems['rnaseq']}
+                                          getItemKey={getItemKey}
+                                isExpanded={expandedSections['rnaseq']}
+                                setIsExpanded={(val) => setExpandedSections(prev => ({ ...prev, rnaseq: val }))}
+                                preserveClickPosition={preserveClickPosition}
                             />                                                                             
                         </div>
                         

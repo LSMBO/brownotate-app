@@ -1,9 +1,18 @@
 import './LoadPreviousDBSearch.css';
-import { useState } from 'react';
 
-export default function CollectionSection({ title, collectionName, data, onLoad, formatDate, color, selectedItemDate }) {
-    const [isExpanded, setIsExpanded] = useState(false);
-
+export default function CollectionSection({ 
+    title, 
+    collectionName, 
+    data, 
+    onLoad, 
+    formatDate, 
+    color, 
+    selectedItemKey,
+    getItemKey,
+    isExpanded = false, 
+    setIsExpanded = () => {},
+    preserveClickPosition = null,
+}) {
     if (!data || data.length === 0) {
         return (
             <div className={`collection-section ${color}`}>
@@ -19,7 +28,14 @@ export default function CollectionSection({ title, collectionName, data, onLoad,
         <div className={`collection-section ${color}`}>
             <div 
                 className="collection-header clickable" 
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={(event) => {
+                    const action = () => setIsExpanded(!isExpanded);
+                    if (typeof preserveClickPosition === 'function') {
+                        preserveClickPosition(event.currentTarget, action);
+                    } else {
+                        action();
+                    }
+                }}
             >
                 <label>{title}</label>
                 <span className="count-badge">{data.length} result{data.length > 1 ? 's' : ''}</span>
@@ -28,12 +44,13 @@ export default function CollectionSection({ title, collectionName, data, onLoad,
             {isExpanded && (
                 <div className="collection-items">
                     {data.map((item, index) => {
-                        const isSelected = item.date === selectedItemDate;
+                        const itemKey = getItemKey(item, index);
+                        const isSelected = itemKey === selectedItemKey;
                         return (
                             <div 
-                                key={index} 
+                                key={itemKey}
                                 className={`collection-item ${isSelected ? 'selected' : ''}`}
-                                onClick={() => onLoad(collectionName, item)}
+                                onClick={(event) => onLoad(collectionName, item, event.currentTarget)}
                             >
                                 <div className="item-info">
                                     <span className="item-date">{formatDate(item.date)} - {item.scientific_name} [TaxID: {item.taxid}]</span>

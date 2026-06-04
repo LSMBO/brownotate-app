@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { faAngleRight, faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 const DatabaseSearchDescription = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
     const [step1Expanded, setStep1Expanded] = useState(false);
     const [step2Expanded, setStep2Expanded] = useState(false);
     const [step3Expanded, setStep3Expanded] = useState(false);
     const [step4Expanded, setStep4Expanded] = useState(false);
+    const [step5Expanded, setStep5Expanded] = useState(false);
 
     // if (compact) {
     //     return (
@@ -107,9 +105,61 @@ const DatabaseSearchDescription = () => {
 
             <div className='step' onClick={() => setStep4Expanded(!step4Expanded)}>
                 <FontAwesomeIcon icon={step4Expanded ? faAngleDown : faAngleRight} className="expand-icon" />
-                <label>Step 4 – Phylogeny Tree</label>
+                <label>Step 4 – RNA Sequencing Search (NCBI SRA)</label>
             </div>
             {step4Expanded && (
+                <div>
+                    <p>
+                        RNA sequencing data are retrieved from NCBI SRA using the <b>RNA-Seq/TRANSCRIPTOMIC</b> strategy.
+                        Brownotate lists individual <b>sequencing runs</b> that match your filters.
+                    </p>
+                    <p>You can refine the search using several filters:</p>
+
+                    <p><b>1. Platform</b></p>
+                    <p>
+                        The sequencing machines used to generate the reads. We recommend <b>PacBio SMRT</b> and <b>Oxford Nanopore</b> because
+                        they produce long reads, which are more suitable for resolving repeated genomic regions.
+                        However, for smaller genomes such as bacteria or fungi, short-read sequencing (e.g., Illumina) is usually sufficient.
+                    </p>
+
+                    <p><b>2. Layout</b></p>
+                    <p>
+                        This indicates how reads were sequenced (single-end or paired-end). Brownotate assembly tools can handle either layout.
+                    </p>
+
+                    <p><b>3. Run Size (GB) per run</b></p>
+                    <p>
+                        By default, Brownotate keeps the <b>10 largest runs</b> that satisfy the selected criteria.
+                        In practice, the largest runs can sometimes be much heavier than necessary, while smaller runs can provide very similar
+                        biological information for this workflow. The <b>Min/Max run size</b> filter is used to control this behavior and avoid
+                        oversized runs when needed. If Min and Max are left empty, the run-size filter is disabled (no size limit).
+                    </p>
+
+                    <p><b>4. Input taxonomy only</b></p>
+                    <p>
+                        By default, the search starts at the input taxonomy level. If no suitable dataset is found, it automatically
+                        moves up the taxonomic lineage (genus, family, etc.) until it finds something. You can restrict the search to the
+                        input taxonomy only by enabling this option.
+                    </p>
+
+                    <p><b>Build your own RNA batch</b></p>
+                    <p>
+                        After filtering, you can manually select runs to build your own batch. Keep two constraints in mind:
+                        the total selected size should stay below about <b>100 Gb</b>, and short-read runs (Illumina/BGISEQ/IonTorrent)
+                        must not be mixed with long-read runs (PacBio/Oxford Nanopore).
+                    </p>
+                    <p>
+                        The <b>Tissue</b> column is shown when available. If possible, selecting runs from different tissues is recommended
+                        to improve transcript diversity in your batch.
+                    </p>
+                </div>
+            )}
+
+            <div className='step' onClick={() => setStep5Expanded(!step5Expanded)}>
+                <FontAwesomeIcon icon={step5Expanded ? faAngleDown : faAngleRight} className="expand-icon" />
+                <label>Step 5 – Phylogeny Tree</label>
+            </div>
+            {step5Expanded && (
                 <p>To help understand how the datasets relate to the input taxonomy, a phylogenetic tree is displayed.
                     It shows the relationship between the queried taxonomy and the taxa for which data was found.</p>
             )}

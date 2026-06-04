@@ -95,24 +95,6 @@ input[type="radio"] {
     width: auto;
 }
 
-.label-tooltip-wrapper .tooltip-container .help-span{
-    color: #288cbb ;
-    font-size: smaller;
-    font-weight: normal;
-    position: absolute;
-    background-color: #cddfeb;
-    border: 1px solid #ccc;
-    padding: 5px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: none;
-    margin-left: 30px;
-} 
-
-.label-tooltip-wrapper .tooltip-container:hover .help-span {
-    display: block;
-}
-
 .expanded-label {
     flex-direction: row;
     align-items: center;

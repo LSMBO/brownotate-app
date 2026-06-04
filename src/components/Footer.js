@@ -16,7 +16,8 @@ export default function Footer() {
             <div className="footer-info">
                 <div>
                     <h3>Contact</h3>
-                    <p><a href="mailto:browna@unistra.fr">browna@unistra.fr</a></p>
+                    <p><a href="mailto:fbertile@unistra.fr">fbertile@unistra.fr</a></p>
+                    <p><a href="mailto:adrien.brown98@gmail.com">adrien.brown98@gmail.com</a></p>
                 </div>
                 <div>
                     <h3>GitHub</h3>

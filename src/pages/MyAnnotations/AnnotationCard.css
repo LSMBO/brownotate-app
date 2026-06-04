@@ -97,6 +97,11 @@ span {
 	margin: 5px 0;
 }
 
+.failed-run-id {
+	margin: 4px 0 8px 0;
+	color: #5b5b5b;
+}
+
 
 .progress-bar-container h4{
   margin: 10px;
@@ -152,6 +157,16 @@ span {
 
 .annotation-details button {
 	flex: 1 1 50%;
+}
+
+.annotation-busco-summary {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin: 8px 4px 4px 4px;
+	gap: 4px;
+	color: #4f6472;
+	font-size: 0.95em;
 }
 
 .functional-badge {

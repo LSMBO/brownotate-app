@@ -5,7 +5,7 @@ export default class DBSPhylogeny {
         this.scientificName = data['scientific_name'];
         this.taxonId = data['taxid'];
         this.date = this.formatDate(data['date']);
-        this.phylogeny_map = data['data']['phylogeny_map'];
+        this.phylogeny = data['data']['phylogeny'];
     }
 
     formatDate(dateString) {

@@ -1,7 +1,15 @@
 
+import { useEffect } from "react";
 import FormElementInputRadio from "./FormElementInputRadio";
 
 export default function SectionBusco({ updateParameters, parameters }) {
+    const isRnaSeq = !!parameters.startSection.rnaSequencing;
+
+  useEffect(() => {
+    if (isRnaSeq && parameters.buscoSection.assembly) {
+      updateParameters({ buscoSection: { assembly: false } });
+    }
+  }, [isRnaSeq, parameters.buscoSection.assembly]);
 
     const handleRadioChange = (name, isChecked) => {
         if (isChecked) {
@@ -26,7 +34,13 @@ export default function SectionBusco({ updateParameters, parameters }) {
     return (
         <div className="parameters-section">
             <div className="form-element">
-                <FormElementInputRadio label="Evaluate the assembly completeness" help="Evaluates the BUSCO completeness evaluation of the assembly." checked={parameters.buscoSection.assembly} onChange={handleRadioChange}/>
+                <FormElementInputRadio
+                    label="Evaluate the assembly completeness"
+                    help={isRnaSeq ? "Assembly BUSCO evaluation is not applicable for RNA-seq pipelines." : "Evaluates the BUSCO completeness evaluation of the assembly."}
+                    checked={parameters.buscoSection.assembly && !isRnaSeq}
+                    onChange={handleRadioChange}
+                    disabled={isRnaSeq}
+                />
             </div>
             <div className="form-element">
                 <FormElementInputRadio label="Evaluate the annotation completeness" help="Evaluates the BUSCO completeness evaluation of the annotation." checked={parameters.buscoSection.annotation} onChange={handleRadioChange}/>

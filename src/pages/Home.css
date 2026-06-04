@@ -77,7 +77,47 @@
 
 .batch-infos > ul {
     padding: 0;
-    margin: 10px
+    margin: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.tissue-tag {
+    display: inline-block;
+    background-color: #eaf4fb;
+    color: #1a5276;
+    border: 1px solid #aed6f1;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.82em;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.tissue-unknown {
+    color: #aaa;
+    font-size: 0.88em;
+}
+
+.sequencing-batch.disabled td {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.rnaseq-batch-summary {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 0.85em;
+    color: #555;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+}
+
+.rnaseq-size-warning {
+    color: #e67e22;
+    font-weight: 600;
 }
 
 table {

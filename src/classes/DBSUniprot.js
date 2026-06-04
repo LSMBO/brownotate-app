@@ -5,7 +5,7 @@ export default class DBSUniprotProteome {
         this.scientificName = data.scientific_name;
         this.taxonId = data.taxid;
         this.date = this.formatDate(data.date);
-        this.proteins = data.data.proteome;
+        this.proteome = data.data.proteome;
         this.setUniprotSwissprot(data.data.statistics);
         this.setUniprotTrembl(data.data.statistics);
     }

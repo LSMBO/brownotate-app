@@ -19,6 +19,8 @@ export async function runAsyncPolledStep({
         throw new Error(startResponse.data?.message || `Unable to start ${stepLabel}`);
     }
 
+    let lastDetail = null;
+
     while (true) {
         await sleep(pollMs);
 
@@ -27,6 +29,14 @@ export async function runAsyncPolledStep({
             const url = `${apiBaseUrl}${statusPath}${query ? `?${query}` : ''}`;
             const statusResponse = await axios.get(url);
             const statusData = statusResponse.data;
+
+            if (statusData.status === 'running' && statusData.detail && statusData.detail !== lastDetail) {
+                lastDetail = statusData.detail;
+                const resumeKey = statusPath.includes('scipio')
+                    ? (statusQuery.flex === 'true' ? 'scipio_flex_detail' : 'scipio_detail')
+                    : 'current_step_detail';
+                await updateAnnotation(user, runId, 'resumeData', { [resumeKey]: statusData.detail });
+            }
 
             if (statusData.status === 'completed') {
                 const normalizedResult =

@@ -21,7 +21,14 @@ export const defaultParameters = {
         sequencingFileList : [],
         sequencingFileListOnServer: [],
         skipPhix: false,
-        platform: ""
+        platform: "",
+        rnaSequencing: null,
+        rnaSequencingRuns: false,
+        rnaSequencingRunList: [],
+        rnaSequencingFiles: false,
+        rnaSequencingFileList: [],
+        rnaSequencingFileListOnServer: [],
+        rnaSequencingPlatform: ""
     },
     assemblySection: {
         canu: true,
@@ -43,6 +50,9 @@ export const defaultParameters = {
         excludedTaxoList: [],
         lastTaxid: null,
         excludeTrembl: false
+    },
+    rnaAssemblySection: {
+        assembler: 'trinity'
     },
     buscoSection: {
         assembly: true,

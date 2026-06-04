@@ -1,6 +1,10 @@
 import ParameterItem from './ParameterItem';
 
 function Parameters({ annotation, functionalAnnotationRun=false }) {
+	const startSection = annotation.parameters?.startSection || {};
+	const isRnaSequencing = Boolean(startSection.rnaSequencing);
+	const isDnaSequencing = Boolean(startSection.sequencing);
+	const isAssemblyStart = Boolean(startSection.assembly);
 
 	const listDisplay = (list) => {
 		if (!Array.isArray(list)) {
@@ -59,8 +63,85 @@ function Parameters({ annotation, functionalAnnotationRun=false }) {
 		return lastTaxid;
 	};
 
+	const getBrownotateVersion = () => {
+		return annotation.resumeData?.brownotate_version || 'N/A';
+	};
+
+	const getSpeciesDisplay = () => {
+		const species = annotation.parameters?.species || {};
+		if (!species.scientificName && !species.taxonID) {
+			return 'N/A';
+		}
+		return `${species.scientificName || 'Unknown'} (TaxID: ${species.taxonID || 'N/A'})`;
+	};
+
+	const getEvidenceInfo = () => {
+		const section = annotation.parameters?.annotationSection || {};
+		const mode = section.evidenceSelectionMode || (section.autoEvidence ? 'automatic' : 'custom');
+		const entries = section.selectedEvidenceEntries || [];
+
+		return (
+			<div>
+				<div className="value"><b>Mode:</b> {mode}</div>
+				{mode === 'automatic' && entries.length > 0 && (
+					<div style={{ marginTop: '6px' }}>
+						<div className="value"><b>Selected evidence entries:</b></div>
+						{entries.map((entry, idx) => (
+							<div className="value" key={`entry-${idx}`}>
+								- {entry.scientific_name || 'Unknown'} ({entry.taxid || 'NA'}) [{entry.database || 'Unknown'}] {entry.accession ? `- ${entry.accession}` : ''}
+							</div>
+						))}
+					</div>
+				)}
+				{mode === 'custom' && section.evidenceOriginalFilename && (
+					<div style={{ marginTop: '6px' }}>
+						<div className="value"><b>File:</b> {section.evidenceOriginalFilename}</div>
+					</div>
+				)}
+			</div>
+		);
+	};
+
+	const formatRunDisplay = (run) => {
+		if (!run) return 'N/A';
+		const accession = run.accession || 'unknown';
+		const platform = run.platform || 'unknown';
+		const size = Number(run.size);
+		const sizeSuffix = Number.isFinite(size) ? ` ${size.toFixed(2)} Gb FASTQ` : '';
+		return `${accession} (${platform})${sizeSuffix}`;
+	};
+
+	const getStartedMode = () => {
+		if (isAssemblyStart) return 'Assembly';
+		if (isRnaSequencing) return 'RNA Sequencing';
+		if (isDnaSequencing) return 'DNA Sequencing';
+		return 'N/A';
+	};
+
+	const getAssemblerDisplay = () => {
+		if (isRnaSequencing) {
+			const assembler = String(annotation.parameters?.rnaAssemblySection?.assembler || '').toLowerCase();
+			if (assembler === 'rnabloom') return 'RNA-Bloom';
+			if (assembler === 'trinity') return 'Trinity';
+			return 'N/A';
+		}
+
+		if (isDnaSequencing) {
+			if (annotation.parameters?.assemblySection?.canu) return 'CANU';
+			if (annotation.parameters?.assemblySection?.megahit) return 'Megahit';
+		}
+
+		return 'N/A';
+	};
+
 	return (
 		<div className="run-parameters">
+			<fieldset>
+				<legend className="t2_bold">Run metadata</legend>
+				<ParameterItem label='Brownotate version' value={getBrownotateVersion()} />
+				<ParameterItem label='Run ID' value={annotation.parameters?.id || 'N/A'} />
+				<ParameterItem label='Annotated species' value={getSpeciesDisplay()} />
+			</fieldset>
 			
 			{functionalAnnotationRun && (
 				<fieldset>
@@ -77,14 +158,22 @@ function Parameters({ annotation, functionalAnnotationRun=false }) {
 			{!functionalAnnotationRun && annotation.parameters.startSection && (
 				<fieldset>
 					<legend className="t2_bold">Started data</legend>
-					<ParameterItem label='Mode' value={annotation.parameters.startSection.assembly ? 'Assembly' : 'Sequencing'} />
-					{annotation.parameters.startSection.sequencingFiles &&
+					<ParameterItem label='Mode' value={getStartedMode()} />
+					{isDnaSequencing && <ParameterItem label='Assembler' value={getAssemblerDisplay()} />}
+					{isRnaSequencing && <ParameterItem label='Transcriptome assembler' value={getAssemblerDisplay()} />}
+					{annotation.parameters.startSection.sequencingFiles && !isRnaSequencing &&
 						<ParameterItem label='Sequencing file(s)' value={listDisplay(annotation.parameters.startSection.sequencingFileListOnServer)} />
 					}
-					{annotation.parameters.startSection.sequencingRuns &&
-						<ParameterItem label='Sequencing accession(s)' value={listDisplay(annotation.parameters.startSection.sequencingRunList.map(run => `${run.accession} (${run.platform})`))} />
+					{annotation.parameters.startSection.sequencingRuns && !isRnaSequencing &&
+						<ParameterItem label='Sequencing accession(s)' value={listDisplay((annotation.parameters.startSection.sequencingRunList || []).map(formatRunDisplay))} />
 					}
-					{annotation.parameters.startSection.sequencing && annotation.parameters.startSection.sequencing.depth !== undefined &&
+					{annotation.parameters.startSection.rnaSequencingFiles &&
+						<ParameterItem label='RNA sequencing file(s)' value={listDisplay(annotation.parameters.startSection.rnaSequencingFileListOnServer)} />
+					}
+					{annotation.parameters.startSection.rnaSequencingRuns &&
+						<ParameterItem label='RNA sequencing accession(s)' value={listDisplay((annotation.parameters.startSection.rnaSequencingRunList || []).map(formatRunDisplay))} />
+					}
+					{annotation.parameters.startSection.sequencing && annotation.parameters.startSection.sequencing.depth !== undefined && !isRnaSequencing &&
 						<ParameterItem label='Sequencing coverage' value={`${annotation.parameters.startSection.sequencing.depth.toFixed(1)}×`} />
 					}
 					{annotation.parameters.startSection.assemblyFile &&
@@ -93,7 +182,7 @@ function Parameters({ annotation, functionalAnnotationRun=false }) {
 					{annotation.parameters.startSection.assemblyAccession &&
 						<ParameterItem label="Assembly accession" value={annotation.parameters.startSection.assemblyAccession} />
 					}
-					{annotation.parameters.startSection.sequencing && annotation.parameters.assemblySection?.megahit && (
+					{annotation.parameters.startSection.sequencing && annotation.parameters.assemblySection?.megahit && !isRnaSequencing && (
 						<>
 							<ParameterItem label="Run fastp" value={annotation.parameters.assemblySection.runFastp ? 'True' : 'False'} />
 							<ParameterItem label="Run Bowtie2 (PhiX removal)" value={annotation.parameters.assemblySection.runBowtie2 ? 'True' : 'False'} />
@@ -105,12 +194,10 @@ function Parameters({ annotation, functionalAnnotationRun=false }) {
 			{!functionalAnnotationRun && annotation.parameters.annotationSection && (
 				<fieldset>
 					<legend className="t2_bold">Annotation parameters</legend>
-					{!annotation.parameters.species.is_bacteria && (
+					{!annotation.parameters.species.is_bacteria && !isRnaSequencing && (
 						<>
 							<ParameterItem label="Automatic evidence selection" value={annotation.parameters.annotationSection.autoEvidence ? 'True' : 'False'} />
-							{!annotation.parameters.annotationSection.autoEvidence && (
-								<ParameterItem label="Evidence files" value={listDisplay(annotation.parameters.annotationSection.evidenceFileOnServer)} />
-							)}
+							<ParameterItem label="Evidence details" value={getEvidenceInfo()} />
 						</>
 					)}
 					
@@ -134,7 +221,9 @@ function Parameters({ annotation, functionalAnnotationRun=false }) {
 			{!functionalAnnotationRun && annotation.parameters.buscoSection && (
 				<fieldset>
 					<legend className="t2_bold">Busco parameters</legend>
-					<ParameterItem label="Evaluate the assembly completeness" value={annotation.parameters.buscoSection.assembly ? 'True' : 'False'} />
+					{!isRnaSequencing && (
+						<ParameterItem label="Evaluate the assembly completeness" value={annotation.parameters.buscoSection.assembly ? 'True' : 'False'} />
+					)}
 					<ParameterItem label="Evaluate the annotation completeness" value={annotation.parameters.buscoSection.annotation ? 'True' : 'False'} />
 				</fieldset>
 			)}
